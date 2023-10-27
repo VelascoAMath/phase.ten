@@ -1,4 +1,11 @@
 Rails.application.routes.draw do
+  resources :game_discards
+  resources :game_decks
+  resources :phase_decks
+  resources :phase_orders
+  resources :player_orders
+  resources :player_hands
+  resources :games
   resources :players
   resources :cards
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

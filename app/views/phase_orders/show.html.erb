@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @phase_order %>
+
+<div>
+  <%= link_to "Edit this phase order", edit_phase_order_path(@phase_order) %> |
+  <%= link_to "Back to phase orders", phase_orders_path %>
+
+  <%= button_to "Destroy this phase order", @phase_order, method: :delete %>
+</div>

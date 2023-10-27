@@ -1,0 +1,32 @@
+<%= form_with(model: game_discard) do |form| %>
+  <% if game_discard.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(game_discard.errors.count, "error") %> prohibited this game_discard from being saved:</h2>
+
+      <ul>
+        <% game_discard.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :game_id, style: "display: block" %>
+    <%= form.text_field :game_id %>
+  </div>
+
+  <div>
+    <%= form.label :card_id, style: "display: block" %>
+    <%= form.text_field :card_id %>
+  </div>
+
+  <div>
+    <%= form.label :order, style: "display: block" %>
+    <%= form.number_field :order %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>
