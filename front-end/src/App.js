@@ -20,10 +20,12 @@ class App extends Component {
           <Route path="/cards">
             <CardCreation></CardCreation>
             <CardListing></CardListing>
+            <Link to="/">Home</Link>
           </Route>
           <Route path="/players">
             <PlayerCreation></PlayerCreation>
             <PlayerListing></PlayerListing>
+            <Link to="/">Home</Link>
           </Route>
 
           <Route path="/">
