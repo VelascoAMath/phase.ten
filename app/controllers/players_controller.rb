@@ -1,9 +1,12 @@
 class PlayersController < ApplicationController
   before_action :set_player, only: %i[ show edit update destroy ]
+  skip_forgery_protection
 
   # GET /players or /players.json
   def index
     @players = Player.all
+    
+    render json: @players
   end
 
   # GET /players/1 or /players/1.json
@@ -21,7 +24,7 @@ class PlayersController < ApplicationController
 
   # POST /players or /players.json
   def create
-    @player = Player.new(player_params)
+    @player = Player.new(name:params["name"])
 
     respond_to do |format|
       if @player.save
@@ -56,15 +59,4 @@ class PlayersController < ApplicationController
       format.json { head :no_content }
     end
   end
-
-  private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_player
-      @player = Player.find(params[:id])
-    end
-
-    # Only allow a list of trusted parameters through.
-    def player_params
-      params.require(:player).permit(:name)
-    end
 end

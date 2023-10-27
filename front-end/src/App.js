@@ -8,7 +8,8 @@ import {
   Route,
   Link
 } from "react-router-dom";
-
+import PlayerListing from './PlayerListing';
+import PlayerCreation from './PlayerCreation'
 
 
 class App extends Component {
@@ -19,6 +20,10 @@ class App extends Component {
           <Route path="/cards">
             <CardCreation></CardCreation>
             <CardListing></CardListing>
+          </Route>
+          <Route path="/players">
+            <PlayerCreation></PlayerCreation>
+            <PlayerListing></PlayerListing>
           </Route>
 
           <Route path="/">

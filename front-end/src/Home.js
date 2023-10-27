@@ -12,6 +12,9 @@ export default function Hello() {
             <div>
             <Link to="/cards">Play with cards</Link>
             </div>
+            <div>
+            <Link to="/players">See the players</Link>
+            </div>
         </div>
     )
 }
