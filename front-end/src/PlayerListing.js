@@ -28,8 +28,34 @@ export default function PlayerListing() {
 
     }, [])
 
+    const deletePlayer = async (id) => {
+      try{
+          const url = "http://localhost:8000/players/" + id;
+          const response = await fetch(url, {
+              "headers": {
+              "Content-Type": "application/json",
+              "Accept"      : "application/json",
+              "body"        : JSON.stringify({id: id})
+          },
+          "method": "DELETE",
+      })
+      const json = await response.json();
+    } catch(error){
+        console.error(error);
+      }
+    }
+
     const getPlayerDivs = function(){  
-      const x = players.map((player) => {return <div key={player.id}>{player.name}</div>} );
+      const x = players.map((player) => {return <div key={player.id}>
+        <button onClick={() => {
+          const answer = confirm("Are you sure you want to delete " + player.name + "?");
+          if(answer){
+            deletePlayer(player.id);
+            // window.location.reload();
+          }
+        }}>Delete player</button>
+        {player.name}
+        </div>} );
       return x;
   }
 
