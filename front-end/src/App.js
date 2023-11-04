@@ -6,18 +6,22 @@ import Home from './Home.js';
 import PlayerListing from './PlayerListing';
 import PlayerCreation from './PlayerCreation'
 import PlayerPage from './PlayerPage';
-
+import { Link, Route } from "wouter";
 
 class App extends Component {
   render() {
     return (
       <div>
-        <CardCreation></CardCreation>
-        <CardListing></CardListing>
-        <PlayerPage></PlayerPage>
-        <PlayerCreation></PlayerCreation>
-        <PlayerListing></PlayerListing>
-        <Home></Home>
+        <Route path="/cards">
+          <CardCreation/>
+          <CardListing/>
+        </Route>
+        <Route path="/player/:id" component={PlayerPage} ></Route>
+        <Route path="/players">
+          <PlayerCreation></PlayerCreation>
+          <PlayerListing></PlayerListing>
+        </Route>
+        <Route path="/" component={Home} ></Route>
       </div>
 
     );

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { useParams } from "wouter";
 
 export default function PlayerPage() {
 	
-	const playerId = 1;
+	const params = useParams();
+	const playerId = params?.id;
 	const [data, setData] = useState(null);
 	const player = data?.player;
 
