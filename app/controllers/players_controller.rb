@@ -11,6 +11,11 @@ class PlayersController < ApplicationController
 
   # GET /players/1 or /players/1.json
   def show
+
+    render json: {
+      "player": @player,
+      "hand": @player_hand
+    }
   end
 
   # GET /players/new
@@ -63,6 +68,7 @@ class PlayersController < ApplicationController
 
   def set_player
     @player = Player.find(params[:id])
+    @player_hand = Player.joins(:player_hand).where( :id => params[:id])
   end
 
 end

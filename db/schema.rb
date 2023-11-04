@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2023_10_27_045618) do
+ActiveRecord::Schema[7.1].define(version: 2023_11_04_175935) do
   create_table "cards", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -91,7 +91,9 @@ ActiveRecord::Schema[7.1].define(version: 2023_10_27_045618) do
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "player_hand_id"
     t.index ["name"], name: "index_players_on_name", unique: true
+    t.index ["player_hand_id"], name: "index_players_on_player_hand_id"
   end
 
   add_foreign_key "game_decks", "cards"
