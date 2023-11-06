@@ -7,6 +7,7 @@ export default function PlayerPage() {
 	const playerId = params?.id;
 	const [data, setData] = useState(null);
 	const player = data?.player;
+	const hand = data?.hand;
 
 	useEffect(() => {
 
@@ -32,10 +33,16 @@ export default function PlayerPage() {
 	}, [])
 	
 	return (
-		<h1>
-		  {player? player.name : ""}
-		  {data && JSON.stringify(data)}
-		  {player && JSON.stringify(player)}
-		</h1>
+		<div>
+			<h1>
+			{player? player.name : ""}
+			</h1>
+			<div>
+				{player && JSON.stringify(player)}
+			</div>
+			<div>
+				{hand && JSON.stringify(hand)}
+			</div>
+		</div>
 	);
 }
