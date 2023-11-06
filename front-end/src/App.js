@@ -6,6 +6,7 @@ import Home from './Home.js';
 import PlayerListing from './PlayerListing';
 import PlayerCreation from './PlayerCreation'
 import PlayerPage from './PlayerPage';
+import GameRoom from './GameRoom';
 import { Link, Route } from "wouter";
 
 class App extends Component {
@@ -20,6 +21,9 @@ class App extends Component {
         <Route path="/players">
           <PlayerCreation></PlayerCreation>
           <PlayerListing></PlayerListing>
+        </Route>
+        <Route path="/games">
+          <GameRoom></GameRoom>
         </Route>
         <Route path="/" component={Home} ></Route>
       </div>
