@@ -48,10 +48,9 @@ export default function PlayerListing() {
     const getPlayerDivs = function(){  
       const x = players.map((player) => {return <div key={player.id}>
         <button onClick={() => {
-          const answer = true; //confirm("Are you sure you want to delete " + player.name + "?");
+          const answer = window.confirm("Are you sure you want to delete " + player.name + "?");
           if(answer){
             deletePlayer(player.id);
-            // window.location.reload();
           }
         }}>Delete player</button>
         <a href={"/player/" + player.id} >{player.name}</a>
