@@ -2,5 +2,5 @@ class PlayerHand < ApplicationRecord
   belongs_to :game
   belongs_to :card
   
-  has_many :players
+  belongs_to :players
 end

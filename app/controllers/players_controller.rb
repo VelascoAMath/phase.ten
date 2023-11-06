@@ -68,7 +68,7 @@ class PlayersController < ApplicationController
 
   def set_player
     @player = Player.find(params[:id])
-    @player_hand = Player.joins(:player_hand).where( :id => params[:id])
+    @player_hand = Player.find(params[:id]).player_hands
   end
 
 end
