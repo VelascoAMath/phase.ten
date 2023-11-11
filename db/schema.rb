@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2023_11_11_074733) do
+ActiveRecord::Schema[7.1].define(version: 2023_11_11_231743) do
   create_table "cards", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -91,6 +91,7 @@ ActiveRecord::Schema[7.1].define(version: 2023_11_11_074733) do
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "password_digest"
     t.index ["name"], name: "index_players_on_name", unique: true
   end
 
