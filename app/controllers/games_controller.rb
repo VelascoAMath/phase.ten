@@ -1,10 +1,13 @@
 class GamesController < ApplicationController
   before_action :set_game, only: %i[ show edit update destroy ]
+  skip_forgery_protection
 
   # GET /games or /games.json
   def index
-    @games = Game.all
-  end
+    @games = Game.all;
+    
+    render json: @games
+end
 
   # GET /games/1 or /games/1.json
   def show
