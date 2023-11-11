@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :rooms
   resources :game_discards
   resources :game_decks
   resources :phase_decks
