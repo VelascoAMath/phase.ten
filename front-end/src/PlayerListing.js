@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "wouter";
 
 export default function PlayerListing() {
 
@@ -39,7 +40,7 @@ export default function PlayerListing() {
           },
           "method": "DELETE",
       })
-      const json = await response.json();
+      window.location.reload();
     } catch(error){
         console.error(error);
       }
@@ -61,8 +62,13 @@ export default function PlayerListing() {
 
 
     return (
+      <div>
         <div className="player-collection">
           {getPlayerDivs()}
         </div>
+        <div>
+          <Link to="/">Home</Link>
+        </div>
+      </div>
     );
 }
