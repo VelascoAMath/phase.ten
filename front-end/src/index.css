@@ -6,6 +6,9 @@ body {
   color: white;
 }
 
+a {
+  color: white;
+}
 
 .card-collection {
   display:flex;
