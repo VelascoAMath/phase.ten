@@ -24,7 +24,7 @@ export default function PlayerCreation() {
 
     return (
         <div>
-            <input value={name} onChange={(e) => {setName(e.target.value)}}></input>
+            <input value={name} onKeyDown={(e) => { if(e.code == 'Enter'){ submitPlayer() } }} onChange={(e) => {setName(e.target.value)}}></input>
           <button onClick={submitPlayer}>Create new player!</button>
         </div>
     );
