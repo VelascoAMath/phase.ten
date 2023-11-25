@@ -6,26 +6,46 @@ import callPOST from "./callPOST";
 export default function PlayerCreation() {
 
 
-    const [location, setLocation] = useLocation();
+	const [location, setLocation] = useLocation();
 
-    const [name, setName] = useState("");
-    
+	const [data, setData] = useState({
+		"user_name": "",
+		"display_name": "",
+		"password": "",
+		"confirmation_password": ""
+	});
+	
 
-    const submitPlayer = async function(){
-        if (name === ""){
-            return;
-        }
-        callPOST("http://localhost:8000/players.json", {
-            "name": name,
-        });
-        alert("Player successfully created!");
-        setLocation("/");
-    }
+	const submitPlayer = async function(){
+		let response = null;
+		try {
+			response = callPOST("http://localhost:8000/players.json", data);
+			console.log(response);
+		} catch (error) {
+			console.log(error);
+			alert("Could not create player");
+			return;
+		}
+		if(response !== null){
+			alert("Player successfully created!");
+			setLocation("/");
+		} else {
+			alert("Could not create player!");
+		}
+	}
 
-    return (
-        <div>
-            <input value={name} onKeyDown={(e) => { if(e.code === 'Enter'){ submitPlayer() } }} onChange={(e) => {setName(e.target.value)}}></input>
-          <button onClick={submitPlayer}>Create new player!</button>
-        </div>
-    );
+	const getInputRows = function(){
+		let result = [];
+		for(const [key, val] of Object.entries(data)) {
+			result.push( <tr><td>{key}:</td><td><input value={val} onChange={(e) => {setData({...data, [key]: e.target.value} ) }} ></input> </td> </tr> )
+		}
+		return result;
+	}
+
+	return (
+		<table>
+			{getInputRows()}	
+			<button onClick={submitPlayer}>Create new player!</button>
+		</table>
+	);
 }
