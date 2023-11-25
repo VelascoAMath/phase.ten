@@ -29,7 +29,8 @@ class PlayersController < ApplicationController
 
   # POST /players or /players.json
   def create
-    @player = Player.new(name:params["name"])
+    @player = Player.new(user_name:params["user_name"], display_name:params["display_name"],
+    password:params["password"], password_confirmation:params["password_confirmation"])
 
     respond_to do |format|
       if @player.save
@@ -71,4 +72,8 @@ class PlayersController < ApplicationController
     @player_hand = Player.find(params[:id]).player_hands
   end
 
+
+  def user_params
+    params.require(:player).permit(:user_name, :display_name, :password, :password_confirmation)
+  end
 end
