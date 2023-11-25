@@ -17,6 +17,8 @@ class App extends Component {
           <CardCreation/>
           <CardListing/>
         </Route>
+        <Route path="/signup" component={PlayerCreation}></Route>
+        <Route path="/login" component={PlayerCreation}></Route>
         <Route path="/player/:id" component={PlayerPage} ></Route>
         <Route path="/players">
           <PlayerCreation></PlayerCreation>

@@ -32,7 +32,7 @@ export default function PlayerListing() {
     const deletePlayer = async (id) => {
       try{
           const url = "http://localhost:8000/players/" + id;
-          const response = await fetch(url, {
+          await fetch(url, {
               "headers": {
               "Content-Type": "application/json",
               "Accept"      : "application/json",

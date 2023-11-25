@@ -9,6 +9,12 @@ export default function Hello() {
 	return (
 		<h1>
 			<div>
+				<Link to="/signup">Sign Up</Link>
+			</div>
+			<div>
+				<Link to="/login">Log In</Link>
+			</div>
+			<div>
 				<Link to="/players">Look at players</Link>
 			</div>
 			<div>
