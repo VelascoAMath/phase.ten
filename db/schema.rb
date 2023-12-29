@@ -88,11 +88,11 @@ ActiveRecord::Schema[7.1].define(version: 2023_11_25_202944) do
   end
 
   create_table "players", force: :cascade do |t|
-    t.string "user_name"
+    t.string "user_name", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "password_digest"
-    t.string "display_name"
+    t.string "display_name", null: false
     t.index ["user_name"], name: "index_players_on_user_name", unique: true
   end
 
