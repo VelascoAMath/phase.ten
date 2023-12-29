@@ -7,10 +7,14 @@ import PlayerListing from './PlayerListing';
 import PlayerCreation from './PlayerCreation'
 import PlayerPage from './PlayerPage';
 import GameRoom from './GameRoom';
-import { Link, Route } from "wouter";
+import { Route } from "wouter";
+import GamePlay from './GamePlay.js';
 
 class App extends Component {
+
+
   render() {
+    
     return (
       <div>
         <Route path="/cards">
@@ -23,6 +27,7 @@ class App extends Component {
         <Route path="/players">
           <PlayerListing></PlayerListing>
         </Route>
+        <Route path="/test_game" component={GamePlay}/>
         <Route path="/games">
           <GameRoom></GameRoom>
         </Route>
