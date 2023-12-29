@@ -23,6 +23,9 @@ export default function Hello() {
 			<div>
 				<Link to="/games">Play a game</Link>
 			</div>
+			<div>
+				<Link to="/test_game">Test out our websockets</Link>
+			</div>
 		</h1>
 	)
 }
