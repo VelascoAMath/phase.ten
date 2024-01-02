@@ -6,8 +6,16 @@ import InputGroup from 'react-bootstrap/InputGroup';
 import callPOST from "./callPOST";
 
 
+
+const socket = new WebSocket("ws://localhost:8001");
+
+socket.onopen = (event) => {
+  socket.send(JSON.stringify("Hello!"));
+}
+
+
+
 export default function GamePlay(props) {
-    const {socket} = props;
     const [sockMessage, setSockMessage] = useState([]);
 
     socket.onmessage = (event) => {
