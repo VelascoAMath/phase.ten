@@ -6,13 +6,9 @@ import InputGroup from 'react-bootstrap/InputGroup';
 import callPOST from "./callPOST";
 
 
-export default function GamePlay() {
-    const socket = new WebSocket("ws://localhost:8001");
+export default function GamePlay(props) {
+    const {socket} = props;
     const [sockMessage, setSockMessage] = useState([]);
-
-    socket.onopen = (event) => {
-      send("Hello!")
-    }
 
     socket.onmessage = (event) => {
         console.log("on message is being called");
@@ -21,7 +17,7 @@ export default function GamePlay() {
     }
 
     const send = function(message){
-        if (socket.readyState == socket.OPEN){
+        if (socket && socket.readyState == socket.OPEN){
             socket.send(JSON.stringify(message));
         }
     }

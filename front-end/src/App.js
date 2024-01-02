@@ -14,6 +14,12 @@ class App extends Component {
 
 
   render() {
+    const socket = new WebSocket("ws://localhost:8001");
+
+    socket.onopen = (event) => {
+      socket.send(JSON.stringify("Hello!"));
+    }
+
     
     return (
       <div>
@@ -27,7 +33,9 @@ class App extends Component {
         <Route path="/players">
           <PlayerListing></PlayerListing>
         </Route>
-        <Route path="/test_game" component={GamePlay}/>
+        <Route path="/test_game">
+          <GamePlay socket={socket}/>
+        </Route>
         <Route path="/games">
           <GameRoom></GameRoom>
         </Route>
