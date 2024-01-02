@@ -36,9 +36,10 @@ export default function GamePlay() {
         return 'card';
     }
 
+    
+    const colorOrder = ["red", "blue", "green", "yellow", "S", "S", "W", "W"];
+    const rankOrder = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "S", "W", "W"];
     const createDeck = function() {
-        const colorOrder = ["red", "blue", "green", "yellow", "S", "S", "W", "W"];
-        const rankOrder = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "S", "W", "W"];
 
         let result = [];
 
@@ -72,9 +73,7 @@ export default function GamePlay() {
     const [hand, setHand] = useState(initialHand);
     const [playerState, setPlayerState] = useState("Drawing");
     const [cardToDiscard, setCardToDiscard] = useState(-1);
-    console.log(hand);
-    console.log(deck);
-
+    
 
     const cardToDiv = function(card, onClick) {
         return <div style={{backgroundColor: card.color}} className={getClassFromRank(card.rank)} key={card.id} onClick={onClick}>{card.rank}</div>;
@@ -84,7 +83,6 @@ export default function GamePlay() {
         return deck.map((x) => cardToDiv(x, onClick));
     }
 
-    
     return (
         <div style={{display: "flex", flexDirection: "column", rowGap: "20px"}}>
             <div className="player-console">
@@ -98,7 +96,10 @@ export default function GamePlay() {
             </div>
             <div className="card-collection">
                 {hand.map((x, idx) => <div style={{backgroundColor: x.color}} className={getClassFromRank(x.rank)} key={x.id} onClick={() => {setCardToDiscard(x.id)}}>{x.rank}</div>)}
-                Discarding: {cardToDiscard != -1 && JSON.stringify(hand.filter(x => x.id ==cardToDiscard)[0])} {cardToDiscard}
+            </div>
+            <div>
+                <Button onClick={() => {setHand([...hand].sort( (a, b) => {return (colorOrder.indexOf(a.color) - colorOrder.indexOf(b.color)) || (rankOrder.indexOf(a.rank) - rankOrder.indexOf(b.rank))} ))}}>Sort by Color</Button>
+                <Button onClick={() => {setHand([...hand].sort( (a, b) => {return (rankOrder.indexOf(a.rank) - rankOrder.indexOf(b.rank)) || (colorOrder.indexOf(a.color) - colorOrder.indexOf(b.color))} ))}}>Sort by Rank</Button>
             </div>
             <div style={{width: "50%", overflow: "scroll", height: "50vh"}}>
                 <h2>Received message</h2>
