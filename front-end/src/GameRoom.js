@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import useFetch from "./useFetch";
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
@@ -7,9 +7,37 @@ import callPOST from "./callPOST";
 
 
 export default function PlayerPage() {
+
+    const fetchGame = function () {
+        fetch("http://localhost:8000/games/", {
+            "headers": {
+            "Content-Type": "application/json",
+            "Accept"      : "application/json",
+        },
+        "method": "GET",
+        })
+        .then(res => {
+        if (!res.ok) { // error coming back from server
+            throw Error('could not fetch the data for that resource');
+        } 
+        return res.json();
+        })
+        .then(data => {
+            console.log(data);
+         setGames([...data]);
+        })
+        .catch(err => {
+        // auto catches network / connection error
+        alert(err.message);
+        })
+    }
 	
-    const [games, isPending, error] = useFetch("http://localhost:8000/games/");
+    const [games, setGames] = useState([]);
     console.log(games);
+
+    useEffect(() => {
+        fetchGame();
+    }, [])
 
 
     return (
@@ -24,13 +52,12 @@ export default function PlayerPage() {
                     Join Game
                 </Button>
             </InputGroup>
-            <Button onClick={() => {callPOST("http://localhost:8000/games/")}}>Create Game</Button>
+            <Button onClick={ () => {const _ = callPOST("http://localhost:8000/games/"); fetchGame()}}>Create Game</Button>
             <div>
                 Games
             </div>
-            {isPending && "Loading"}
-            {!isPending &&  games && games.map(x => JSON.stringify(x) )}
-            {!isPending && !games && "There seem to be no games. Why don't you create one?"}
+            { games && games.map(x => JSON.stringify(x) )}
+            {!games && "There seem to be no games. Why don't you create one?"}
         </div>
     )
 }

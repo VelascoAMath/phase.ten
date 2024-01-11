@@ -24,9 +24,9 @@ export default function PlayerPage() {
 		  const json = await response.json();
 		  setData(json);
 		} catch(error){
-		  console.error(error);
-		  }
+			console.error(error);
 		}
+	}
   
 		fetchPlayer();
   

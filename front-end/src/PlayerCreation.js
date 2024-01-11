@@ -19,7 +19,7 @@ export default function PlayerCreation() {
 	const submitPlayer = async function(){
 		let response = null;
 		try {
-			response = callPOST("http://localhost:8000/players.json", data);
+			response = callPOST("http://localhost:8142/players.json", data);
 			console.log(response);
 		} catch (error) {
 			console.log(error);
