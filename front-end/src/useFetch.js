@@ -11,26 +11,26 @@ const useFetch = (url) => {
         "headers": {
         "Content-Type": "application/json",
         "Accept"      : "application/json",
-    },
-    "method": "GET",
+      },
+      "method": "GET",
     })
     .then(res => {
-    if (!res.ok) { // error coming back from server
+      if (!res.ok) { // error coming back from server
         throw Error('could not fetch the data for that resource');
-    } 
-    return res.json();
+
+      }
+      return res.json();
     })
     .then(data => {
-    setIsPending(false);
-    setData(data);
-    setError(null);
+      setIsPending(false);
+      setData(data);
+      setError(null);
     })
     .catch(err => {
-    // auto catches network / connection error
-    setIsPending(false);
-    setError(err.message);
+      // auto catches network / connection error
+      setIsPending(false);
+      setError(err.message);
     })
-
   }, [url])
 
   return [ data, isPending, error];
