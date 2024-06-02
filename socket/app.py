@@ -24,7 +24,7 @@ async def handler(websocket):
             # await websocket.send(json.dumps(message))
             print(f"Sending {message}")
     finally:
-     connected.remove(websocket)
+        connected.remove(websocket)
 
 
 async def main():

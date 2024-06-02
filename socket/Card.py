@@ -20,8 +20,8 @@ class Rank(Enum):
     def __lt__(self, other):
         return self.value < other.value
 
-    # def __str__(self):
-    # 	return self.__repr__()
+    def __str__(self):
+    	return self.__repr__()
 
     def __repr__(self):
         match self.name:
@@ -95,37 +95,46 @@ class Card:
     rank: Rank = dataclasses.field(default_factory=lambda: Rank.WILD)
 
     def __post_init__(self):
-        if self.color == Color.WILD and self.rank != Rank.WILD:
+        if self.color is Color.WILD and self.rank is not Rank.WILD:
             raise Exception(
                 f"Cannot create a card with color {self.color} and rank {self.rank}!"
             )
 
-        if self.color != Color.WILD and self.rank == Rank.WILD:
+        if self.color is not Color.WILD and self.rank is Rank.WILD:
             raise Exception(
                 f"Cannot create a card with color {self.color} and rank {self.rank}!"
             )
 
-        if self.color == Color.SKIP and self.rank != Rank.SKIP:
+        if self.color is Color.SKIP and self.rank is not Rank.SKIP:
             raise Exception(
                 f"Cannot create a card with color {self.color} and rank {self.rank}!"
             )
 
-        if self.color != Color.SKIP and self.rank == Rank.SKIP:
+        if self.color is not Color.SKIP and self.rank is Rank.SKIP:
             raise Exception(
                 f"Cannot create a card with color {self.color} and rank {self.rank}!"
             )
 
     def __str__(self):
-        if self.color == Color.WILD and self.rank == Rank.WILD:
+        if self.color is Color.WILD and self.rank is Rank.WILD:
             return "W"
-        if self.color == Color.SKIP and self.rank == Rank.SKIP:
+        if self.color is Color.SKIP and self.rank is Rank.SKIP:
             return "S"
+
         return f"{self.color}{self.rank}"
 
 
 def main():
     for rank in Rank:
         for color in Color:
+            if rank is Rank.WILD and color is not Color.WILD:
+                continue
+            if rank is Rank.SKIP and color is not Color.SKIP:
+                continue
+            if color is Color.WILD and rank is not Rank.WILD:
+                continue
+            if color is Color.SKIP and rank is not Rank.SKIP:
+                continue
             c = Card(color, rank)
             print(c)
 
