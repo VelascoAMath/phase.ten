@@ -25,7 +25,7 @@ class Rank(Enum):
         return self.value < other.value
 
     def __str__(self):
-    	return self.__repr__()
+        return self.__repr__()
 
     def __repr__(self):
         match self.name:
@@ -65,7 +65,7 @@ class Rank(Enum):
                 return "K"
             case _:
                 return self.name
-        
+
     @staticmethod
     def fromJSON(data):
         match data:
@@ -129,7 +129,7 @@ class Color(Enum):
                 return "S"
             case _:
                 return self.name
-    
+
     @staticmethod
     def fromJSON(data):
         match data:
@@ -147,9 +147,7 @@ class Color(Enum):
                 return Color.WILD
             case _:
                 raise Exception(f"{data} is not a valid color!")
-        
-    
-    
+
 
 @dataclasses.dataclass(order=True, frozen=True)
 class Card:
@@ -187,29 +185,32 @@ class Card:
 
     def toJSON(self):
         return json.dumps({"color": str(self.color), "rank": str(self.rank)})
-    
+
     def toJSONDict(self):
         return {"color": str(self.color), "rank": str(self.rank)}
+
     @staticmethod
     def fromJSON(data):
         data = json.loads(data)
-        
+
         return Card(Color.fromJSON(data["color"]), Rank.fromJSON(data["rank"]))
-    
+
+    @staticmethod
+    def fromJSONDict(data):
+        return Card(Color.fromJSON(data["color"]), Rank.fromJSON(data["rank"]))
+
     @staticmethod
     def from_string(data):
-        
         # Cards like R9, G8, B2, etc.
         m = re.fullmatch("([RGYB])([0-9])", data)
         if m:
             return Card(Color.fromJSON(m.group(1)), Rank.fromJSON(m.group(2)))
-        
+
         # Cards with rank 10
         m = re.fullmatch("([RGYB])(1[012])", data)
         if m:
             return Card(Color.fromJSON(m.group(1)), Rank.fromJSON(m.group(2)))
-        
-            
+
         match data:
             case "S":
                 return Card(Color.SKIP, Rank.SKIP)
@@ -217,6 +218,7 @@ class Card:
                 return Card(Color.WILD, Rank.WILD)
             case "_":
                 raise Exception(f"{data} is not a valid card!")
+
 
 def main():
     for rank in Rank:

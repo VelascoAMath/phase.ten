@@ -12,7 +12,7 @@ class Player:
     hand: list = dataclasses.field(default_factory=list)
     skip_cards: int = 0
     phase: int = 1
-
+    
     def toJSON(self):
         return json.dumps(
             {
@@ -27,14 +27,14 @@ class Player:
     
     def toJSONDict(self):
         return {
-                "id": self.id,
-                "name": self.name,
-                "token": self.token,
-                "hand": [x.toJSONDict() for x in self.hand],
-                "skip_cards": self.skip_cards,
-                "phase": self.phase,
-            }
-
+            "id": self.id,
+            "name": self.name,
+            "token": self.token,
+            "hand": [x.toJSONDict() for x in self.hand],
+            "skip_cards": self.skip_cards,
+            "phase": self.phase,
+        }
+    
     @staticmethod
     def fromJSON(data):
         data = json.loads(data)
@@ -43,6 +43,17 @@ class Player:
             data["name"],
             data["token"],
             [Card.fromJSON(x) for x in data["hand"]],
+            data["skip_cards"],
+            data["phase"],
+        )
+    
+    @staticmethod
+    def fromJSONDict(data):
+        return Player(
+            data["id"],
+            data["name"],
+            data["token"],
+            [Card.fromJSONDict(x) for x in data["hand"]],
             data["skip_cards"],
             data["phase"],
         )
@@ -62,7 +73,7 @@ def main():
         4,
         8,
     )
-
+    
     print(p)
     print(p.toJSON())
     print(Player.fromJSON(p.toJSON()))
