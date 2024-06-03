@@ -1,5 +1,6 @@
 import dataclasses
 import json
+import re
 from enum import Enum
 
 
@@ -136,6 +137,8 @@ class Color(Enum):
                 return Color.WILD
             case _:
                 raise Exception(f"{data} is not a valid color!")
+        
+    
     
 
 @dataclasses.dataclass(order=True, frozen=True)
@@ -180,6 +183,28 @@ class Card:
         data = json.loads(data)
         
         return Card(Color.fromJSON(data["color"]), Rank.fromJSON(data["rank"]))
+    
+    @staticmethod
+    def from_string(data):
+        
+        # Cards like R9, G8, B2, etc.
+        m = re.fullmatch("([RGYB])([0-9])", data)
+        if m:
+            return Card(Color.fromJSON(m.group(1)), Rank.fromJSON(m.group(2)))
+        
+        # Cards with rank 10
+        m = re.fullmatch("([RGYB])10", data)
+        if m:
+            return Card(Color.fromJSON(m.group(1)), Rank.TEN)
+        
+            
+        match data:
+            case "S":
+                return Card(Color.SKIP, Rank.SKIP)
+            case "W":
+                return Card(Color.WILD, Rank.WILD)
+            case "_":
+                raise Exception(f"{data} is not a valid card!")
 
 def main():
     for rank in Rank:
@@ -196,6 +221,7 @@ def main():
             print(c)
             print(c.toJSON())
             print(Card.fromJSON(c.toJSON()))
+            print(Card.from_string(str(c)))
             print()
 
 
