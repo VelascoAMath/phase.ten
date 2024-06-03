@@ -10,11 +10,8 @@ import GameRoom from './GameRoom';
 import { Route } from "wouter";
 import GamePlay from './GamePlay.js';
 
-class App extends Component {
-
-
-  render() {
-    const socket = new WebSocket("ws://localhost:8001");
+function App() {
+  const socket = new WebSocket("ws://localhost:8001");
 
     socket.onopen = (event) => {
       socket.send(JSON.stringify("Hello!"));
@@ -43,7 +40,6 @@ class App extends Component {
       </div>
 
     );
-  }
 }
 
 export default App;

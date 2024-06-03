@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useLocation } from "wouter";
-import { navigate } from "wouter/use-location";
 import callPOST from "./callPOST";
 
 export default function PlayerCreation() {
