@@ -16,8 +16,10 @@ class Rank(Enum):
     EIGHT = 8
     NINE = 9
     TEN = 10
-    WILD = 11
-    SKIP = 12
+    ELEVEN = 11
+    TWELVE = 12
+    WILD = 13
+    SKIP = 14
 
     def __lt__(self, other):
         return self.value < other.value
@@ -47,6 +49,10 @@ class Rank(Enum):
                 return "9"
             case "TEN":
                 return "10"
+            case "ELEVEN":
+                return "11"
+            case "TWELVE":
+                return "12"
             case "WILD":
                 return "W"
             case "SKIP":
@@ -83,6 +89,10 @@ class Rank(Enum):
                 return Rank.NINE
             case "10":
                 return Rank.TEN
+            case "11":
+                return Rank.ELEVEN
+            case "12":
+                return Rank.TWELVE
             case "W":
                 return Rank.WILD
             case "S":
@@ -193,9 +203,9 @@ class Card:
             return Card(Color.fromJSON(m.group(1)), Rank.fromJSON(m.group(2)))
         
         # Cards with rank 10
-        m = re.fullmatch("([RGYB])10", data)
+        m = re.fullmatch("([RGYB])(1[012])", data)
         if m:
-            return Card(Color.fromJSON(m.group(1)), Rank.TEN)
+            return Card(Color.fromJSON(m.group(1)), Rank.fromJSON(m.group(2)))
         
             
         match data:
