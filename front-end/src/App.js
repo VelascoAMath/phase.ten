@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, useReducer } from 'react';
 import CardCreation from './CardCreation';
 import CardListing from './CardListing.js';
 import Home from './Home.js';
@@ -9,12 +9,16 @@ import PlayerPage from './PlayerPage';
 import GameRoom from './GameRoom';
 import { Route } from "wouter";
 import GamePlay from './GamePlay.js';
+import inputReducer from './InputReducer.js';
 
 function App() {
+
+  const [state, dispatch] = useReducer(inputReducer, {});
+
   const socket = new WebSocket("ws://localhost:8001");
 
     socket.onopen = (event) => {
-      socket.send(JSON.stringify("Hello!"));
+      socket.send(JSON.stringify({type: "connection"}));
     }
 
     

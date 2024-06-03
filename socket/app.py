@@ -5,24 +5,17 @@ import websockets
 import json
 
 connected = set()
-socket_index = 0
 
 async def handler(websocket):
-    global socket_index
-    index = socket_index
-    socket_index += 1
     connected.add(websocket)
+
     try:
         while True:
-            message = await websocket.recv()
-            message = json.loads(message)
-            print(f"Received {message}")
-            if message == "Hello!":
-                continue
-            message = message + f" {index}"
-            websockets.broadcast(connected, json.dumps(message))
-            # await websocket.send(json.dumps(message))
-            print(f"Sending {message}")
+            event = await websocket.recv()
+            event = json.loads(event)
+            
+            print(event)
+            
     finally:
         connected.remove(websocket)
 
