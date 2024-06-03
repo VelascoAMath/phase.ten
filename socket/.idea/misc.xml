@@ -2,7 +2,7 @@
 <project version="4">
   <component name="Black">
     <option name="enabledOnReformat" value="true" />
-    <option name="sdkUUID" value="6277392c-60e9-4674-8a90-85d1d975320e" />
+    <option name="sdkName" value="$USER_HOME$/anaconda3" />
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="$USER_HOME$/anaconda3" project-jdk-type="Python SDK" />
 </project>
