@@ -1,4 +1,5 @@
 import dataclasses
+import json
 from enum import Enum
 
 
@@ -57,6 +58,36 @@ class Rank(Enum):
                 return "K"
             case _:
                 return self.name
+        
+    @staticmethod
+    def fromJSON(data):
+        match data:
+            case "1":
+                return Rank.ONE
+            case "2":
+                return Rank.TWO
+            case "3":
+                return Rank.THREE
+            case "4":
+                return Rank.FOUR
+            case "5":
+                return Rank.FIVE
+            case "6":
+                return Rank.SIX
+            case "7":
+                return Rank.SEVEN
+            case "8":
+                return Rank.EIGHT
+            case "9":
+                return Rank.NINE
+            case "10":
+                return Rank.TEN
+            case "W":
+                return Rank.WILD
+            case "S":
+                return Rank.SKIP
+            case _:
+                raise Exception(f"{data} is not a valid rank!")
 
 
 @dataclasses.dataclass
@@ -87,7 +118,25 @@ class Color(Enum):
                 return "S"
             case _:
                 return self.name
-
+    
+    @staticmethod
+    def fromJSON(data):
+        match data:
+            case "R":
+                return Color.RED
+            case "G":
+                return Color.GREEN
+            case "Y":
+                return Color.YELLOW
+            case "B":
+                return Color.BLUE
+            case "S":
+                return Color.SKIP
+            case "W":
+                return Color.WILD
+            case _:
+                raise Exception(f"{data} is not a valid color!")
+    
 
 @dataclasses.dataclass(order=True, frozen=True)
 class Card:
@@ -123,6 +172,14 @@ class Card:
 
         return f"{self.color}{self.rank}"
 
+    def toJSON(self):
+        return json.dumps({"color": str(self.color), "rank": str(self.rank)})
+    
+    @staticmethod
+    def fromJSON(data):
+        data = json.loads(data)
+        
+        return Card(Color.fromJSON(data["color"]), Rank.fromJSON(data["rank"]))
 
 def main():
     for rank in Rank:
@@ -137,6 +194,9 @@ def main():
                 continue
             c = Card(color, rank)
             print(c)
+            print(c.toJSON())
+            print(Card.fromJSON(c.toJSON()))
+            print()
 
 
 if __name__ == "__main__":
