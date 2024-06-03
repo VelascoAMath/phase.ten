@@ -36,3 +36,9 @@
 
 
 /Gemfile.lock
+
+.DS_Store
+.idea/
+\#*
+*~
+socket/__pycache__/
