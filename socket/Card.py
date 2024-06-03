@@ -188,6 +188,8 @@ class Card:
     def toJSON(self):
         return json.dumps({"color": str(self.color), "rank": str(self.rank)})
     
+    def toJSONDict(self):
+        return {"color": str(self.color), "rank": str(self.rank)}
     @staticmethod
     def fromJSON(data):
         data = json.loads(data)

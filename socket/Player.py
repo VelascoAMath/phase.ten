@@ -24,6 +24,16 @@ class Player:
                 "phase": self.phase,
             }
         )
+    
+    def toJSONDict(self):
+        return {
+                "id": self.id,
+                "name": self.name,
+                "token": self.token,
+                "hand": [x.toJSONDict() for x in self.hand],
+                "skip_cards": self.skip_cards,
+                "phase": self.phase,
+            }
 
     @staticmethod
     def fromJSON(data):
