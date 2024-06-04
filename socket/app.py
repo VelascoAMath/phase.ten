@@ -39,6 +39,8 @@ async def handler(websocket):
 					await websocket.send(json.dumps({"type": "new_user", "user": u.toJSONDict()}))
 				else:
 					await websocket.send(json.dumps({"type": "rejection", "message": f"User already exists with the name {data['name']}"}))
+			elif data["type"] == "get_users":
+				await websocket.send(json.dumps({"type": "get_users", "users": [u.toJSONDict() for u in user_set]}))
 	
 	
 	except Exception as e:
