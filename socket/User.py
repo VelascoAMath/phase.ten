@@ -8,7 +8,7 @@ from Card import Card
 from Player import Player
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(order=True)
 class User:
     id: int = 0
     name: str = ""

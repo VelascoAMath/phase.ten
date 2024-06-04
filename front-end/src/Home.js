@@ -1,11 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'wouter';
 
 
-export default function Hello() {
+export default function Home({props}) {
 	
-
-
 	return (
 		<h1>
 			<div>

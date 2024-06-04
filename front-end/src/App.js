@@ -1,4 +1,4 @@
-import React, { Component, useReducer } from 'react';
+import React, { useReducer } from 'react';
 import CardCreation from './CardCreation';
 import CardListing from './CardListing.js';
 import Home from './Home.js';
@@ -8,7 +8,6 @@ import PlayerCreation from './PlayerCreation'
 import PlayerPage from './PlayerPage';
 import GameRoom from './GameRoom';
 import { Route } from "wouter";
-import GamePlay from './GamePlay.js';
 import inputReducer from './InputReducer.js';
 
 function App() {
@@ -21,6 +20,19 @@ function App() {
       socket.send(JSON.stringify({type: "connection"}));
     }
 
+
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log(data);
+      if(data["type"] === "new_user"){
+        dispatch({type: "change-input", key: "user-id", value: data.user["id"]});
+        dispatch({type: "change-input", key: "user-name", value: data.user["name"]});
+        dispatch({type: "change-input", key: "user-token", value: data.user["token"]});
+      }
+      else if(data["type"] === "rejection"){
+        alert(data["message"]);
+      }
+    }
     
     return (
       <div>
@@ -28,19 +40,23 @@ function App() {
           <CardCreation/>
           <CardListing/>
         </Route>
-        <Route path="/signup" component={PlayerCreation}></Route>
+        <Route path="/signup">
+          <PlayerCreation props={{state, dispatch, socket}}/>
+        </Route>
         <Route path="/login" component={PlayerCreation}></Route>
         <Route path="/player/:id" component={PlayerPage} ></Route>
         <Route path="/players">
           <PlayerListing></PlayerListing>
         </Route>
-        <Route path="/test_game">
+        {/* <Route path="/test_game">
           <GamePlay socket={socket}/>
-        </Route>
+        </Route> */}
         <Route path="/games">
           <GameRoom></GameRoom>
         </Route>
-        <Route path="/" component={Home} ></Route>
+        <Route path="/" >
+          <Home props={{state, dispatch, socket}}/>
+        </Route>
       </div>
 
     );
