@@ -26,7 +26,7 @@ export default function PlayerLogin({props}) {
 				Token: {state["user-token"]}
 			</div>
 			<div>
-                {state["user-list"].map(user => {
+                {state["user-list"]?.map(user => {
                     const setUser = function(){
                         dispatch({type: "change-input", key: "user-id", value: user["id"]});
                         dispatch({type: "change-input", key: "user-name", value: user["name"]});
