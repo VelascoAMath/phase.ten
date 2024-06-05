@@ -93,7 +93,7 @@ async def handler(websocket):
 			if user_id not in id_to_user:
 				await websocket.send(json.dumps({"type": "rejection", "message": f"User ID {user_id} is not valid!"}))
 			else:
-				g = Game(secrets.token_urlsafe(16), DEFAULT_PHASE_LIST, [], [], 0)
+				g = Game(secrets.token_urlsafe(16), DEFAULT_PHASE_LIST, [], [], 0, user_id, False)
 				id_to_game[g.id] = g
 				game_set.add(g)
 				cur.execute(f"INSERT INTO games (id) VALUES ('{g.id}')")
