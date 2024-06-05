@@ -10,7 +10,7 @@ from Player import Player
 
 @dataclasses.dataclass(order=True)
 class User:
-    id: int = 0
+    id: str = ""
     name: str = ""
     token: str = ""
     
@@ -41,7 +41,7 @@ class User:
 
 def main():
     u = User(
-        30,
+        "30",
         "Alfredo",
         "secret token",
     )

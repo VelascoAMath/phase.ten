@@ -6,7 +6,7 @@ from Player import Player
 
 @dataclasses.dataclass(order=True)
 class Game:
-	id: int = 0
+	id: str = ""
 	phase_list: list = dataclasses.field(default_factory=list)
 	deck: list = dataclasses.field(default_factory=list)
 	discard: list = dataclasses.field(default_factory=list)
@@ -70,7 +70,7 @@ def main():
 		"S5+S3",
 	]
 	discard_list = [deck.pop() for _ in range(5)]
-	g = Game(2884, phase_list, deck, discard_list, 87)
+	g = Game("2884", phase_list, deck, discard_list, 87)
 	print(g)
 	h = Game.fromJSON(g.toJSON())
 	print(h)

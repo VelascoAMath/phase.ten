@@ -6,9 +6,9 @@ from Card import Card
 
 @dataclasses.dataclass(order=True)
 class Player:
-    id: int = 0
-    user_id: int = 0
-    game_id: int = 0
+    id: str = ""
+    user_id: str = ""
+    game_id: str = ""
     hand: list = dataclasses.field(default_factory=list)
     skip_cards: int = 0
     phase: int = 1
@@ -46,9 +46,9 @@ class Player:
 
 def main():
     p = Player(
-        30,
-        20,
-        50,
+        "30",
+        "20",
+        "50",
         [
             Card.from_string("R10"),
             Card.from_string("W"),
