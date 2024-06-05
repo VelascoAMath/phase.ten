@@ -94,7 +94,7 @@ async def handler(websocket):
 				game_dict = g.toJSONDict()
 				game_dict["users"] = []
 				for (user_id,) in cur.execute(
-					"SELECT users.id FROM users JOIN players ON users.id = players.user_id JOIN games ON players.game_id = games.id;"):
+					f"SELECT users.id FROM users JOIN players ON users.id = players.user_id JOIN games ON players.game_id = games.id WHERE games.id = '{g.id}' ;"):
 					game_dict["users"].append(id_to_user[user_id].toJSONDict())
 				
 				await websocket.send(json.dumps({"type": "create_game", "game": game_dict}))
