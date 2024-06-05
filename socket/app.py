@@ -48,11 +48,12 @@ async def handler(websocket):
 	con = sqlite3.connect("phase_ten.db")
 	# con = sqlite3.connect(":memory:")
 	cur = con.cursor()
-	cur.execute("CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, name TEXT)")
-	cur.execute("CREATE TABLE IF NOT EXISTS games(id TEXT PRIMARY KEY)")
-	cur.execute("CREATE TABLE IF NOT EXISTS players(id TEXT PRIMARY KEY, game_id TEXT, user_id TEXT,"
+	cur.execute("CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL);")
+	cur.execute("CREATE UNIQUE INDEX idx_name ON users (name);")
+	cur.execute("CREATE TABLE IF NOT EXISTS games(id TEXT PRIMARY KEY NOT NULL)")
+	cur.execute("CREATE TABLE IF NOT EXISTS players(id TEXT PRIMARY KEY NOT NULL, game_id TEXT NOT NULL, user_id TEXT NOT NULL,"
 	            "FOREIGN KEY (game_id) REFERENCES games (id) ON DELETE CASCADE,"
-	            "FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE)")
+	            "FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE);")
 	con.commit()
 	
 	# try:
