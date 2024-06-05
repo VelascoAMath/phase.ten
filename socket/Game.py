@@ -9,7 +9,11 @@ class Game:
 	phase_list: list = dataclasses.field(default_factory=list)
 	deck: list = dataclasses.field(default_factory=list)
 	discard: list = dataclasses.field(default_factory=list)
-	current_player: int = 0
+	current_player: str = ""
+	# The player who originally created the game
+	owner: str = ""
+	# If the game has started
+	in_progress: bool = False
 
 	def toJSONDict(self):
 		return {
@@ -18,6 +22,8 @@ class Game:
 			"deck": [x.toJSONDict() for x in self.deck],
 			"discard": [x.toJSONDict() for x in self.discard],
 			"current_player": self.current_player,
+			"owner": self.current_player,
+			"in_progress": self.in_progress,
 		}
 	
 	def toJSON(self):
@@ -32,7 +38,7 @@ class Game:
 		discard = []
 		for c in data["discard"]:
 			discard.append(Card.fromJSONDict(c))
-		return Game(data["id"], data["phase_list"], deck, discard, data["current_player"])
+		return Game(data["id"], data["phase_list"], deck, discard, data["current_player"], data["owner"], data["in_progress"])
 	
 
 
@@ -69,7 +75,7 @@ def main():
 		"S5+S3",
 	]
 	discard_list = [deck.pop() for _ in range(5)]
-	g = Game("2884", phase_list, deck, discard_list, 87)
+	g = Game("2884", phase_list, deck, discard_list, "87", "87", True)
 	print(g)
 	h = Game.fromJSON(g.toJSON())
 	print(h)
