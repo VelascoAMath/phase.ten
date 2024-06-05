@@ -45,4 +45,5 @@ socket/__pycache__/
 
 
 *.db
+*.css.map
 

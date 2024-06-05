@@ -1,3 +1,4 @@
+import './App.css';
 import React, { useReducer } from 'react';
 import CardCreation from './CardCreation';
 import CardListing from './CardListing.js';
