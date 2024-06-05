@@ -8,6 +8,10 @@ export default function PlayerCreation({props}) {
 	const [name, setName] = useState("");
 
 	const createNewPlayer = function() {
+		if(socket.readyState === 2 || socket.readyState === 3){
+			alert("Server connection has been lost!");
+			return
+		}
 		setName("");
 		socket.send(JSON.stringify({type: "new_user", name: name}));
 	}

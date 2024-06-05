@@ -1,5 +1,5 @@
 import './App.css';
-import React, { useReducer } from 'react';
+import React, { useReducer, useState } from 'react';
 import CardCreation from './CardCreation';
 import CardListing from './CardListing.js';
 import Home from './Home.js';
@@ -15,11 +15,17 @@ import PlayerLogin from './PlayerLogin.js';
 function App() {
 
   const [state, dispatch] = useReducer(inputReducer, {});
+  const [socketState, setSocketState] = useState(0);
   
   const socket = new WebSocket("ws://localhost:8001");
 
+  socket.onerror = (event) => {
+    setSocketState(-1);
+  }
+
   socket.onopen = (event) => {
     socket.send(JSON.stringify({type: "connection"}));
+    setSocketState(1);
   }
     
 
@@ -42,6 +48,12 @@ function App() {
     }
   }
   
+  if(socketState === 0) {
+    return <div>Establishing connection</div>
+  } else if (socketState === -1){
+    return <div>Failed to establish connection</div>
+  }
+
   return (
     <div>
       <Route path="/cards">
