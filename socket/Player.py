@@ -4,7 +4,7 @@ import json
 from Card import Card
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(order=True)
 class Player:
     id: int = 0
     user_id: int = 0
