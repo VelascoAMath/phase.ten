@@ -1,7 +1,6 @@
 import random
 
 from Card import *
-from Player import Player
 
 
 @dataclasses.dataclass(order=True)

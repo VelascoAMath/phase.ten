@@ -1,12 +1,6 @@
 import dataclasses
 import json
 
-import vel_data_structures
-from vel_data_structures import AVL_Set
-
-from Card import Card
-from Player import Player
-
 
 @dataclasses.dataclass(order=True)
 class User:

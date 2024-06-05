@@ -34,8 +34,9 @@ function App() {
       dispatch({type: "change-input", key: "user-list", value: data["users"].toSorted((a, b) => a.name.localeCompare(b.name)) })
     } else if (data["type"] === "get_games"){
       dispatch({type: "change-input", key: "game-list", value: data["games"]})
-    }
-    else if(data["type"] === "rejection"){
+    } else if(data["type"] === "create_game"){
+      dispatch({type: "change-input", key: "game-list", value: [...state["game-list"], data["game"]] })
+    } else if(data["type"] === "rejection"){
       alert(data["message"]);
     }
   }
