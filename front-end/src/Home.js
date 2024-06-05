@@ -12,18 +12,18 @@ export default function Home({props}) {
 			<div>
 				<Link to="/login">Log In</Link>
 			</div>
-			<div>
+			{/* <div>
 				<Link to="/players">Look at players</Link>
 			</div>
 			<div>
 				<Link to="/cards">Look at cards</Link>
-			</div>
+			</div> */}
 			<div>
 				<Link to="/games">Play a game</Link>
 			</div>
-			<div>
+			{/* <div>
 				<Link to="/test_game">Test out our websockets</Link>
-			</div>
+			</div> */}
 		</h1>
 	)
 }

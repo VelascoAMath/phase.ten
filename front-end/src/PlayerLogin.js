@@ -36,6 +36,7 @@ export default function PlayerLogin({props}) {
                 })}
 			</div>
             <button onClick={getPlayers}>Refresh</button>
+            <button onClick={() => {dispatch({type: "change-input", key: "user-id", value: null}); dispatch({type: "change-input", key: "user-name", value: null}); dispatch({type: "change-input", key: "user-token", value: null});} }>Log out</button>
 		</div>
 	)
 }
