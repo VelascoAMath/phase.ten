@@ -32,6 +32,8 @@ function App() {
     }
     else if(data["type"] === "get_users"){
       dispatch({type: "change-input", key: "user-list", value: data["users"].toSorted((a, b) => a.name.localeCompare(b.name)) })
+    } else if (data["type"] === "get_games"){
+      dispatch({type: "change-input", key: "game-list", value: data["games"]})
     }
     else if(data["type"] === "rejection"){
       alert(data["message"]);
@@ -58,7 +60,7 @@ function App() {
         <GamePlay socket={socket}/>
       </Route> */}
       <Route path="/games">
-        <GameRoom></GameRoom>
+        <GameRoom props={{state, dispatch, socket}}></GameRoom>
       </Route>
       <Route path="/" >
         <Home props={{state, dispatch, socket}}/>

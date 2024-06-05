@@ -4,7 +4,7 @@ from Card import *
 from Player import Player
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(order=True)
 class Game:
 	id: int = 0
 	phase_list: list = dataclasses.field(default_factory=list)
@@ -13,17 +13,18 @@ class Game:
 	discard: list = dataclasses.field(default_factory=list)
 	current_player: int = 0
 
+	def toJSONDict(self):
+		return {
+			"id": self.id,
+			"phase_list": self.phase_list,
+			"players": [x.toJSONDict() for x in self.players],
+			"deck": [x.toJSONDict() for x in self.deck],
+			"discard": [x.toJSONDict() for x in self.discard],
+			"current_player": self.current_player,
+		}
+	
 	def toJSON(self):
-		return json.dumps(
-			{
-				"id": self.id,
-				"phase_list": self.phase_list,
-				"players": [x.toJSONDict() for x in self.players],
-				"deck": [x.toJSONDict() for x in self.deck],
-				"discard": [x.toJSONDict() for x in self.discard],
-				"current_player": self.current_player,
-			}
-		)
+		return json.dumps(self.toJSONDict())
 
 	@staticmethod
 	def fromJSON(data):
@@ -38,6 +39,7 @@ class Game:
 		for c in data["discard"]:
 			discard.append(Card.fromJSONDict(c))
 		return Game(data["id"], data["phase_list"], player_list, deck, discard, data["current_player"])
+	
 
 
 def main():
@@ -62,8 +64,8 @@ def main():
 
 	alice = Player(
 		30,
-		"Alice",
-		"secret token",
+		3,
+		100,
 		[
 			Card.from_string("R10"),
 			Card.from_string("W"),
@@ -75,8 +77,8 @@ def main():
 	)
 	bob = Player(
 		87,
-		"Bob",
-		"shush",
+		8,
+		100,
 		[
 			Card.from_string("W"),
 			Card.from_string("W"),
@@ -88,8 +90,8 @@ def main():
 	)
 	charlie = Player(
 		98,
-		"Charlie",
-		"no one knows",
+		9,
+		100,
 		[
 			Card.from_string("G11"),
 			Card.from_string("G3"),

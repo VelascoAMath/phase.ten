@@ -1,63 +1,39 @@
-import React, { useEffect, useState } from "react";
-import useFetch from "./useFetch";
+import React, { useState } from "react";
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
-import callPOST from "./callPOST";
 
 
-export default function PlayerPage() {
-
-    const fetchGame = function () {
-        fetch("http://localhost:8000/games/", {
-            "headers": {
-            "Content-Type": "application/json",
-            "Accept"      : "application/json",
-        },
-        "method": "GET",
-        })
-        .then(res => {
-        if (!res.ok) { // error coming back from server
-            throw Error('could not fetch the data for that resource');
-        } 
-        return res.json();
-        })
-        .then(data => {
-            console.log(data);
-         setGames([...data]);
-        })
-        .catch(err => {
-        // auto catches network / connection error
-        alert(err.message);
-        })
+export default function PlayerPage({props}) {
+    
+    const{state, dispatch, socket} = props;
+    
+    if(!(state["user-id"] && state["user-token"])){
+        return (
+            <div>
+                You must log in first!
+            </div>
+        )
     }
-	
-    const [games, setGames] = useState([]);
-    console.log(games);
 
-    useEffect(() => {
-        fetchGame();
-    }, [])
 
+    if(socket.readyState === 1){
+        socket.send(JSON.stringify({type: "get_games"}));
+    }
+
+    const createGame = function() {
+        socket.send(JSON.stringify({type: "create_game", "user_id": state["user-id"] }))        
+    }
 
     return (
         <div>
-            <InputGroup className="mb-3">
-                <Form.Control
-                placeholder="Join a game"
-                aria-label="Join a game"
-                aria-describedby="basic-addon2"
-                />
-                <Button variant="outline-secondary" id="button-addon2">
-                    Join Game
-                </Button>
-            </InputGroup>
-            <Button onClick={ () => {const _ = callPOST("http://localhost:8000/games/"); fetchGame()}}>Create Game</Button>
+            <Button onClick={createGame}>Create Game</Button>
             <div>
-                Games
+                Join one of the games below
             </div>
-            { games && games.map(x => JSON.stringify(x) )}
-            {!games && "There seem to be no games. Why don't you create one?"}
+            {state["game-list"] && state["game-list"].map(x => <button key={x.id}>Join{x.id}</button> ) }
+            {(!state["game-list"] || state["game-list"].length === 0) && "There seem to be no games. Why don't you create one?"}
+            {state["game-list"] && state["game-list"].map(x => <div key={x.id}>{JSON.stringify(x)}</div> ) }
         </div>
     )
 }

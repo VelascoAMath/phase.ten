@@ -57,6 +57,8 @@ class User:
 def main():
     p = Player(
         30,
+        20,
+        50,
         [
             Card.from_string("R10"),
             Card.from_string("W"),
