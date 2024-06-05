@@ -193,7 +193,7 @@ class Card:
     def fromJSON(data):
         data = json.loads(data)
 
-        return Card(Color.fromJSON(data["color"]), Rank.fromJSON(data["rank"]))
+        return Card.fromJSONDict(data)
 
     @staticmethod
     def fromJSONDict(data):
