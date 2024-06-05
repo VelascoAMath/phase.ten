@@ -11,6 +11,7 @@ import GameRoom from './GameRoom';
 import { Route } from "wouter";
 import inputReducer from './InputReducer.js';
 import PlayerLogin from './PlayerLogin.js';
+import PlayRoom from './PlayRoom.js';
 
 function App() {
 
@@ -75,6 +76,9 @@ function App() {
       </Route> */}
       <Route path="/games">
         <GameRoom props={{state, dispatch, socket}}></GameRoom>
+      </Route>
+      <Route path="/play/:id">
+        <PlayRoom props={{state, dispatch, socket}}/>
       </Route>
       <Route path="/" >
         <Home props={{state, dispatch, socket}}/>
