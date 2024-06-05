@@ -7,8 +7,6 @@ from Card import Card
 @dataclasses.dataclass
 class Player:
     id: int = 0
-    name: str = ""
-    token: str = ""
     hand: list = dataclasses.field(default_factory=list)
     skip_cards: int = 0
     phase: int = 1
@@ -17,9 +15,7 @@ class Player:
         return json.dumps(
             {
                 "id": self.id,
-                "name": self.name,
-                "token": self.token,
-                "hand": [x.toJSON() for x in self.hand],
+                "hand": [x.toJSONDict() for x in self.hand],
                 "skip_cards": self.skip_cards,
                 "phase": self.phase,
             }
@@ -28,8 +24,6 @@ class Player:
     def toJSONDict(self):
         return {
             "id": self.id,
-            "name": self.name,
-            "token": self.token,
             "hand": [x.toJSONDict() for x in self.hand],
             "skip_cards": self.skip_cards,
             "phase": self.phase,
@@ -40,8 +34,6 @@ class Player:
         data = json.loads(data)
         return Player(
             data["id"],
-            data["name"],
-            data["token"],
             [Card.fromJSON(x) for x in data["hand"]],
             data["skip_cards"],
             data["phase"],
@@ -51,8 +43,6 @@ class Player:
     def fromJSONDict(data):
         return Player(
             data["id"],
-            data["name"],
-            data["token"],
             [Card.fromJSONDict(x) for x in data["hand"]],
             data["skip_cards"],
             data["phase"],
@@ -62,8 +52,6 @@ class Player:
 def main():
     p = Player(
         30,
-        "Alfredo",
-        "secret token",
         [
             Card.from_string("R10"),
             Card.from_string("W"),

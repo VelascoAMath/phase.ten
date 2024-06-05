@@ -1,50 +1,30 @@
 import React, { useState } from "react";
-import { useLocation } from "wouter";
-import callPOST from "./callPOST";
 
-export default function PlayerCreation() {
+export default function PlayerCreation({props}) {
 
 
-	const [location, setLocation] = useLocation();
+	const{state, dispatch, socket} = props;
 
-	const [data, setData] = useState({
-		"user_name": "",
-		"display_name": "",
-		"password": "",
-		"confirmation_password": ""
-	});
-	
+	const [name, setName] = useState("");
 
-	const submitPlayer = async function(){
-		let response = null;
-		try {
-			response = callPOST("http://localhost:8142/players.json", data);
-			console.log(response);
-		} catch (error) {
-			console.log(error);
-			alert("Could not create player");
-			return;
-		}
-		if(response !== null){
-			alert("Player successfully created!");
-			setLocation("/");
-		} else {
-			alert("Could not create player!");
-		}
-	}
-
-	const getInputRows = function(){
-		let result = [];
-		for(const [key, val] of Object.entries(data)) {
-			result.push( <tr><td>{key}:</td><td><input value={val} onChange={(e) => {setData({...data, [key]: e.target.value} ) }} ></input> </td> </tr> )
-		}
-		return result;
+	const createNewPlayer = function() {
+		setName("");
+		socket.send(JSON.stringify({type: "new_user", name: name}));
 	}
 
 	return (
-		<table>
-			{getInputRows()}	
-			<button onClick={submitPlayer}>Create new player!</button>
-		</table>
-	);
+		<div>
+			<div>
+				Name: {state["user-name"]}
+			</div>
+			<div>
+				User ID: {state["user-id"]}
+			</div>
+			<div>
+				Token: {state["user-token"]}
+			</div>
+			<input value={name} onInput={(e) => {setName(e.target.value)}} onKeyDown={(e) => {if(e.key === "Enter") {createNewPlayer()} }}/>
+			<button onClick={createNewPlayer}>Confirm Name</button>
+		</div>
+	)
 }
