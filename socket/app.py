@@ -30,6 +30,19 @@ if os.path.exists("phase_ten.db"):
 	os.remove("phase_ten.db")
 
 
+
+async def send_games(cur, websocket):
+	game_list = []
+	for game in game_set:
+		game_dict = game.toJSONDict()
+		game_dict["users"] = []
+		for (user_id,) in cur.execute(
+			f"SELECT users.id FROM users JOIN players ON users.id = players.user_id JOIN games ON players.game_id = games.id WHERE games.id = '{game.id}';"):
+			game_dict["users"].append(id_to_user[user_id].toJSONDict())
+		game_list.append(game_dict)
+	
+	await websocket.send(json.dumps({"type": "get_games", "games": game_list}))
+
 async def handler(websocket):
 	connected.add(websocket)
 	con = sqlite3.connect("phase_ten.db")
@@ -48,12 +61,12 @@ async def handler(websocket):
 		data = json.loads(event)
 		print()
 		print(connected)
-		print(f"{user_set=}")
+		print(f"user_set={user_set}")
 		print(f"id_to_user={id_to_user}")
-		print(f"{player_set}")
-		print(f"{id_to_player=}")
+		print(f"player_set={player_set}")
+		print(f"id_to_player={id_to_player}")
 		print(f"game_set={game_set}")
-		print(f"{id_to_game=}")
+		print(f"id_to_game={id_to_game}")
 		print(data)
 		
 		if data["type"] == "new_user":
@@ -111,28 +124,11 @@ async def handler(websocket):
 				id_to_player[(game_id, user_id)] = p
 				cur.execute(f"INSERT INTO players (id, game_id, user_id) VALUES ('{p.id}', '{game_id}', '{user_id}')")
 				con.commit()
-				game_list = []
-				for game in game_set:
-					game_dict = game.toJSONDict()
-					game_dict["users"] = []
-					for (user_id,) in cur.execute(
-						"SELECT users.id FROM users JOIN players ON users.id = players.user_id JOIN games ON players.game_id = games.id;"):
-						game_dict["users"].append(id_to_user[user_id].toJSONDict())
-					game_list.append(game_dict)
 				
-				await websocket.send(json.dumps({"type": "get_games", "games": game_list}))
+				await send_games(cur, websocket)
 		
 		elif data["type"] == "get_games":
-			game_list = []
-			for game in game_set:
-				game_dict = game.toJSONDict()
-				game_dict["users"] = []
-				for (user_id,) in cur.execute(
-					"SELECT users.id FROM users JOIN players ON users.id = players.user_id JOIN games ON players.game_id = games.id;"):
-					game_dict["users"].append(id_to_user[user_id].toJSONDict())
-				game_list.append(game_dict)
-			
-			await websocket.send(json.dumps({"type": "get_games", "games": game_list}))
+			await send_games(cur, websocket)
 
 
 # except Exception as e:
