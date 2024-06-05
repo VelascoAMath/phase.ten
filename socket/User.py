@@ -17,14 +17,7 @@ class User:
     
 
     def toJSON(self):
-        return json.dumps(
-            {
-                "id": self.id,
-                "name": self.name,
-                "token": self.token,
-                "player_set": [x.toJSONDict() for x in self.player_set],
-            }
-        )
+        return json.dumps(self.toJSONDict())
 
     def toJSONDict(self):
         return {
