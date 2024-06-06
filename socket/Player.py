@@ -11,7 +11,7 @@ class Player:
     user_id: str = ""
     hand: list = dataclasses.field(default_factory=list)
     skip_cards: int = 0
-    phase: int = 1
+    phase: int = 0
     # Does this player go first, second, etc
     turn_index: int = -1
     

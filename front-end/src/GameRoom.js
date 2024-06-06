@@ -7,6 +7,10 @@ function joinGame(game_id, user_id, socket) {
 }
 
 
+function startGame(game_id, user_id, socket){
+    socket.send(JSON.stringify({type: "start_game", "user_id": user_id, "game_id": game_id}))
+}
+
 
 function joinGameButton(game, title, key, onClick, className){
     const nameList = game.users.map(user => {return <div key={user.id}>{user.name}</div>});
@@ -53,22 +57,22 @@ function gameRoomView(user_id, gameList, socket, selectedGame, setSelectedGame) 
         <div>
             <h2>Waiting for Players to join</h2>
             <div className="rooms-to-join">
-                {hostWaitGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1} ${game['user-in-game']}`, game.id, () => {setSelectedGame(game.id)}, ("available " + (selectedGame === game.id ? "selected": ""))))}
+                {hostWaitGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1}`, game.id, () => {setSelectedGame(game.id)}, ("available " + (selectedGame === game.id ? "selected": ""))))}
             </div>
             <h2>Games in progress</h2>
             <div className="rooms-to-join">
-                {hostStartedGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1} ${game['user-in-game']}`, game.id, () => {setSelectedGame(game.id)}, ("in-progress " + (selectedGame === game.id ? "selected": "")) ))}
+                {hostStartedGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1}`, game.id, () => {setSelectedGame(game.id)}, ("in-progress " + (selectedGame === game.id ? "selected": "")) ))}
             </div>
         </div>
         <h1>Games you have joined</h1>
         <div>
             <h2>Waiting for players to join</h2>
             <div className="rooms-to-join">
-                {joinWaitGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1} ${game['user-in-game']}`, game.id, () => {setSelectedGame(game.id); if(!game['user-in-game']){joinGame(game.id, user_id, socket)} }, ("available " + (selectedGame === game.id ? "selected": "")) ))}
+                {joinWaitGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1}`, game.id, () => {setSelectedGame(game.id); if(!game['user-in-game']){joinGame(game.id, user_id, socket)} }, ("available " + (selectedGame === game.id ? "selected": "")) ))}
             </div>
             <h2>Games in progress</h2>
             <div className="rooms-to-join">
-                {joinStartedGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1} ${game['user-in-game']}`, game.id, () => {setSelectedGame(game.id); joinGame(game.id, user_id, socket)}, ("in-progress " + (selectedGame === game.id ? "selected": "")) ))}
+                {joinStartedGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1}`, game.id, () => {setSelectedGame(game.id); joinGame(game.id, user_id, socket)}, ("in-progress " + (selectedGame === game.id ? "selected": "")) ))}
             </div>
 
         </div>
@@ -103,15 +107,16 @@ export default function PlayerPage({props}) {
         const gameList = state["game-list"];
 
         const game = gameList.filter((game) => {return game.id === selectedGame})[0];
+        const game_id = game.id;
         if(game.owner === user_id){
             if(game.in_progress){
                 return <button>Delete Game</button>;
             } else {
-                return <button>Start Game</button>;
+                return <button onClick={() => {startGame(game_id, user_id, socket); setSelectedGame(null)}}>Start Game</button>;
             }
         } else {
             if(game.in_progress){
-                return <button>Play Game</button>
+                return <button onClick={() => startGame(game)}>Play Game</button>
             } else {
                 return <button>Unjoin Game</button>
             }

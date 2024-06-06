@@ -1,12 +1,14 @@
 import asyncio
 import json
 import os.path
+import random
 import secrets
 import sqlite3
 
 import websockets
 from vel_data_structures import AVL_Set, AVL_Dict
 
+from Card import Card
 from Game import Game
 from Player import Player
 from User import User
@@ -70,7 +72,9 @@ async def handler(websocket):
 		print(f"id_to_game={id_to_game}")
 		print(data)
 		
-		if data["type"] == "new_user":
+		if data["type"] == "connection":
+			await websocket.send(json.dumps({"type": "connection"}))
+		elif data["type"] == "new_user":
 			will_send = True
 			for u in user_set:
 				if u.name == data["name"]:
@@ -99,7 +103,7 @@ async def handler(websocket):
 				game_set.add(g)
 				cur.execute(f"INSERT INTO games (id) VALUES ('{g.id}')")
 				
-				p = Player(secrets.token_urlsafe(16), g.id, user_id, [], 1, 0)
+				p = Player(secrets.token_urlsafe(16), g.id, user_id, [], 1, 0, -1)
 				player_set.add(p)
 				id_to_player[(g.id, user_id)] = p
 				cur.execute(f"INSERT INTO players (id, game_id, user_id) VALUES ('{p.id}', '{g.id}', '{user_id}')")
@@ -120,7 +124,7 @@ async def handler(websocket):
 			if (game_id, user_id) in id_to_player:
 				await websocket.send(json.dumps({"type": "rejection", "message": "You are already in that game!"}))
 			else:
-				p = Player(secrets.token_urlsafe(16), game_id, user_id, [], 1, 0)
+				p = Player(secrets.token_urlsafe(16), game_id, user_id, [], 1, 0, -1)
 				player_set.add(p)
 				id_to_player[(game_id, user_id)] = p
 				cur.execute(f"INSERT INTO players (id, game_id, user_id) VALUES ('{p.id}', '{game_id}', '{user_id}')")
@@ -130,6 +134,35 @@ async def handler(websocket):
 		
 		elif data["type"] == "get_games":
 			await send_games(cur, websocket)
+		
+		elif data["type"] == "start_game":
+			game_id = data["game_id"]
+			user_id = data["user_id"]
+			
+			game = id_to_game[game_id]
+			user = id_to_user[user_id]
+			
+			if game.owner == user_id and not game.in_progress:
+				player_list = [id_to_player[(game_id, user_id)] for (game_id, user_id) in cur.execute(f"SELECT game_id, user_id FROM players WHERE game_id = '{game_id}'")]
+				random.shuffle(player_list)
+	
+				deck = Card.getNewDeck()
+				random.shuffle(deck)
+				random.shuffle(player_list)
+				for i, player in enumerate(player_list):
+					player.phase = 0
+					player.turn_index = i
+					player.hand = [deck.pop() for _ in range(10)]
+				
+				game.discard = [deck.pop()]
+				game.deck = deck
+				game.in_progress = True
+				game.current_player = player_list[0].id
+				await send_games(cur, websocket)
+			else:
+				await websocket.send(json.dumps({"type": "rejection", "message": "You are not the owner and cannot start this game"}))
+		else:
+			await websocket.send(json.dumps({"type": "rejection", "message": f"Unrecognized type {data['type']}"}))
 
 
 # except Exception as e:
