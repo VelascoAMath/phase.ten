@@ -3,17 +3,23 @@ import Button from 'react-bootstrap/Button';
 
 
 function joinGame(game_id, user_id, socket) {
-    socket.send(JSON.stringify({type: "join_game", "user_id": user_id, "game_id": game_id }));
+    if(socket.readyState === socket.OPEN){
+        socket.send(JSON.stringify({type: "join_game", "user_id": user_id, "game_id": game_id }));
+    }
 }
 
 
 function unjoinGame(game_id, user_id, socket) {
-    socket.send(JSON.stringify({type: "unjoin_game", "user_id": user_id, "game_id": game_id }));
+    if(socket.readyState === socket.OPEN){
+        socket.send(JSON.stringify({type: "unjoin_game", "user_id": user_id, "game_id": game_id }));
+    }
 }
 
 
 function startGame(game_id, user_id, socket){
-    socket.send(JSON.stringify({type: "start_game", "user_id": user_id, "game_id": game_id}))
+    if(socket.readyState === socket.OPEN){
+        socket.send(JSON.stringify({type: "start_game", "user_id": user_id, "game_id": game_id}))
+    }
 }
 
 
@@ -104,7 +110,9 @@ export default function PlayerPage({props}) {
     }
 
     const createGame = function() {
-        socket.send(JSON.stringify({type: "create_game", "user_id": state["user-id"] }));
+        if(socket.readyState === socket.OPEN){
+            socket.send(JSON.stringify({type: "create_game", "user_id": state["user-id"] }));
+        }
     }
 
     function getButtonForGameAction() {
@@ -115,6 +123,10 @@ export default function PlayerPage({props}) {
         }
 
         const game = gameList.filter((game) => {return game.id === selectedGame})[0];
+        if(game === null || game === undefined){
+            setSelectedGame(null);
+            return;
+        }
         const game_id = game.id;
         if(game.owner === user_id){
             if(game.in_progress){

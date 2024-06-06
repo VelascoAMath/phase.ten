@@ -25,8 +25,10 @@ function App() {
   }
 
   socket.onopen = (event) => {
-    socket.send(JSON.stringify({type: "connection"}));
-    setSocketState(1);
+    if(socket.readyState === socket.OPEN){
+      socket.send(JSON.stringify({type: "connection"}));
+      setSocketState(1);
+    }
   }
     
 

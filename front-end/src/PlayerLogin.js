@@ -6,7 +6,7 @@ export default function PlayerLogin({props}) {
 	const{state, dispatch, socket} = props;
 
     const getPlayers = function() {
-        if(socket.readyState === 1){
+        if(socket.readyState === socket.OPEN){
             socket.send(JSON.stringify({type: "get_users"}));
         }
     }

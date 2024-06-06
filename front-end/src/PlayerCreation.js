@@ -12,8 +12,10 @@ export default function PlayerCreation({props}) {
 			alert("Server connection has been lost!");
 			return
 		}
-		setName("");
-		socket.send(JSON.stringify({type: "new_user", name: name}));
+		if(socket.readyState === socket.OPEN){
+			setName("");
+			socket.send(JSON.stringify({type: "new_user", name: name}));
+		}
 	}
 
 	return (
