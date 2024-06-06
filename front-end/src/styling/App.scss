@@ -62,18 +62,25 @@ body {
     background-color: darkblue;
 
     .room-to-join {
-      background-color: red;
+      background-color: rgb(0, 0, 0);
       padding: 5px;
       border: solid 1px black;
       border-radius: 5px;
     }
-    .joinable {
+    .available {
       background-color: green;
-      cursor: pointer;
     }
-    
-    .non-joinable {
-      cursor: not-allowed;
+
+    .waiting {
+      background-color: mediumturquoise;
+    }
+
+    .in-progress {
+      background-color: darkorange;
+    }
+
+    .selected {
+      border: solid 5px turquoise;
     }
 
   }

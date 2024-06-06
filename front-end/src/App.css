@@ -58,17 +58,22 @@ a {
   background-color: darkblue;
 }
 .rooms-to-join .room-to-join {
-  background-color: red;
+  background-color: rgb(0, 0, 0);
   padding: 5px;
   border: solid 1px black;
   border-radius: 5px;
 }
-.rooms-to-join .joinable {
+.rooms-to-join .available {
   background-color: green;
-  cursor: pointer;
 }
-.rooms-to-join .non-joinable {
-  cursor: not-allowed;
+.rooms-to-join .waiting {
+  background-color: mediumturquoise;
+}
+.rooms-to-join .in-progress {
+  background-color: darkorange;
+}
+.rooms-to-join .selected {
+  border: solid 5px turquoise;
 }
 
 /*# sourceMappingURL=App.css.map */
