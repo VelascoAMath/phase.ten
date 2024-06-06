@@ -13,9 +13,16 @@ import inputReducer from './InputReducer.js';
 import PlayerLogin from './PlayerLogin.js';
 import PlayRoom from './PlayRoom.js';
 
+
+const initState = {
+  "user-id": localStorage.getItem("user-id"),
+  "user-name": localStorage.getItem("user-name"),
+  "user-token": localStorage.getItem("user-token"),
+};
+
 function App() {
 
-  const [state, dispatch] = useReducer(inputReducer, {});
+  const [state, dispatch] = useReducer(inputReducer, initState);
   const [socketState, setSocketState] = useState(0);
   
   const socket = new WebSocket("ws://localhost:8001");
@@ -39,6 +46,9 @@ function App() {
       dispatch({type: "change-input", key: "user-id", value: data.user["id"]});
       dispatch({type: "change-input", key: "user-name", value: data.user["name"]});
       dispatch({type: "change-input", key: "user-token", value: data.user["token"]});
+      localStorage.setItem("user-id", data.user["user-id"]);
+      localStorage.setItem("user-name", data.user["user-name"]);
+      localStorage.setItem("user-token", data.user["user-token"]);
     }
     else if(data["type"] === "get_users"){
       dispatch({type: "change-input", key: "user-list", value: data["users"].toSorted((a, b) => a.name.localeCompare(b.name)) })
