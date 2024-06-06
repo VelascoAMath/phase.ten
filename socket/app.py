@@ -56,7 +56,7 @@ async def handler(websocket):
 	cur.execute(
 		"CREATE TABLE IF NOT EXISTS players(id TEXT PRIMARY KEY NOT NULL, game_id TEXT NOT NULL, user_id TEXT NOT NULL,"
 		"FOREIGN KEY (game_id) REFERENCES games (id),"
-		"FOREIGN KEY (user_id) REFERENCES users (id);")
+		"FOREIGN KEY (user_id) REFERENCES users (id));")
 	con.commit()
 	
 	# try:
