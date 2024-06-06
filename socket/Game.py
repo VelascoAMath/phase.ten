@@ -22,7 +22,7 @@ class Game:
 			"deck": [x.toJSONDict() for x in self.deck],
 			"discard": [x.toJSONDict() for x in self.discard],
 			"current_player": self.current_player,
-			"owner": self.current_player,
+			"owner": self.owner,
 			"in_progress": self.in_progress,
 		}
 	
