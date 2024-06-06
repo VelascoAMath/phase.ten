@@ -42,7 +42,7 @@ async def send_games(connected, cur):
 			game_dict["users"].append(id_to_user[user_id].toJSONDict())
 		game_list.append(game_dict)
 	
-	await websockets.broadcast(connected, json.dumps({"type": "get_games", "games": game_list}))
+	websockets.broadcast(connected, json.dumps({"type": "get_games", "games": game_list}))
 
 
 async def handler(websocket):
