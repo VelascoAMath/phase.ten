@@ -24,6 +24,7 @@ function App() {
 
   const [state, dispatch] = useReducer(inputReducer, initState);
   const [socketState, setSocketState] = useState(0);
+  const [initialSocketCall, setInitialSocketCall] = useState(false);
   
   const socket = new WebSocket("ws://localhost:8001");
 
@@ -33,7 +34,11 @@ function App() {
 
   socket.onopen = (event) => {
     if(socket.readyState === socket.OPEN){
-      socket.send(JSON.stringify({type: "connection"}));
+      if(!initialSocketCall){
+        socket.send(JSON.stringify({type: "connection"}));
+        socket.send(JSON.stringify({type: "get_games"}));
+        setInitialSocketCall(true);
+      }
       setSocketState(1);
     }
   }
