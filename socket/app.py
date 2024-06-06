@@ -32,7 +32,7 @@ if os.path.exists("phase_ten.db"):
 	os.remove("phase_ten.db")
 
 
-async def send_games(cur, websocket):
+async def send_games(connected, cur):
 	game_list = []
 	for game in game_set:
 		game_dict = game.toJSONDict()
@@ -42,7 +42,7 @@ async def send_games(cur, websocket):
 			game_dict["users"].append(id_to_user[user_id].toJSONDict())
 		game_list.append(game_dict)
 	
-	await websocket.send(json.dumps({"type": "get_games", "games": game_list}))
+	await websockets.broadcast(connected, json.dumps({"type": "get_games", "games": game_list}))
 
 
 async def handler(websocket):
@@ -119,6 +119,7 @@ async def handler(websocket):
 						game_dict["users"].append(id_to_user[user_id].toJSONDict())
 					
 					await websocket.send(json.dumps({"type": "create_game", "game": game_dict}))
+					await send_games(connected, cur)
 			
 			case "join_game":
 				game_id = data["game_id"]
@@ -134,7 +135,7 @@ async def handler(websocket):
 						f"INSERT INTO players (id, game_id, user_id) VALUES ('{p.id}', '{game_id}', '{user_id}')")
 					con.commit()
 					
-					await send_games(cur, websocket)
+					await send_games(connected, cur)
 			case "unjoin_game":
 				game_id = data["game_id"]
 				user_id = data["user_id"]
@@ -161,9 +162,9 @@ async def handler(websocket):
 					player_set.remove(id_to_player[(game_id, user_id)])
 					id_to_player.remove((game_id, user_id))
 				
-				await send_games(cur, websocket)
+				await send_games(connected, cur)
 			case "get_games":
-				await send_games(cur, websocket)
+				await send_games(connected, cur)
 			
 			case "start_game":
 				game_id = data["game_id"]
@@ -189,7 +190,7 @@ async def handler(websocket):
 					game.deck = deck
 					game.in_progress = True
 					game.current_player = player_list[0].id
-					await send_games(cur, websocket)
+					await send_games(connected, cur)
 				else:
 					await websocket.send(json.dumps(
 						{"type": "rejection", "message": "You are not the owner and cannot start this game"}))
