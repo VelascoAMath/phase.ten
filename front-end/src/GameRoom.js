@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Button from 'react-bootstrap/Button';
+import { useLocation } from "wouter";
 
 
 function joinGame(game_id, user_id, socket) {
@@ -95,6 +96,7 @@ export default function PlayerPage({props}) {
 
     const{state, socket} = props;
     const [selectedGame, setSelectedGame] = useState(null);
+    let [_, navigate] = useLocation();
 
     if(!(state["user-id"] && state["user-token"])){
         return (
@@ -132,7 +134,7 @@ export default function PlayerPage({props}) {
             if(game.in_progress){
                 return <button onClick={() => {unjoinGame(game_id, user_id, socket); setSelectedGame(null)} }>Delete Game</button>;
             } else {
-                return <button onClick={() => {startGame(game_id, user_id, socket); setSelectedGame(null)}}>Start Game</button>;
+                return <button onClick={() => {startGame(game_id, user_id, socket); setSelectedGame(null); navigate("/play/" + game_id) }}>Start Game</button>;
             }
         } else {
             if(game.in_progress){
