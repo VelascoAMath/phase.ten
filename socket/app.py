@@ -99,7 +99,7 @@ async def handler(websocket):
 				game_set.add(g)
 				cur.execute(f"INSERT INTO games (id) VALUES ('{g.id}')")
 				
-				p = Player(secrets.token_urlsafe(16), user_id, g.id, [], 1, 0)
+				p = Player(secrets.token_urlsafe(16), g.id, user_id, [], 1, 0)
 				player_set.add(p)
 				id_to_player[(g.id, user_id)] = p
 				cur.execute(f"INSERT INTO players (id, game_id, user_id) VALUES ('{p.id}', '{g.id}', '{user_id}')")
@@ -120,7 +120,7 @@ async def handler(websocket):
 			if (game_id, user_id) in id_to_player:
 				await websocket.send(json.dumps({"type": "rejection", "message": "You are already in that game!"}))
 			else:
-				p = Player(secrets.token_urlsafe(16), user_id, game_id, [], 1, 0)
+				p = Player(secrets.token_urlsafe(16), game_id, user_id, [], 1, 0)
 				player_set.add(p)
 				id_to_player[(game_id, user_id)] = p
 				cur.execute(f"INSERT INTO players (id, game_id, user_id) VALUES ('{p.id}', '{game_id}', '{user_id}')")

@@ -7,8 +7,8 @@ from Card import Card
 @dataclasses.dataclass(order=True)
 class Player:
     id: str = ""
-    user_id: str = ""
     game_id: str = ""
+    user_id: str = ""
     hand: list = dataclasses.field(default_factory=list)
     skip_cards: int = 0
     phase: int = 1
@@ -35,9 +35,8 @@ class Player:
     def fromJSONDict(data):
         return Player(
             data["id"],
-
-            data["user_id"],
             data["game_id"],
+            data["user_id"],
             [Card.fromJSONDict(x) for x in data["hand"]],
             data["skip_cards"],
             data["phase"],
@@ -62,6 +61,7 @@ def main():
     print(p)
     print(p.toJSON())
     print(Player.fromJSON(p.toJSON()))
+    print(p == Player.fromJSON(p.toJSON()))
 
 
 if __name__ == "__main__":
