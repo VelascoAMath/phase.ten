@@ -7,6 +7,11 @@ function joinGame(game_id, user_id, socket) {
 }
 
 
+function unjoinGame(game_id, user_id, socket) {
+    socket.send(JSON.stringify({type: "unjoin_game", "user_id": user_id, "game_id": game_id }));
+}
+
+
 function startGame(game_id, user_id, socket){
     socket.send(JSON.stringify({type: "start_game", "user_id": user_id, "game_id": game_id}))
 }
@@ -105,12 +110,15 @@ export default function PlayerPage({props}) {
     function getButtonForGameAction() {
         const user_id = state["user-id"];
         const gameList = state["game-list"];
+        if(gameList?.length === 0){
+            return;
+        }
 
         const game = gameList.filter((game) => {return game.id === selectedGame})[0];
         const game_id = game.id;
         if(game.owner === user_id){
             if(game.in_progress){
-                return <button>Delete Game</button>;
+                return <button onClick={() => {unjoinGame(game_id, user_id, socket); setSelectedGame(null)} }>Delete Game</button>;
             } else {
                 return <button onClick={() => {startGame(game_id, user_id, socket); setSelectedGame(null)}}>Start Game</button>;
             }
@@ -118,7 +126,7 @@ export default function PlayerPage({props}) {
             if(game.in_progress){
                 return <button onClick={() => startGame(game)}>Play Game</button>
             } else {
-                return <button>Unjoin Game</button>
+                return <button onClick={() => {unjoinGame(game_id, user_id, socket); setSelectedGame(null)}}>Unjoin Game</button>
             }
         }
     }
@@ -133,7 +141,7 @@ export default function PlayerPage({props}) {
             {(!state["game-list"] || state["game-list"]?.length === 0) && "There seem to be no games. Why don't you create one?"}
             
             <div className="rooms-to-join">
-                {state["game-list"] && gameRoomView(state["user-id"], state["game-list"], socket, selectedGame, setSelectedGame)}
+                {(state["game-list"]?.length > 0) && gameRoomView(state["user-id"], state["game-list"], socket, selectedGame, setSelectedGame)}
             </div>
             <Button onClick={createGame}>Create Game</Button>
         </div>

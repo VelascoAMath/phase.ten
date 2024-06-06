@@ -32,7 +32,6 @@ if os.path.exists("phase_ten.db"):
 	os.remove("phase_ten.db")
 
 
-
 async def send_games(cur, websocket):
 	game_list = []
 	for game in game_set:
@@ -45,6 +44,7 @@ async def send_games(cur, websocket):
 	
 	await websocket.send(json.dumps({"type": "get_games", "games": game_list}))
 
+
 async def handler(websocket):
 	connected.add(websocket)
 	con = sqlite3.connect("phase_ten.db")
@@ -53,9 +53,10 @@ async def handler(websocket):
 	cur.execute("CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL);")
 	cur.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_name ON users (name);")
 	cur.execute("CREATE TABLE IF NOT EXISTS games(id TEXT PRIMARY KEY NOT NULL)")
-	cur.execute("CREATE TABLE IF NOT EXISTS players(id TEXT PRIMARY KEY NOT NULL, game_id TEXT NOT NULL, user_id TEXT NOT NULL,"
-	            "FOREIGN KEY (game_id) REFERENCES games (id) ON DELETE CASCADE,"
-	            "FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE);")
+	cur.execute(
+		"CREATE TABLE IF NOT EXISTS players(id TEXT PRIMARY KEY NOT NULL, game_id TEXT NOT NULL, user_id TEXT NOT NULL,"
+		"FOREIGN KEY (game_id) REFERENCES games (id),"
+		"FOREIGN KEY (user_id) REFERENCES users (id);")
 	con.commit()
 	
 	# try:
@@ -97,7 +98,8 @@ async def handler(websocket):
 			case "create_game":
 				user_id = data["user_id"]
 				if user_id not in id_to_user:
-					await websocket.send(json.dumps({"type": "rejection", "message": f"User ID {user_id} is not valid!"}))
+					await websocket.send(
+						json.dumps({"type": "rejection", "message": f"User ID {user_id} is not valid!"}))
 				else:
 					g = Game(secrets.token_urlsafe(16), DEFAULT_PHASE_LIST, [], [], 0, user_id, False)
 					id_to_game[g.id] = g
@@ -128,11 +130,38 @@ async def handler(websocket):
 					p = Player(secrets.token_urlsafe(16), game_id, user_id, [], 1, 0, -1)
 					player_set.add(p)
 					id_to_player[(game_id, user_id)] = p
-					cur.execute(f"INSERT INTO players (id, game_id, user_id) VALUES ('{p.id}', '{game_id}', '{user_id}')")
+					cur.execute(
+						f"INSERT INTO players (id, game_id, user_id) VALUES ('{p.id}', '{game_id}', '{user_id}')")
 					con.commit()
 					
 					await send_games(cur, websocket)
-			
+			case "unjoin_game":
+				game_id = data["game_id"]
+				user_id = data["user_id"]
+				game = id_to_game[game_id]
+				
+				# The host is deleting the game
+				if game.owner == user_id:
+					dead_player_key_list = [player_id for player_id in
+					                        cur.execute(f"SELECT game_id, user_id from players")]
+					cur.execute(f"DELETE FROM games WHERE id = '{game_id}'")
+					cur.execute(f"DELETE FROM players WHERE game_id = '{game_id}'")
+					con.commit()
+					
+					for player_id in dead_player_key_list:
+						player_set.remove(id_to_player[player_id])
+						id_to_player.remove(player_id)
+					
+					id_to_game.remove(game_id)
+					game_set.remove(game)
+				
+				else:
+					cur.execute(f"DELETE FROM players WHERE game_id = '{game_id}' AND user_id = '{user_id}'")
+					con.commit()
+					player_set.remove(id_to_player[(game_id, user_id)])
+					id_to_player.remove((game_id, user_id))
+				
+				await send_games(cur, websocket)
 			case "get_games":
 				await send_games(cur, websocket)
 			
@@ -144,9 +173,10 @@ async def handler(websocket):
 				user = id_to_user[user_id]
 				
 				if game.owner == user_id and not game.in_progress:
-					player_list = [id_to_player[(game_id, user_id)] for (game_id, user_id) in cur.execute(f"SELECT game_id, user_id FROM players WHERE game_id = '{game_id}'")]
+					player_list = [id_to_player[(game_id, user_id)] for (game_id, user_id) in
+					               cur.execute(f"SELECT game_id, user_id FROM players WHERE game_id = '{game_id}'")]
 					random.shuffle(player_list)
-		
+					
 					deck = Card.getNewDeck()
 					random.shuffle(deck)
 					random.shuffle(player_list)
@@ -161,7 +191,8 @@ async def handler(websocket):
 					game.current_player = player_list[0].id
 					await send_games(cur, websocket)
 				else:
-					await websocket.send(json.dumps({"type": "rejection", "message": "You are not the owner and cannot start this game"}))
+					await websocket.send(json.dumps(
+						{"type": "rejection", "message": "You are not the owner and cannot start this game"}))
 			case _:
 				await websocket.send(json.dumps({"type": "rejection", "message": f"Unrecognized type {data['type']}"}))
 
