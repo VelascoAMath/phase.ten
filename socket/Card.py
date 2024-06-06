@@ -174,6 +174,25 @@ class Card:
             raise Exception(
                 f"Cannot create a card with color {self.color} and rank {self.rank}!"
             )
+        
+    @staticmethod
+    def getNewDeck():
+        deck = []
+        for color in Color:
+            if color is Color.WILD or color is Color.SKIP:
+                continue
+            for rank in Rank:
+                if rank is Rank.WILD or rank is Rank.SKIP:
+                    continue
+                deck.append(Card(color, rank))
+                deck.append(Card(color, rank))
+            
+            for _ in range(4):
+                deck.append(Card(Color.SKIP, Rank.SKIP))
+            
+            for _ in range(8):
+                deck.append(Card(Color.WILD, Rank.WILD))
+        return deck
 
     def __str__(self):
         if self.color is Color.WILD and self.rank is Rank.WILD:

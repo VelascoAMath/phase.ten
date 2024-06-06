@@ -43,21 +43,7 @@ class Game:
 
 
 def main():
-	deck = []
-	for color in Color:
-		if color is Color.WILD or color is Color.SKIP:
-			continue
-		for rank in Rank:
-			if rank is Rank.WILD or rank is Rank.SKIP:
-				continue
-			deck.append(Card(color, rank))
-			deck.append(Card(color, rank))
-
-		for _ in range(4):
-			deck.append(Card(Color.SKIP, Rank.SKIP))
-
-		for _ in range(8):
-			deck.append(Card(Color.WILD, Rank.WILD))
+	deck = Card.getNewDeck()
 
 	random.seed(0)
 	random.shuffle(deck)
