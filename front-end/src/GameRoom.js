@@ -2,6 +2,10 @@ import React from "react";
 import Button from 'react-bootstrap/Button';
 
 
+const joinGame = function(game_id, user_id, socket) {
+    socket.send(JSON.stringify({type: "join_game", "user_id": user_id, "game_id": game_id }));
+}
+
 
 
 const joinGameButton = function(game, title, key, onClick, user_id){
@@ -16,6 +20,40 @@ const joinGameButton = function(game, title, key, onClick, user_id){
             {nameList}
         </div>
     )
+}
+
+
+const gameRoomView = function (user_id, gameList, socket) {
+    
+    let ownedGameList = [];
+    let joinedGameList = [];
+    let otherGameList = [];
+    for(const game of gameList){
+        if(game.owner === user_id){
+            ownedGameList.push(game);
+        } else if (game.users.filter(user => {return user.id === user_id})?.length > 0) {
+            joinedGameList.push(game)
+        } else {
+            otherGameList.push(game);
+        }
+    }
+
+    return  (
+    <div>
+        Games you have started
+        <div className="rooms-to-join">
+            {ownedGameList.map((x, idx) => joinGameButton(x, `Game ${idx+1}` ,x.id, () => {joinGame(x.id, user_id, socket)}, user_id ))}
+        </div>
+        Games you have joined
+        <div className="rooms-to-join">
+            {joinedGameList.map((x, idx) => joinGameButton(x, `Game ${idx+1}` ,x.id, () => {joinGame(x.id, user_id, socket)}, user_id ))}
+        </div>
+        Games available to you
+        <div className="rooms-to-join">
+            {otherGameList.map((x, idx) => joinGameButton(x, `Game ${idx+1}` ,x.id, () => {joinGame(x.id, user_id, socket)}, user_id ))}
+        </div>
+    </div>
+    );
 }
 
 export default function PlayerPage({props}) {
@@ -39,19 +77,15 @@ export default function PlayerPage({props}) {
         socket.send(JSON.stringify({type: "create_game", "user_id": state["user-id"] }));
     }
 
-    const joinGame = function(game_id) {
-        socket.send(JSON.stringify({type: "join_game", "user_id": state["user-id"], "game_id": game_id }));
-    }
 
     return (
         <div>
             <Button onClick={createGame}>Create Game</Button>
-            <div>
-                Join one of the games below
-            </div>
-            {(!state["game-list"] || state["game-list"].length === 0) && "There seem to be no games. Why don't you create one?"}
+
+            {(!state["game-list"] || state["game-list"]?.length === 0) && "There seem to be no games. Why don't you create one?"}
+            
             <div className="rooms-to-join">
-                {state["game-list"] && state["game-list"].map((x, idx) => joinGameButton(x, `Game ${idx+1}` ,x.id, () => {joinGame(x.id)}, state["user-id"] ))}
+                {state["game-list"] && gameRoomView(state["user-id"], state["game-list"], socket)}
             </div>
         </div>
     )
