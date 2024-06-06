@@ -12,6 +12,8 @@ class Player:
     hand: list = dataclasses.field(default_factory=list)
     skip_cards: int = 0
     phase: int = 1
+    # Does this player go first, second, etc
+    turn_index: int = -1
     
     def toJSON(self):
         return json.dumps(self.toJSONDict())
@@ -24,6 +26,7 @@ class Player:
             "hand": [x.toJSONDict() for x in self.hand],
             "skip_cards": self.skip_cards,
             "phase": self.phase,
+            "turn_index": self.turn_index,
         }
     
     @staticmethod
@@ -40,6 +43,7 @@ class Player:
             [Card.fromJSONDict(x) for x in data["hand"]],
             data["skip_cards"],
             data["phase"],
+            data["turn_index"],
         )
 
 
@@ -56,6 +60,7 @@ def main():
         ],
         4,
         8,
+        2
     )
     
     print(p)
