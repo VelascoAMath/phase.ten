@@ -72,97 +72,98 @@ async def handler(websocket):
 		print(f"id_to_game={id_to_game}")
 		print(data)
 		
-		if data["type"] == "connection":
-			await websocket.send(json.dumps({"type": "connection"}))
-		elif data["type"] == "new_user":
-			will_send = True
-			for u in user_set:
-				if u.name == data["name"]:
-					will_send = False
-					break
-			if will_send:
-				u = User(secrets.token_urlsafe(16), data["name"], secrets.token_urlsafe(16))
-				# Add this new user to our databases
-				user_set.add(u)
-				id_to_user[u.id] = u
-				cur.execute(f"INSERT INTO users (id, name) VALUES ('{u.id}', '{u.name}')")
-				con.commit()
-				await websocket.send(json.dumps({"type": "new_user", "user": u.toJSONDict()}))
-			else:
-				await websocket.send(json.dumps(
-					{"type": "rejection", "message": f"User already exists with the name {data['name']}"}))
-		elif data["type"] == "get_users":
-			await websocket.send(json.dumps({"type": "get_users", "users": [u.toJSONDict() for u in user_set]}))
-		elif data["type"] == "create_game":
-			user_id = data["user_id"]
-			if user_id not in id_to_user:
-				await websocket.send(json.dumps({"type": "rejection", "message": f"User ID {user_id} is not valid!"}))
-			else:
-				g = Game(secrets.token_urlsafe(16), DEFAULT_PHASE_LIST, [], [], 0, user_id, False)
-				id_to_game[g.id] = g
-				game_set.add(g)
-				cur.execute(f"INSERT INTO games (id) VALUES ('{g.id}')")
-				
-				p = Player(secrets.token_urlsafe(16), g.id, user_id, [], 1, 0, -1)
-				player_set.add(p)
-				id_to_player[(g.id, user_id)] = p
-				cur.execute(f"INSERT INTO players (id, game_id, user_id) VALUES ('{p.id}', '{g.id}', '{user_id}')")
-				con.commit()
-				# For each game, let's also list the players who are in it
-				game_dict = g.toJSONDict()
-				game_dict["users"] = []
-				for (user_id,) in cur.execute(
-					f"SELECT users.id FROM users JOIN players ON users.id = players.user_id JOIN games ON players.game_id = games.id WHERE games.id = '{g.id}' ;"):
-					game_dict["users"].append(id_to_user[user_id].toJSONDict())
-				
-				await websocket.send(json.dumps({"type": "create_game", "game": game_dict}))
-		
-		elif data["type"] == "join_game":
-			game_id = data["game_id"]
-			user_id = data["user_id"]
+		match data["type"]:
+			case "connection":
+				await websocket.send(json.dumps({"type": "connection"}))
+			case "new_user":
+				will_send = True
+				for u in user_set:
+					if u.name == data["name"]:
+						will_send = False
+						break
+				if will_send:
+					u = User(secrets.token_urlsafe(16), data["name"], secrets.token_urlsafe(16))
+					# Add this new user to our databases
+					user_set.add(u)
+					id_to_user[u.id] = u
+					cur.execute(f"INSERT INTO users (id, name) VALUES ('{u.id}', '{u.name}')")
+					con.commit()
+					await websocket.send(json.dumps({"type": "new_user", "user": u.toJSONDict()}))
+				else:
+					await websocket.send(json.dumps(
+						{"type": "rejection", "message": f"User already exists with the name {data['name']}"}))
+			case "get_users":
+				await websocket.send(json.dumps({"type": "get_users", "users": [u.toJSONDict() for u in user_set]}))
+			case "create_game":
+				user_id = data["user_id"]
+				if user_id not in id_to_user:
+					await websocket.send(json.dumps({"type": "rejection", "message": f"User ID {user_id} is not valid!"}))
+				else:
+					g = Game(secrets.token_urlsafe(16), DEFAULT_PHASE_LIST, [], [], 0, user_id, False)
+					id_to_game[g.id] = g
+					game_set.add(g)
+					cur.execute(f"INSERT INTO games (id) VALUES ('{g.id}')")
+					
+					p = Player(secrets.token_urlsafe(16), g.id, user_id, [], 1, 0, -1)
+					player_set.add(p)
+					id_to_player[(g.id, user_id)] = p
+					cur.execute(f"INSERT INTO players (id, game_id, user_id) VALUES ('{p.id}', '{g.id}', '{user_id}')")
+					con.commit()
+					# For each game, let's also list the players who are in it
+					game_dict = g.toJSONDict()
+					game_dict["users"] = []
+					for (user_id,) in cur.execute(
+						f"SELECT users.id FROM users JOIN players ON users.id = players.user_id JOIN games ON players.game_id = games.id WHERE games.id = '{g.id}' ;"):
+						game_dict["users"].append(id_to_user[user_id].toJSONDict())
+					
+					await websocket.send(json.dumps({"type": "create_game", "game": game_dict}))
 			
-			if (game_id, user_id) in id_to_player:
-				await websocket.send(json.dumps({"type": "rejection", "message": "You are already in that game!"}))
-			else:
-				p = Player(secrets.token_urlsafe(16), game_id, user_id, [], 1, 0, -1)
-				player_set.add(p)
-				id_to_player[(game_id, user_id)] = p
-				cur.execute(f"INSERT INTO players (id, game_id, user_id) VALUES ('{p.id}', '{game_id}', '{user_id}')")
-				con.commit()
+			case "join_game":
+				game_id = data["game_id"]
+				user_id = data["user_id"]
 				
+				if (game_id, user_id) in id_to_player:
+					await websocket.send(json.dumps({"type": "rejection", "message": "You are already in that game!"}))
+				else:
+					p = Player(secrets.token_urlsafe(16), game_id, user_id, [], 1, 0, -1)
+					player_set.add(p)
+					id_to_player[(game_id, user_id)] = p
+					cur.execute(f"INSERT INTO players (id, game_id, user_id) VALUES ('{p.id}', '{game_id}', '{user_id}')")
+					con.commit()
+					
+					await send_games(cur, websocket)
+			
+			case "get_games":
 				await send_games(cur, websocket)
-		
-		elif data["type"] == "get_games":
-			await send_games(cur, websocket)
-		
-		elif data["type"] == "start_game":
-			game_id = data["game_id"]
-			user_id = data["user_id"]
 			
-			game = id_to_game[game_id]
-			user = id_to_user[user_id]
-			
-			if game.owner == user_id and not game.in_progress:
-				player_list = [id_to_player[(game_id, user_id)] for (game_id, user_id) in cur.execute(f"SELECT game_id, user_id FROM players WHERE game_id = '{game_id}'")]
-				random.shuffle(player_list)
-	
-				deck = Card.getNewDeck()
-				random.shuffle(deck)
-				random.shuffle(player_list)
-				for i, player in enumerate(player_list):
-					player.phase = 0
-					player.turn_index = i
-					player.hand = [deck.pop() for _ in range(10)]
+			case "start_game":
+				game_id = data["game_id"]
+				user_id = data["user_id"]
 				
-				game.discard = [deck.pop()]
-				game.deck = deck
-				game.in_progress = True
-				game.current_player = player_list[0].id
-				await send_games(cur, websocket)
-			else:
-				await websocket.send(json.dumps({"type": "rejection", "message": "You are not the owner and cannot start this game"}))
-		else:
-			await websocket.send(json.dumps({"type": "rejection", "message": f"Unrecognized type {data['type']}"}))
+				game = id_to_game[game_id]
+				user = id_to_user[user_id]
+				
+				if game.owner == user_id and not game.in_progress:
+					player_list = [id_to_player[(game_id, user_id)] for (game_id, user_id) in cur.execute(f"SELECT game_id, user_id FROM players WHERE game_id = '{game_id}'")]
+					random.shuffle(player_list)
+		
+					deck = Card.getNewDeck()
+					random.shuffle(deck)
+					random.shuffle(player_list)
+					for i, player in enumerate(player_list):
+						player.phase = 0
+						player.turn_index = i
+						player.hand = [deck.pop() for _ in range(10)]
+					
+					game.discard = [deck.pop()]
+					game.deck = deck
+					game.in_progress = True
+					game.current_player = player_list[0].id
+					await send_games(cur, websocket)
+				else:
+					await websocket.send(json.dumps({"type": "rejection", "message": "You are not the owner and cannot start this game"}))
+			case _:
+				await websocket.send(json.dumps({"type": "rejection", "message": f"Unrecognized type {data['type']}"}))
 
 
 # except Exception as e:
