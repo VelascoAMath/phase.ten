@@ -6,7 +6,6 @@ import Home from './Home.js';
 
 import PlayerListing from './PlayerListing';
 import PlayerCreation from './PlayerCreation'
-import PlayerPage from './PlayerPage';
 import GameRoom from './GameRoom';
 import { Route } from "wouter";
 import inputReducer from './InputReducer.js';
@@ -92,7 +91,7 @@ function App() {
       <Route path="/login">
         <PlayerLogin props={{state, dispatch, socket}}/>
       </Route>
-      <Route path="/player/:id" component={PlayerPage} ></Route>
+      {/* <Route path="/player/:id" component={PlayerPage} ></Route> */}
       <Route path="/players">
         <PlayerListing></PlayerListing>
       </Route>

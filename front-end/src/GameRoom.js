@@ -92,7 +92,7 @@ function gameRoomView(user_id, gameList, socket, selectedGame, setSelectedGame) 
     );
 }
 
-export default function PlayerPage({props}) {
+export default function GameRoom({props}) {
 
     const{state, socket} = props;
     const [selectedGame, setSelectedGame] = useState(null);
