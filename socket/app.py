@@ -197,7 +197,7 @@ async def handler(websocket):
 						game.discard = [deck.pop()]
 						game.deck = deck
 						game.in_progress = True
-						game.current_player = player_list[0].id
+						game.current_player = player_list[0].user_id
 						await send_games(connected, cur)
 					else:
 						await websocket.send(json.dumps(
