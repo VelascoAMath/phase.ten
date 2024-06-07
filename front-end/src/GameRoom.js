@@ -133,7 +133,7 @@ export default function GameRoom({props}) {
             }
         } else {
             if(game.in_progress){
-                return <button onClick={() => startGame(game)}>Play Game</button>
+                return <button onClick={() => navigate("/play/" + game_id)}>Play Game</button>
             } else {
                 return <button onClick={() => {unjoinGame(game_id, user_id, socket); setSelectedGame(null)}}>Unjoin Game</button>
             }
