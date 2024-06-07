@@ -85,6 +85,8 @@ function App() {
       dispatch({type: "change-input", key: "game-list", value: data["games"]})
     } else if(data["type"] === "create_game"){
       dispatch({type: "change-input", key: "game-list", value: [...state["game-list"], data["game"]] })
+    } else if (data["type"] === "get_player"){
+      dispatch({type: "change-input", key: "player", value: data })
     } else if(data["type"] === "rejection"){
       alert(data["message"]);
     }
