@@ -128,9 +128,13 @@ async def handler(websocket):
 				case "join_game":
 					game_id = data["game_id"]
 					user_id = data["user_id"]
+					game = id_to_game[game_id]
 
 					if (game_id, user_id) in id_to_player:
 						await websocket.send(json.dumps({"type": "rejection", "message": "You are already in that game!"}))
+					elif game.in_progress:
+						await websocket.send(
+							json.dumps({"type": "rejection", "message": "You can't join a game that's already in progress"}))
 					else:
 						p = Player(secrets.token_urlsafe(16), game_id, user_id, [], 1, 0, -1)
 						player_set.add(p)
