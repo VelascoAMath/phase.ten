@@ -18,6 +18,7 @@ const initState = {
   "user-id": localStorage.getItem("user-id"),
   "user-name": localStorage.getItem("user-name"),
   "user-token": localStorage.getItem("user-token"),
+  "socket": new WebSocket("ws://localhost:8001"),
 };
 
 function App() {
@@ -26,7 +27,7 @@ function App() {
   const [socketState, setSocketState] = useState(0);
   const [initialSocketCall, setInitialSocketCall] = useState(false);
   
-  const socket = new WebSocket("ws://localhost:8001");
+  const socket = state["socket"];
 
   socket.onerror = (event) => {
     setSocketState(-1);
@@ -37,9 +38,16 @@ function App() {
       if(!initialSocketCall){
         socket.send(JSON.stringify({type: "connection"}));
         socket.send(JSON.stringify({type: "get_games"}));
+        socket.send(JSON.stringify({type: "get_users"}));
         setInitialSocketCall(true);
       }
       setSocketState(1);
+    }
+  }
+
+  socket.onclose = (event) => {
+    if(socket.readyState === socket.OPEN){
+      socket.send(JSON.stringify({type: "disconnection"}));
     }
   }
     

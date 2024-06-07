@@ -106,11 +106,6 @@ export default function PlayerPage({props}) {
         )
     }
 
-
-    if(socket.readyState === 1){
-        socket.send(JSON.stringify({type: "get_games"}));
-    }
-
     const createGame = function() {
         if(socket.readyState === socket.OPEN){
             socket.send(JSON.stringify({type: "create_game", "user_id": state["user-id"] }));

@@ -77,6 +77,8 @@ async def handler(websocket):
 			match data["type"]:
 				case "connection":
 					await websocket.send(json.dumps({"type": "connection"}))
+				case "disconnection":
+					connected.remove(websocket)
 				case "new_user":
 					will_send = True
 					for u in user_set:
@@ -91,11 +93,12 @@ async def handler(websocket):
 						cur.execute(f"INSERT INTO users (id, name) VALUES ('{u.id}', '{u.name}')")
 						con.commit()
 						await websocket.send(json.dumps({"type": "new_user", "user": u.toJSONDict()}))
+						websockets.broadcast(connected, json.dumps({"type": "get_users", "users": [u.toJSONDict() for u in user_set]}))
 					else:
 						await websocket.send(json.dumps(
 							{"type": "rejection", "message": f"User already exists with the name {data['name']}"}))
 				case "get_users":
-					await websocket.send(json.dumps({"type": "get_users", "users": [u.toJSONDict() for u in user_set]}))
+					websockets.broadcast(connected, json.dumps({"type": "get_users", "users": [u.toJSONDict() for u in user_set]}))
 				case "create_game":
 					user_id = data["user_id"]
 					if user_id not in id_to_user:

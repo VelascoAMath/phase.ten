@@ -11,8 +11,6 @@ export default function PlayerLogin({props}) {
         }
     }
 
-    getPlayers();
-
 
 	return (
 		<div>
