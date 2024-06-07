@@ -99,6 +99,16 @@ async def handler(websocket):
 							{"type": "rejection", "message": f"User already exists with the name {data['name']}"}))
 				case "get_users":
 					websockets.broadcast(connected, json.dumps({"type": "get_users", "users": [u.toJSONDict() for u in user_set]}))
+				case "get_player":
+					game_id = data["game_id"]
+					user_id = data["user_id"]
+					if (game_id, user_id) in id_to_player:
+						player = id_to_player[(game_id, user_id)]
+						await websocket.send(json.dumps({"type": "get_player", "game_id": game_id, "user_id": user_id, "player": player.toJSONDict()}))
+					else:
+						await websocket.send(json.dumps({"type": "get_player", "game_id": game_id, "user_id": user_id}))
+
+					await websocket.send()
 				case "create_game":
 					user_id = data["user_id"]
 					if user_id not in id_to_user:
