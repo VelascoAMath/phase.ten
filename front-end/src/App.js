@@ -64,6 +64,23 @@ function App() {
     }
     else if(data["type"] === "get_users"){
       dispatch({type: "change-input", key: "user-list", value: data["users"].toSorted((a, b) => a.name.localeCompare(b.name)) })
+      let validToken = false;
+      // Validate our stored session data
+      for(const user of data["users"]){
+        if(user.id == state["user-id"] && user.name == state["user-name"] && user.token == state["user-token"]){
+          validToken = true;
+          break;
+        }
+      }
+      // We have old data and it needs to be deleted
+      if(!validToken){
+        localStorage.removeItem("user-id");
+        localStorage.removeItem("user-name");
+        localStorage.removeItem("user-token");
+        dispatch({type: "change-input", key: "user-id", value: null});
+        dispatch({type: "change-input", key: "user-name", value: null});
+        dispatch({type: "change-input", key: "user-token", value: null});
+      }
     } else if (data["type"] === "get_games"){
       dispatch({type: "change-input", key: "game-list", value: data["games"]})
     } else if(data["type"] === "create_game"){
