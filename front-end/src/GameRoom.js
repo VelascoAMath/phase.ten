@@ -127,7 +127,12 @@ export default function GameRoom({props}) {
         const game_id = game.id;
         if(game.owner === user_id){
             if(game.in_progress){
-                return <button onClick={() => {unjoinGame(game_id, user_id, socket); setSelectedGame(null)} }>Delete Game</button>;
+                return (
+                    <>
+                        <button onClick={() => {unjoinGame(game_id, user_id, socket); setSelectedGame(null)} }>Delete Game</button>
+                        <button onClick={() => {navigate("/play/" + game_id)} }>Enter Game</button>
+                    </>
+                );
             } else {
                 return <button onClick={() => {startGame(game_id, user_id, socket); setSelectedGame(null); navigate("/play/" + game_id) }}>Start Game</button>;
             }
