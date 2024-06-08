@@ -1,5 +1,6 @@
 import dataclasses
 import json
+import random
 import re
 from enum import Enum
 
@@ -256,6 +257,12 @@ def main():
             print(Card.fromJSON(c.toJSON()))
             print(Card.from_string(str(c)))
             print()
+
+    deck = Card.getNewDeck()
+    random.shuffle(deck)
+    print([str(x) for x in deck])
+    deck.sort(key=lambda x: x.color.value)
+    print([str(x) for x in deck])
 
 
 if __name__ == "__main__":

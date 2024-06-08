@@ -1,4 +1,5 @@
 import { useParams } from "wouter";
+import PlayerLogin from "./PlayerLogin";
 
 
 const rankToColor = {
@@ -21,6 +22,7 @@ const getClassFromRank = function(rank) {
 const getDeckDivs = function(deck){
     return deck.map((card, idx) => {return <div style={{backgroundColor: rankToColor[card.color]}} key={idx} className={getClassFromRank(card.rank)}>{card.rank}</div>} );
 }
+
 
 
 
@@ -63,12 +65,54 @@ export default function PlayRoom({props}) {
             </div>
     }
 
+    const hand = player["hand"];
+    const player_id = player["id"];
 
+    const drawDeck = function(){
+        if(socket.readyState === socket.OPEN){
+            socket.send(JSON.stringify({type: "player_action", action: "draw_deck", player_id: player_id}));
+        }
+    }
+
+
+    const sortByColor = function(cardCollection){
+        // cardCollection.sort((a, b) => {
+        //     if(a.color < b.color) {
+        //     return -1;   
+        //     } if (a.color == b.color){
+        //         return 0;
+        //     } else {
+        //         return 1;
+        //     }
+        // })
+
+        if(socket.readyState === socket.OPEN){
+            socket.send(JSON.stringify({type: "player_action", action: "sort_by_color", player_id: player_id}));
+        }
+    }
+    const sortByRank = function(cardCollection){
+        // const rankOrdering = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', 'W', 'S']
+        // cardCollection.sort((a, b) => {
+        //     const aIndex = rankOrdering.indexOf(a.rank);
+        //     const bIndex = rankOrdering.indexOf(b.rank);
+        //     if(aIndex < bIndex) {
+        //     return -1;   
+        //     } if (aIndex == bIndex){
+        //         return 0;
+        //     } else {
+        //         return 1;
+        //     }
+        // })
+        if(socket.readyState === socket.OPEN){
+            socket.send(JSON.stringify({type: "player_action", action: "sort_by_rank", player_id: player_id}));
+        }
+    }
 
 
 
     return (
         <div>
+            <PlayerLogin  props={{state, dispatch, socket}}/>
             <div>
                 User is {name} {user_id}
             </div>
@@ -79,15 +123,19 @@ export default function PlayRoom({props}) {
             <div className="card-collection">
                 {getDeckDivs(game["discard"]) }
             </div>
-
             <div className="card-collection">
                 {getDeckDivs(player["hand"])}
+            </div>
+            <div className="player-console">
+                <button onClick={() => {sortByRank(hand)}}>Sort by rank</button>
+                <button onClick={() => {sortByColor(hand)}}>Sort by color</button>
+                <button onClick={drawDeck}>Draw Deck</button>
             </div>
             <div>
                 {JSON.stringify(player)}
             </div>
-            <div>
-                {JSON.stringify(game)}
+            <div className="card-collection">
+                {getDeckDivs(game["deck"])}
             </div>
         </div>
     )

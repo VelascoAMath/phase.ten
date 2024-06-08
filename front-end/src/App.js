@@ -17,7 +17,8 @@ const initState = {
   "user-id": localStorage.getItem("user-id"),
   "user-name": localStorage.getItem("user-name"),
   "user-token": localStorage.getItem("user-token"),
-  "socket": new WebSocket("ws://localhost:8001"),
+  "socket": new WebSocket("ws://192.168.0.40:8001"),
+  "game-list": [],
 };
 
 function App() {
@@ -100,6 +101,17 @@ function App() {
 
   return (
     <div>
+      {state["user-name"]}:{state["user-id"]}
+      <div>
+                {state["user-list"]?.map(user => {
+                    const setUser = function(){
+                        dispatch({type: "change-input", key: "user-id", value: user["id"]});
+                        dispatch({type: "change-input", key: "user-name", value: user["name"]});
+                        dispatch({type: "change-input", key: "user-token", value: user["token"]});
+                    }
+                    return <button key={user.id} onClick={setUser}>{user.name}</button>
+                })}
+			</div>
       <Route path="/cards">
         <CardCreation/>
         <CardListing/>
