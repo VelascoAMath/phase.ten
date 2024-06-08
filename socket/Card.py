@@ -2,268 +2,271 @@ import dataclasses
 import json
 import random
 import re
+import secrets
 from enum import Enum
 
 
 @dataclasses.dataclass
 class Rank(Enum):
-    ONE = 1
-    TWO = 2
-    THREE = 3
-    FOUR = 4
-    FIVE = 5
-    SIX = 6
-    SEVEN = 7
-    EIGHT = 8
-    NINE = 9
-    TEN = 10
-    ELEVEN = 11
-    TWELVE = 12
-    WILD = 13
-    SKIP = 14
+	ONE = 1
+	TWO = 2
+	THREE = 3
+	FOUR = 4
+	FIVE = 5
+	SIX = 6
+	SEVEN = 7
+	EIGHT = 8
+	NINE = 9
+	TEN = 10
+	ELEVEN = 11
+	TWELVE = 12
+	WILD = 13
+	SKIP = 14
 
-    def __lt__(self, other):
-        return self.value < other.value
+	def __lt__(self, other):
+		return self.value < other.value
 
-    def __str__(self):
-        return self.__repr__()
+	def __str__(self):
+		return self.__repr__()
 
-    def __repr__(self):
-        match self.name:
-            case "ONE":
-                return "1"
-            case "TWO":
-                return "2"
-            case "THREE":
-                return "3"
-            case "FOUR":
-                return "4"
-            case "FIVE":
-                return "5"
-            case "SIX":
-                return "6"
-            case "SEVEN":
-                return "7"
-            case "EIGHT":
-                return "8"
-            case "NINE":
-                return "9"
-            case "TEN":
-                return "10"
-            case "ELEVEN":
-                return "11"
-            case "TWELVE":
-                return "12"
-            case "WILD":
-                return "W"
-            case "SKIP":
-                return "S"
-            case "JACK":
-                return "J"
-            case "QUEEN":
-                return "Q"
-            case "KING":
-                return "K"
-            case _:
-                return self.name
+	def __repr__(self):
+		match self.name:
+			case "ONE":
+				return "1"
+			case "TWO":
+				return "2"
+			case "THREE":
+				return "3"
+			case "FOUR":
+				return "4"
+			case "FIVE":
+				return "5"
+			case "SIX":
+				return "6"
+			case "SEVEN":
+				return "7"
+			case "EIGHT":
+				return "8"
+			case "NINE":
+				return "9"
+			case "TEN":
+				return "10"
+			case "ELEVEN":
+				return "11"
+			case "TWELVE":
+				return "12"
+			case "WILD":
+				return "W"
+			case "SKIP":
+				return "S"
+			case "JACK":
+				return "J"
+			case "QUEEN":
+				return "Q"
+			case "KING":
+				return "K"
+			case _:
+				return self.name
 
-    @staticmethod
-    def fromJSON(data):
-        match data:
-            case "1":
-                return Rank.ONE
-            case "2":
-                return Rank.TWO
-            case "3":
-                return Rank.THREE
-            case "4":
-                return Rank.FOUR
-            case "5":
-                return Rank.FIVE
-            case "6":
-                return Rank.SIX
-            case "7":
-                return Rank.SEVEN
-            case "8":
-                return Rank.EIGHT
-            case "9":
-                return Rank.NINE
-            case "10":
-                return Rank.TEN
-            case "11":
-                return Rank.ELEVEN
-            case "12":
-                return Rank.TWELVE
-            case "W":
-                return Rank.WILD
-            case "S":
-                return Rank.SKIP
-            case _:
-                raise Exception(f"{data} is not a valid rank!")
+	@staticmethod
+	def fromJSON(data):
+		match data:
+			case "1":
+				return Rank.ONE
+			case "2":
+				return Rank.TWO
+			case "3":
+				return Rank.THREE
+			case "4":
+				return Rank.FOUR
+			case "5":
+				return Rank.FIVE
+			case "6":
+				return Rank.SIX
+			case "7":
+				return Rank.SEVEN
+			case "8":
+				return Rank.EIGHT
+			case "9":
+				return Rank.NINE
+			case "10":
+				return Rank.TEN
+			case "11":
+				return Rank.ELEVEN
+			case "12":
+				return Rank.TWELVE
+			case "W":
+				return Rank.WILD
+			case "S":
+				return Rank.SKIP
+			case _:
+				raise Exception(f"{data} is not a valid rank!")
 
 
 @dataclasses.dataclass
 class Color(Enum):
-    RED = 0
-    BLUE = 1
-    GREEN = 2
-    YELLOW = 3
-    SKIP = 4
-    WILD = 5
+	RED = 0
+	BLUE = 1
+	GREEN = 2
+	YELLOW = 3
+	SKIP = 4
+	WILD = 5
 
-    def __str__(self):
-        return self.__repr__()
+	def __str__(self):
+		return self.__repr__()
 
-    def __repr__(self):
-        match self.name:
-            case "RED":
-                return "R"
-            case "BLUE":
-                return "B"
-            case "GREEN":
-                return "G"
-            case "YELLOW":
-                return "Y"
-            case "WILD":
-                return "W"
-            case "SKIP":
-                return "S"
-            case _:
-                return self.name
+	def __repr__(self):
+		match self.name:
+			case "RED":
+				return "R"
+			case "BLUE":
+				return "B"
+			case "GREEN":
+				return "G"
+			case "YELLOW":
+				return "Y"
+			case "WILD":
+				return "W"
+			case "SKIP":
+				return "S"
+			case _:
+				return self.name
 
-    @staticmethod
-    def fromJSON(data):
-        match data:
-            case "R":
-                return Color.RED
-            case "G":
-                return Color.GREEN
-            case "Y":
-                return Color.YELLOW
-            case "B":
-                return Color.BLUE
-            case "S":
-                return Color.SKIP
-            case "W":
-                return Color.WILD
-            case _:
-                raise Exception(f"{data} is not a valid color!")
+	@staticmethod
+	def fromJSON(data):
+		match data:
+			case "R":
+				return Color.RED
+			case "G":
+				return Color.GREEN
+			case "Y":
+				return Color.YELLOW
+			case "B":
+				return Color.BLUE
+			case "S":
+				return Color.SKIP
+			case "W":
+				return Color.WILD
+			case _:
+				raise Exception(f"{data} is not a valid color!")
 
 
 @dataclasses.dataclass(order=True, frozen=True)
 class Card:
-    color: Color = dataclasses.field(default_factory=lambda: Color.WILD)
-    rank: Rank = dataclasses.field(default_factory=lambda: Rank.WILD)
+	color: Color = dataclasses.field(default_factory=lambda: Color.WILD)
+	rank: Rank = dataclasses.field(default_factory=lambda: Rank.WILD)
+	id: str = dataclasses.field(default_factory=lambda: secrets.token_urlsafe(16))
 
-    def __post_init__(self):
-        if self.color is Color.WILD and self.rank is not Rank.WILD:
-            raise Exception(
-                f"Cannot create a card with color {self.color} and rank {self.rank}!"
-            )
+	def __post_init__(self):
+		if self.color is Color.WILD and self.rank is not Rank.WILD:
+			raise Exception(
+				f"Cannot create a card with color {self.color} and rank {self.rank}!"
+			)
 
-        if self.color is not Color.WILD and self.rank is Rank.WILD:
-            raise Exception(
-                f"Cannot create a card with color {self.color} and rank {self.rank}!"
-            )
+		if self.color is not Color.WILD and self.rank is Rank.WILD:
+			raise Exception(
+				f"Cannot create a card with color {self.color} and rank {self.rank}!"
+			)
 
-        if self.color is Color.SKIP and self.rank is not Rank.SKIP:
-            raise Exception(
-                f"Cannot create a card with color {self.color} and rank {self.rank}!"
-            )
+		if self.color is Color.SKIP and self.rank is not Rank.SKIP:
+			raise Exception(
+				f"Cannot create a card with color {self.color} and rank {self.rank}!"
+			)
 
-        if self.color is not Color.SKIP and self.rank is Rank.SKIP:
-            raise Exception(
-                f"Cannot create a card with color {self.color} and rank {self.rank}!"
-            )
-        
-    @staticmethod
-    def getNewDeck():
-        deck = []
-        for color in Color:
-            if color is Color.WILD or color is Color.SKIP:
-                continue
-            for rank in Rank:
-                if rank is Rank.WILD or rank is Rank.SKIP:
-                    continue
-                deck.append(Card(color, rank))
-                deck.append(Card(color, rank))
-            
-            for _ in range(4):
-                deck.append(Card(Color.SKIP, Rank.SKIP))
-            
-            for _ in range(8):
-                deck.append(Card(Color.WILD, Rank.WILD))
-        return deck
+		if self.color is not Color.SKIP and self.rank is Rank.SKIP:
+			raise Exception(
+				f"Cannot create a card with color {self.color} and rank {self.rank}!"
+			)
 
-    def __str__(self):
-        if self.color is Color.WILD and self.rank is Rank.WILD:
-            return "W"
-        if self.color is Color.SKIP and self.rank is Rank.SKIP:
-            return "S"
+	@staticmethod
+	def getNewDeck():
+		deck = []
+		for color in Color:
+			if color is Color.WILD or color is Color.SKIP:
+				continue
+			for rank in Rank:
+				if rank is Rank.WILD or rank is Rank.SKIP:
+					continue
+				deck.append(Card(color, rank))
+				deck.append(Card(color, rank))
 
-        return f"{self.color}{self.rank}"
+			for _ in range(4):
+				deck.append(Card(Color.SKIP, Rank.SKIP))
 
-    def toJSON(self):
-        return json.dumps(self.toJSONDict())
+			for _ in range(8):
+				deck.append(Card(Color.WILD, Rank.WILD))
+		return deck
 
-    def toJSONDict(self):
-        return {"color": str(self.color), "rank": str(self.rank)}
+	def __str__(self):
+		if self.color is Color.WILD and self.rank is Rank.WILD:
+			return "W"
+		if self.color is Color.SKIP and self.rank is Rank.SKIP:
+			return "S"
 
-    @staticmethod
-    def fromJSON(data):
-        data = json.loads(data)
+		return f"{self.color}{self.rank}"
 
-        return Card.fromJSONDict(data)
+	def toJSON(self):
+		return json.dumps(self.toJSONDict())
 
-    @staticmethod
-    def fromJSONDict(data):
-        return Card(Color.fromJSON(data["color"]), Rank.fromJSON(data["rank"]))
+	def toJSONDict(self):
+		return {"color": str(self.color), "rank": str(self.rank), "id": self.id}
 
-    @staticmethod
-    def from_string(data):
-        # Cards like R9, G8, B2, etc.
-        m = re.fullmatch("([RGYB])([0-9])", data)
-        if m:
-            return Card(Color.fromJSON(m.group(1)), Rank.fromJSON(m.group(2)))
+	@staticmethod
+	def fromJSON(data):
+		data = json.loads(data)
 
-        # Cards with rank 10
-        m = re.fullmatch("([RGYB])(1[012])", data)
-        if m:
-            return Card(Color.fromJSON(m.group(1)), Rank.fromJSON(m.group(2)))
+		return Card.fromJSONDict(data)
 
-        match data:
-            case "S":
-                return Card(Color.SKIP, Rank.SKIP)
-            case "W":
-                return Card(Color.WILD, Rank.WILD)
-            case "_":
-                raise Exception(f"{data} is not a valid card!")
+	@staticmethod
+	def fromJSONDict(data):
+		return Card(Color.fromJSON(data["color"]), Rank.fromJSON(data["rank"]), data["id"])
+
+	@staticmethod
+	def from_string(data):
+		# Cards like R9, G8, B2, etc.
+		m = re.fullmatch("([RGYB])([0-9])", data)
+		if m:
+			return Card(Color.fromJSON(m.group(1)), Rank.fromJSON(m.group(2)))
+
+		# Cards with rank 10
+		m = re.fullmatch("([RGYB])(1[012])", data)
+		if m:
+			return Card(Color.fromJSON(m.group(1)), Rank.fromJSON(m.group(2)))
+
+		match data:
+			case "S":
+				return Card(Color.SKIP, Rank.SKIP)
+			case "W":
+				return Card(Color.WILD, Rank.WILD)
+			case "_":
+				raise Exception(f"{data} is not a valid card!")
 
 
 def main():
-    for rank in Rank:
-        for color in Color:
-            if rank is Rank.WILD and color is not Color.WILD:
-                continue
-            if rank is Rank.SKIP and color is not Color.SKIP:
-                continue
-            if color is Color.WILD and rank is not Rank.WILD:
-                continue
-            if color is Color.SKIP and rank is not Rank.SKIP:
-                continue
-            c = Card(color, rank)
-            print(c)
-            print(c.toJSON())
-            print(Card.fromJSON(c.toJSON()))
-            print(Card.from_string(str(c)))
-            print()
+	for rank in Rank:
+		for color in Color:
+			if rank is Rank.WILD and color is not Color.WILD:
+				continue
+			if rank is Rank.SKIP and color is not Color.SKIP:
+				continue
+			if color is Color.WILD and rank is not Rank.WILD:
+				continue
+			if color is Color.SKIP and rank is not Rank.SKIP:
+				continue
+			c = Card(color, rank)
+			print(c)
+			print(c.toJSON())
+			print(Card.fromJSON(c.toJSON()))
+			print(c == Card.fromJSON(c.toJSON()))
+			print(Card.from_string(str(c)))
+			print()
 
-    deck = Card.getNewDeck()
-    random.shuffle(deck)
-    print([str(x) for x in deck])
-    deck.sort(key=lambda x: x.color.value)
-    print([str(x) for x in deck])
+deck = Card.getNewDeck()
+random.shuffle(deck)
+print([str(x) for x in deck])
+deck.sort(key=lambda x: x.color.value)
+print([str(x) for x in deck])
 
 
 if __name__ == "__main__":
-    main()
+	main()
