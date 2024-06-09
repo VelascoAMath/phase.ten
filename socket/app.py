@@ -144,12 +144,6 @@ def game_id_to_gamePhaseDecks(game_id):
     phaseDeck_set = []
     for (id, phase, deck_json) in list(
             cur.execute("SELECT id, phase, deck FROM gamePhaseDecks WHERE game_id = ?", (game_id,))):
-        print(deck_json)
-        print(type(deck_json))
-        for x in json.loads(deck_json):
-            print(x)
-            print(type(x))
-            print(Card.fromJSONDict(x))
         deck = [Card.fromJSONDict(x) for x in json.loads(deck_json)]
         phaseDeck = GamePhaseDeck(id, game_id, phase, deck)
         phaseDeck_set.append(phaseDeck)
