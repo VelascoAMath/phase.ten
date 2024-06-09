@@ -170,7 +170,7 @@ export default function PlayRoom({props}) {
                 <button onClick={discardSelected}>Discard Selected Card</button>
             </div>
             <div>
-                {game["phase_decks"].map((deck) => {return  <div className="phase-deck-collection"> <h2>{deck.phase}:</h2> <div className="card-collection">{getDeckDivs(deck["deck"], selectedCards, setSelectedCards)} </div> </div> })}
+                {game["phase_decks"].map((deck) => {return  <div className="phase-deck-collection" key={deck.id}> <h2>{deck.phase}:</h2> <div className="card-collection">{getDeckDivs(deck["deck"], selectedCards, setSelectedCards)} </div> </div> })}
             </div>
             {wantToCompletePhase && 
             <div style={{display: "flex", flexDirection: "column", justifyContent: "center"}}>
