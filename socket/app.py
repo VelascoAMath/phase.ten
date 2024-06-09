@@ -254,7 +254,32 @@ def player_action(data):
 		case "put_down":
 			pass
 		case "complete_phase":
-			pass
+			if player.completed_phase:
+				return json.dumps({"type": "rejection", "message": "You've already completed your phase!"})
+
+			cards = [Card.fromJSONDict(x) for x in data["cards"]]
+			str_cards = [str(x) for x in cards]
+			phase = game.phase_list[player.phase_index]
+			command = f"java RE -p {phase} -d {' '.join(str_cards)}"
+			print(command)
+			output = subprocess.check_output(command).decode("utf-8").strip()
+			print(output)
+			if output == "true":
+				# Remove the cards from the player's hand
+				# for card in cards:
+				# 	if card not in hand:
+				# 		return json.dumps({"type": "rejection", "message": f"This card {card} is not in your hand!"})
+				# 	hand.remove(card)
+				# Create a new gamePhaseDeck
+				json_cards = [x.toJSONDict() for x in cards]
+				cur.execute("INSERT INTO gamePhaseDecks (id, game_id, phase, deck) VALUES (?, ?, ?, ?)",
+							(secrets.token_urlsafe(16), game_id, phase, json_cards))
+
+
+
+			else:
+				return json.dumps({"type": "rejection", "message": "Not a valid phase!"})
+
 		case "skip_player":
 			pass
 		case "discard":

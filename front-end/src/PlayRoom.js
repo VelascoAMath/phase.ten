@@ -122,6 +122,9 @@ export default function PlayRoom({props}) {
 
     const completePhase = function() {
         setSelectedCards([]);
+        if(socket.readyState === socket.OPEN){
+            socket.send(JSON.stringify({type: "player_action", action: "complete_phase", player_id: player_id, cards: selectedCards}));
+        }
 
     }
 
