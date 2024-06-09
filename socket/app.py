@@ -29,6 +29,7 @@ DEFAULT_PHASE_LIST = [
     "S5+S3",
 ]
 
+INITIAL_HAND_SIZE = 20
 # We'll start from a new database everytime we start the server
 # This is just until we can get something that definitely works
 if os.path.exists("phase_ten.db"):
@@ -261,17 +262,22 @@ def player_action(data):
             str_cards = [str(x) for x in cards]
             phase = game.phase_list[player.phase_index]
             command = f"java RE -p {phase} -d {' '.join(str_cards)}"
-            output = subprocess.check_output(command).decode("utf-8").strip()
+            output = subprocess.check_output(command, shell=True).decode("utf-8").strip()
             if output == "true":
                 # Remove the cards from the player's hand
-                # for card in cards:
-                # 	if card not in hand:
-                # 		return json.dumps({"type": "rejection", "message": f"This card {card} is not in your hand!"})
-                # 	hand.remove(card)
+                for card in cards:
+                    if card not in hand:
+                        return json.dumps({"type": "rejection", "message": f"This card {card} is not in your hand!"})
+                    hand.remove(card)
+                    player.completed_phase = True
                 # Create a new gamePhaseDeck
                 json_cards = [x.toJSONDict() for x in cards]
                 cur.execute("INSERT INTO gamePhaseDecks (id, game_id, phase, deck) VALUES (?, ?, ?, ?)",
                             (secrets.token_urlsafe(16), game_id, phase, str(json_cards)))
+
+                json_hand = [x.toJSONDict() for x in hand]
+                cur.execute("UPDATE players SET hand=?, completed_phase=1 WHERE id = ?", (json.dumps(json_hand), player_id))
+                con.commit()
 
 
 
@@ -456,7 +462,7 @@ def handle_data(data, websocket):
                 for i, player in enumerate(player_list):
                     player.phase_index = 0
                     player.turn_index = i
-                    player.hand = [deck.pop() for _ in range(10)]
+                    player.hand = [deck.pop() for _ in range(INITIAL_HAND_SIZE)]
                     json_hand = [x.toJSONDict() for x in player.hand]
                     command = f"UPDATE players SET phase_index=0, turn_index={i}, hand='{json.dumps(json_hand)}' WHERE id = '{player.id}'"
                     cur.execute(command)
