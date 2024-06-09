@@ -180,11 +180,11 @@ def create_game(data):
 	user_id = data["user_id"]
 	if cur.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone() is None:
 		return json.dumps(
-				{
-					"type": "rejection",
-					"message": f"User ID {user_id} is not valid!",
-				}
-			)
+			{
+				"type": "rejection",
+				"message": f"User ID {user_id} is not valid!",
+			}
+		)
 	else:
 		g = Game(secrets.token_urlsafe(16), DEFAULT_PHASE_LIST, [], [], 0, user_id, False)
 		try:
@@ -251,7 +251,25 @@ def player_action(data):
 		case "skip_player":
 			pass
 		case "discard":
-			pass
+			card_id = data["card_id"]
+			selected_card = None
+			for card in hand:
+				if card.id == card_id:
+					selected_card = card
+					break
+			if selected_card is not None:
+				hand.remove(selected_card)
+				game.discard.append(selected_card)
+
+				json_hand = [x.toJSONDict() for x in hand]
+				cur.execute("UPDATE players SET hand=? WHERE id = ?",
+				            (json.dumps(json_hand), player_id))
+
+				json_discard = [x.toJSONDict() for x in game.discard]
+				cur.execute("UPDATE games SET discard=? WHERE id = ?",
+				            (json.dumps(json_discard), game_id))
+
+
 		case "finish_hand":
 			pass
 		case _:
@@ -290,18 +308,18 @@ def handle_data(data, websocket):
 					# This happens because the SQL statement failed
 					print(e)
 					return json.dumps(
-							{
-								"type": "rejection",
-								"message": f"User already exists with the name {data['name']}",
-							}
-						)
-			else:
-				return json.dumps(
 						{
 							"type": "rejection",
 							"message": f"User already exists with the name {data['name']}",
 						}
 					)
+			else:
+				return json.dumps(
+					{
+						"type": "rejection",
+						"message": f"User already exists with the name {data['name']}",
+					}
+				)
 
 		case "get_users":
 			return json.dumps({"type": "ignore"})
@@ -311,21 +329,21 @@ def handle_data(data, websocket):
 			if game_user_id_in_player(game_id, user_id):
 				player = game_user_id_to_player(game_id, user_id)
 				return json.dumps(
-						{
-							"type": "get_player",
-							"game_id": game_id,
-							"user_id": user_id,
-							"player": player.toJSONDict(),
-						}
-					)
+					{
+						"type": "get_player",
+						"game_id": game_id,
+						"user_id": user_id,
+						"player": player.toJSONDict(),
+					}
+				)
 			else:
 				return json.dumps(
-						{
-							"type": "get_player",
-							"game_id": game_id,
-							"user_id": user_id,
-						}
-					)
+					{
+						"type": "get_player",
+						"game_id": game_id,
+						"user_id": user_id,
+					}
+				)
 
 		case "create_game":
 			return create_game(data)
@@ -337,18 +355,18 @@ def handle_data(data, websocket):
 
 			if game_user_id_in_player(game_id, user_id):
 				return json.dumps(
-						{
-							"type": "rejection",
-							"message": "You are already in that game!",
-						}
-					)
+					{
+						"type": "rejection",
+						"message": "You are already in that game!",
+					}
+				)
 			elif game.in_progress:
 				return json.dumps(
-						{
-							"type": "rejection",
-							"message": "You can't join a game that's already in progress",
-						}
-					)
+					{
+						"type": "rejection",
+						"message": "You can't join a game that's already in progress",
+					}
+				)
 			else:
 				try:
 					p = Player(secrets.token_urlsafe(16), game_id, user_id)
@@ -396,7 +414,8 @@ def handle_data(data, websocket):
 			game = id_to_game(game_id)
 
 			if game.owner == user_id and not game.in_progress:
-				game_user_id_list = list(cur.execute(f"SELECT game_id, user_id FROM players WHERE game_id = ?", (game_id,)))
+				game_user_id_list = list(
+					cur.execute(f"SELECT game_id, user_id FROM players WHERE game_id = ?", (game_id,)))
 				player_list = [
 					game_user_id_to_player(game_id, user_id)
 					for (game_id, user_id) in game_user_id_list
@@ -425,21 +444,21 @@ def handle_data(data, websocket):
 				con.commit()
 				return json.dumps({"type": "ignore"})
 			else:
-				return  json.dumps(
-						{
-							"type": "rejection",
-							"message": "You are not the owner and cannot start this game",
-						}
-					)
+				return json.dumps(
+					{
+						"type": "rejection",
+						"message": "You are not the owner and cannot start this game",
+					}
+				)
 		case "player_action":
 			return player_action(data)
 		case _:
 			return json.dumps(
-					{
-						"type": "rejection",
-						"message": f"Unrecognized type {data['type']}",
-					}
-				)
+				{
+					"type": "rejection",
+					"message": f"Unrecognized type {data['type']}",
+				}
+			)
 
 
 async def handler(websocket):

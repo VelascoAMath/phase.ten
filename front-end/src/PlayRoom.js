@@ -1,5 +1,5 @@
+import { useState } from "react";
 import { useParams } from "wouter";
-import PlayerLogin from "./PlayerLogin";
 
 
 const rankToColor = {
@@ -19,8 +19,30 @@ const getClassFromRank = function(rank) {
     return 'card';
 }
 
-const getDeckDivs = function(deck){
-    return deck.map((card, idx) => {return <div style={{backgroundColor: rankToColor[card.color]}} key={idx} className={getClassFromRank(card.rank)}>{card.rank}</div>} );
+const getDeckDivs = function(deck, selectedCards, setSelectedCards){
+    
+    
+    
+    return deck.map(
+        (card, idx) => {
+            let className = getClassFromRank(card.rank);
+            if(selectedCards.includes(card.id)){
+                className = className + " selected";
+            }
+            const onClick = function(card) {
+                if(selectedCards.includes(card.id)){
+                    setSelectedCards(selectedCards.filter((id) => {return id !== card.id}));
+                } else {
+                    setSelectedCards([...selectedCards, card.id]);
+                }
+            }
+            return(
+                <div style={{backgroundColor: rankToColor[card.color]}} key={idx} className={className} onClick={() => onClick(card)}>
+                    {card.rank}
+                </div>
+            );
+        }
+    );
 }
 
 
@@ -34,6 +56,7 @@ export default function PlayRoom({props}) {
     const name = state["user-name"];
     const user_id = state["user-id"];
     const game = state["game-list"]?.filter(game => game.id === game_id)[0];
+    const [selectedCards, setSelectedCards] = useState([]);
 
     if(game === undefined){
         return <div>{game_id} is not a valid game room!</div>
@@ -73,36 +96,31 @@ export default function PlayRoom({props}) {
             socket.send(JSON.stringify({type: "player_action", action: "draw_deck", player_id: player_id}));
         }
     }
+    
+    const discardSelected = function() {
+        if(selectedCards.length > 1){
+            alert("You can only discard one card!");
+            return;
+        }
+        if(selectedCards.length === 0){
+            alert("Selected a card to discard!");
+            return;
+        }
+        if(socket.readyState === socket.OPEN){
+            const message = JSON.stringify({type: "player_action", action: "discard", player_id: player_id, card_id: selectedCards[0]});
+            socket.send(message);
+            setSelectedCards([]);
+        }
+    }
 
-
-    const sortByColor = function(cardCollection){
-        // cardCollection.sort((a, b) => {
-        //     if(a.color < b.color) {
-        //     return -1;   
-        //     } if (a.color == b.color){
-        //         return 0;
-        //     } else {
-        //         return 1;
-        //     }
-        // })
+    const sortByColor = function(){
 
         if(socket.readyState === socket.OPEN){
             socket.send(JSON.stringify({type: "player_action", action: "sort_by_color", player_id: player_id}));
         }
     }
-    const sortByRank = function(cardCollection){
-        // const rankOrdering = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', 'W', 'S']
-        // cardCollection.sort((a, b) => {
-        //     const aIndex = rankOrdering.indexOf(a.rank);
-        //     const bIndex = rankOrdering.indexOf(b.rank);
-        //     if(aIndex < bIndex) {
-        //     return -1;   
-        //     } if (aIndex == bIndex){
-        //         return 0;
-        //     } else {
-        //         return 1;
-        //     }
-        // })
+
+    const sortByRank = function(){
         if(socket.readyState === socket.OPEN){
             socket.send(JSON.stringify({type: "player_action", action: "sort_by_rank", player_id: player_id}));
         }
@@ -110,9 +128,10 @@ export default function PlayRoom({props}) {
 
 
 
+
+
     return (
         <div>
-            <PlayerLogin  props={{state, dispatch, socket}}/>
             <div>
                 User is {name} {user_id}
             </div>
@@ -121,21 +140,20 @@ export default function PlayRoom({props}) {
             </div>
 
             <div className="card-collection">
-                {getDeckDivs(game["discard"]) }
+                {getDeckDivs(game["discard"], selectedCards, setSelectedCards) }
             </div>
             <div className="card-collection">
-                {getDeckDivs(player["hand"])}
+                {getDeckDivs(player["hand"], selectedCards, setSelectedCards )}
             </div>
             <div className="player-console">
                 <button onClick={() => {sortByRank(hand)}}>Sort by rank</button>
                 <button onClick={() => {sortByColor(hand)}}>Sort by color</button>
                 <button onClick={drawDeck}>Draw Deck</button>
+                <button onClick={discardSelected}>Discard Selected Card</button>
             </div>
-            <div>
-                {JSON.stringify(player)}
-            </div>
+            <div>{JSON.stringify(selectedCards)}</div>
             <div className="card-collection">
-                {getDeckDivs(game["deck"])}
+                {getDeckDivs(game["deck"],selectedCards, setSelectedCards)}
             </div>
         </div>
     )
