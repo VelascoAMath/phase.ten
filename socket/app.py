@@ -13,6 +13,7 @@ from Card import Card
 from Game import Game
 from Player import Player
 from User import User
+from GamePhaseDeck import GamePhaseDeck
 
 connected = set()
 
@@ -139,6 +140,22 @@ def get_games():
     return game_set
 
 
+def game_id_to_gamePhaseDecks(game_id):
+    phaseDeck_set = []
+    for (id, phase, deck_json) in list(
+            cur.execute("SELECT id, phase, deck FROM gamePhaseDecks WHERE game_id = ?", (game_id,))):
+        print(deck_json)
+        print(type(deck_json))
+        for x in json.loads(deck_json):
+            print(x)
+            print(type(x))
+            print(Card.fromJSONDict(x))
+        deck = [Card.fromJSONDict(x) for x in json.loads(deck_json)]
+        phaseDeck = GamePhaseDeck(id, game_id, phase, deck)
+        phaseDeck_set.append(phaseDeck)
+    return phaseDeck_set
+
+
 async def send_games():
     game_list = []
     for game in get_games():
@@ -150,6 +167,7 @@ async def send_games():
         ))
         for (user_id,) in user_id_list:
             game_dict["users"].append(id_to_user(user_id).toJSONDict())
+        game_dict["phase_decks"] = [x.toJSONDict() for x in game_id_to_gamePhaseDecks(game.id)]
         game_list.append(game_dict)
 
     websockets.broadcast(
@@ -273,10 +291,11 @@ def player_action(data):
                 # Create a new gamePhaseDeck
                 json_cards = [x.toJSONDict() for x in cards]
                 cur.execute("INSERT INTO gamePhaseDecks (id, game_id, phase, deck) VALUES (?, ?, ?, ?)",
-                            (secrets.token_urlsafe(16), game_id, phase, str(json_cards)))
+                            (secrets.token_urlsafe(16), game_id, phase, json.dumps(json_cards)))
 
                 json_hand = [x.toJSONDict() for x in hand]
-                cur.execute("UPDATE players SET hand=?, completed_phase=1 WHERE id = ?", (json.dumps(json_hand), player_id))
+                cur.execute("UPDATE players SET hand=?, completed_phase=1 WHERE id = ?",
+                            (json.dumps(json_hand), player_id))
                 con.commit()
 
 
