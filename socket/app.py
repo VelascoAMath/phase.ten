@@ -4,6 +4,7 @@ import os.path
 import random
 import secrets
 import sqlite3
+import subprocess
 
 import websockets
 from vel_data_structures import AVL_Set, AVL_Dict
@@ -492,6 +493,10 @@ async def main():
 
 
 if __name__ == "__main__":
+	# Create our Regular Expression Compiler for phases
+	if not os.path.exists("RE.class"):
+		subprocess.check_output(["javac", "RE.java"])
+
 	if not name_in_user("Alfredo"):
 		handle_data({"type": "new_user", "name": "Alfredo"}, None)
 	if not name_in_user("Naly"):
