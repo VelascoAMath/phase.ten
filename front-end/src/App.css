@@ -49,6 +49,15 @@ a {
   text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;
 }
 
+.phase-deck-collection {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: baseline;
+  margin-top: 20px;
+  gap: 0px 20px;
+}
+
 .rooms-to-join {
   display: flex;
   flex-wrap: wrap;

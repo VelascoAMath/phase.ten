@@ -169,6 +169,9 @@ export default function PlayRoom({props}) {
                 <button onClick={drawDiscard}>Draw Discard</button>
                 <button onClick={discardSelected}>Discard Selected Card</button>
             </div>
+            <div>
+                {game["phase_decks"].map((deck) => {return  <div className="phase-deck-collection"> <h2>{deck.phase}:</h2> <div className="card-collection">{getDeckDivs(deck["deck"], selectedCards, setSelectedCards)} </div> </div> })}
+            </div>
             {wantToCompletePhase && 
             <div style={{display: "flex", flexDirection: "column", justifyContent: "center"}}>
                 <h2 style={{marginLeft: "auto", marginRight: "auto"}}>Select your cards for the phase</h2>
@@ -178,6 +181,7 @@ export default function PlayRoom({props}) {
                 <button onClick={completePhase}>Complete Phase</button>
             </div>
             }
+            
 
             <div className="card-collection">
                 {getDeckDivs(game["deck"], selectedCards, setSelectedCards)}
