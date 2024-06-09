@@ -255,6 +255,7 @@ public class RE {
                     wildList[i-1].put(c, stateList[i]);
             }
             wildList[colorSize - 1].put(c, stateList[colorSize - 1]);
+            endStateList.add(wildList[colorSize - 1]);
             // Start to the first card of the rank
             beginState.put(c, stateList[0]);
             // Connect the rank cards to each other;
@@ -306,6 +307,7 @@ public class RE {
         }
         // A collection of wild cards is technically a set
         wildList[setSize-1].put(CardRank.WILD, wildList[setSize-1]);
+        endStateList.add(wildList[setSize-1]);
 
         beginState.put(CardRank.WILD, wildList[0]);
 
