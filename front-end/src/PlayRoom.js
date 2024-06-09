@@ -26,14 +26,14 @@ const getDeckDivs = function(deck, selectedCards, setSelectedCards){
     return deck.map(
         (card, idx) => {
             let className = getClassFromRank(card.rank);
-            if(selectedCards.includes(card.id)){
+            if(selectedCards.includes(card)){
                 className = className + " selected";
             }
             const onClick = function(card) {
-                if(selectedCards.includes(card.id)){
-                    setSelectedCards(selectedCards.filter((id) => {return id !== card.id}));
+                if(selectedCards.includes(card)){
+                    setSelectedCards(selectedCards.filter((x) => {return x.id !== card.id}));
                 } else {
-                    setSelectedCards([...selectedCards, card.id]);
+                    setSelectedCards([...selectedCards, card]);
                 }
             }
             return(
@@ -57,6 +57,7 @@ export default function PlayRoom({props}) {
     const user_id = state["user-id"];
     const game = state["game-list"]?.filter(game => game.id === game_id)[0];
     const [selectedCards, setSelectedCards] = useState([]);
+    const [wantToCompletePhase, setWantToCompletePhase] = useState(false);
 
     if(game === undefined){
         return <div>{game_id} is not a valid game room!</div>
@@ -96,6 +97,12 @@ export default function PlayRoom({props}) {
             socket.send(JSON.stringify({type: "player_action", action: "draw_deck", player_id: player_id}));
         }
     }
+
+    const drawDiscard = function(){
+        if(socket.readyState === socket.OPEN){
+            socket.send(JSON.stringify({type: "player_action", action: "draw_discard", player_id: player_id}));
+        }
+    }
     
     const discardSelected = function() {
         if(selectedCards.length > 1){
@@ -107,10 +114,15 @@ export default function PlayRoom({props}) {
             return;
         }
         if(socket.readyState === socket.OPEN){
-            const message = JSON.stringify({type: "player_action", action: "discard", player_id: player_id, card_id: selectedCards[0]});
+            const message = JSON.stringify({type: "player_action", action: "discard", player_id: player_id, card_id: selectedCards[0].id});
             socket.send(message);
             setSelectedCards([]);
         }
+    }
+
+    const completePhase = function() {
+        setSelectedCards([]);
+
     }
 
     const sortByColor = function(){
@@ -148,12 +160,24 @@ export default function PlayRoom({props}) {
             <div className="player-console">
                 <button onClick={() => {sortByRank(hand)}}>Sort by rank</button>
                 <button onClick={() => {sortByColor(hand)}}>Sort by color</button>
+                {!wantToCompletePhase && <button onClick={() => {setWantToCompletePhase(true)}}>Complete Phase</button>}
+                {wantToCompletePhase && <button onClick={() => {setWantToCompletePhase(false)}}>I don't have my phase</button>}
                 <button onClick={drawDeck}>Draw Deck</button>
+                <button onClick={drawDiscard}>Draw Discard</button>
                 <button onClick={discardSelected}>Discard Selected Card</button>
             </div>
-            <div>{JSON.stringify(selectedCards)}</div>
+            {wantToCompletePhase && 
+            <div style={{display: "flex", flexDirection: "column", justifyContent: "center"}}>
+                <h2 style={{marginLeft: "auto", marginRight: "auto"}}>Select your cards for the phase</h2>
+                <div className="card-collection">
+                    {getDeckDivs(selectedCards, selectedCards, setSelectedCards)}
+                </div>
+                <button onClick={completePhase}>Complete Phase</button>
+            </div>
+            }
+
             <div className="card-collection">
-                {getDeckDivs(game["deck"],selectedCards, setSelectedCards)}
+                {getDeckDivs(game["deck"], selectedCards, setSelectedCards)}
             </div>
         </div>
     )

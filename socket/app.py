@@ -241,7 +241,13 @@ def player_action(data):
 			            (json.dumps(json_deck), game_id))
 
 		case "draw_discard":
-			pass
+			hand.append(game.discard.pop())
+			json_hand = [x.toJSONDict() for x in hand]
+			cur.execute("UPDATE players SET hand=? WHERE id = ?",
+			            (json.dumps(json_hand), player_id))
+			json_discard = [x.toJSONDict() for x in game.discard]
+			cur.execute("UPDATE games SET discard=? WHERE id = ?",
+			            (json.dumps(json_discard), game_id))
 		case "do_skip":
 			pass
 		case "put_down":

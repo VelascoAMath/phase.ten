@@ -20,8 +20,7 @@ a {
 .card-collection {
   display:flex;
   flex-wrap: wrap;
-  gap: 5px;
-
+  justify-content: center;
 
   .card {
     border-color: white;
