@@ -42,6 +42,7 @@
 \#*
 *~
 socket/__pycache__/
+socket/*class
 
 
 *.db
