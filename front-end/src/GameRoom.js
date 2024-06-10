@@ -84,7 +84,15 @@ function gameRoomView(user_id, gameList, socket, selectedGame, setSelectedGame) 
             </div>
             <h2>Games in progress</h2>
             <div className="rooms-to-join">
-                {joinStartedGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1}`, game.id, () => {setSelectedGame(game.id); joinGame(game.id, user_id, socket)}, ("in-progress " + (selectedGame === game.id ? "selected": "")) ))}
+                {joinStartedGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1}`, game.id, () => {
+                    if(!game["user-in-game"] && (game.in_progress === 0 || game.in_progress === false)) {
+                        joinGame(game.id, user_id, socket);
+                    }
+                    if((game.in_progress === 1 || game.in_progress === true) && game["user-in-game"]){
+                        setSelectedGame(game.id);
+                    }
+                    },
+                    ("in-progress " + (selectedGame === game.id ? "selected": "")) ))}
             </div>
 
         </div>
