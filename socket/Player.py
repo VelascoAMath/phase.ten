@@ -13,6 +13,7 @@ class Player:
     # Does this player go first, second, etc
     turn_index: int = -1
     phase_index: int = 0
+    drew_card: bool = False
     completed_phase: bool = False
     skip_cards: int = 0
     
@@ -22,11 +23,12 @@ class Player:
     def toJSONDict(self):
         return {
             "id": self.id,
-            "user_id": self.user_id,
             "game_id": self.game_id,
+            "user_id": self.user_id,
             "hand": [x.toJSONDict() for x in self.hand],
             "turn_index": self.turn_index,
             "phase_index": self.phase_index,
+            "drew_card": (1 if self.drew_card else 0),
             "completed_phase": (1 if self.completed_phase else 0),
             "skip_cards": self.skip_cards,
         }
@@ -45,6 +47,7 @@ class Player:
             [Card.fromJSONDict(x) for x in data["hand"]],
             data["turn_index"],
             data["phase_index"],
+            (True if (data["drew_card"] == 1) else False),
             (True if (data["completed_phase"] == 1) else False),
             data["skip_cards"],
         )
@@ -63,6 +66,7 @@ def main():
         ],
         4,
         8,
+        True,
         True,
         3
     )

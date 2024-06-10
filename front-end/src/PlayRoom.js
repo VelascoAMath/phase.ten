@@ -90,8 +90,18 @@ export default function PlayRoom({props}) {
             </div>
     }
 
+
+
     const hand = player["hand"];
     const player_id = player["id"];
+    const discardDeck = game["discard"];
+
+    const isCurrentPlayer = (player.user_id === game.current_player);
+    const hasSkip = hand.filter(card => {return card.rank === "S"}).length > 0;
+
+    const roomPlayers = game["players"];
+
+
 
     const drawDeck = function(){
         if(socket.readyState === socket.OPEN){
@@ -165,6 +175,16 @@ export default function PlayRoom({props}) {
             <div>
                 User is {name} {user_id}
             </div>
+            <div className="phase-list">
+                {game.phase_list.map((phase, idx) => <div className={"phase " + ((player.phase_index === idx) ? "selected": "")}>{phase}</div>)}
+            </div>
+            <div className="room-players">
+                {roomPlayers.map((player) => {
+                    const className = "player " + ((player.user_id === game.current_player) ? "current ": "") + ((player.skip_cards > 0) ? "skipped": "");
+                    return <div className={className} key={player.id}> <div>{player.name}</div> <div>Phase {player.phase_index + 1}</div> </div>
+                    }
+                )}
+            </div>
             <h2 style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
                 You are on phase {player.phase_index + 1} - {player.phase}
             </h2>
@@ -177,7 +197,7 @@ export default function PlayRoom({props}) {
             </div>
 
             <div className="card-collection">
-                {getDeckDivs(game["discard"], selectedCards, setSelectedCards) }
+                {getDeckDivs(discardDeck, selectedCards, setSelectedCards) }
             </div>
             <div className="card-collection">
                 {getDeckDivs(player["hand"], selectedCards, setSelectedCards )}
@@ -186,17 +206,19 @@ export default function PlayRoom({props}) {
                 <button onClick={() => {sortByRank(hand)}}>Sort by rank</button>
                 <button onClick={() => {sortByColor(hand)}}>Sort by color</button>
             </div>
-            <div className="player-console">
-                <button onClick={drawDeck}>Draw Deck</button>
-                <button onClick={drawDiscard}>Draw Discard</button>
+            {(player["drew_card"] === 1) && <div className="player-console">
                 <button onClick={discardSelected}>Discard Selected Card</button>
-            </div>
-            <div className="player-console">
+            </div>}
+            {isCurrentPlayer && (player["drew_card"] === 0) && <div className="player-console">
+                <button onClick={drawDeck}>Draw Deck</button>
+                {(discardDeck.length > 0) && (discardDeck[discardDeck.length - 1].rank !== "S") && <button onClick={drawDiscard}>Draw Discard</button>}
+            </div>}
+            {(player["drew_card"] === 1) && isCurrentPlayer && hasSkip && <div className="player-console">
                 {wantToSkip && <button onClick={() => {setWantToSkip(false); setSelectedSkipPlayer(null)}}>Don't Skip Player</button>}
                 {!wantToSkip && <button onClick={() => setWantToSkip(true)}>Skip Player</button>}    
-            </div>
+            </div>}
             {
-                wantToSkip && 
+                (player["drew_card"] === 1) && wantToSkip && 
                 <div style={{display: "flex", flexDirection: "column", alignItems: "center", border: "5px white solid"}}>
                     <h3>Who do you want to skip?</h3>
                     <div>
@@ -220,7 +242,7 @@ export default function PlayRoom({props}) {
                 <div className="card-collection">
                     {getDeckDivs(selectedCards, selectedCards, setSelectedCards)}
                 </div>
-                <button onClick={completePhase}>Complete Phase</button>
+                {isCurrentPlayer && (selectedCards.length > 0) && <button onClick={completePhase}>Complete Phase</button>}
             </div>
             
 

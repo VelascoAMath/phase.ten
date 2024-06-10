@@ -17,6 +17,68 @@ a {
   justify-content: center;
 }
 
+.phase-list {
+  display: flex;
+  flex-direction: row;
+  background-color: darkblue;
+  border-radius: 3px;
+  justify-content: space-between;
+  width: 90%;
+  margin: auto;
+  font-size: large;
+
+  .phase {
+    width: 100%;
+    border-top: 3px white solid;
+    border-right: 3px white solid;
+    border-bottom: 3px white solid;
+    text-align: center; 
+  }
+
+  .phase:first-child {
+    border-left: 3px white solid;
+  }
+
+  .selected{
+    border-width: 3px;
+    background-color: green;
+  }
+}
+
+.room-players {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  background-color: purple;
+  padding: 5px;
+  border-radius: 10px;
+  width: 50%;
+  overflow-x: scroll;
+  margin: auto;
+  gap: 0px;
+
+  .player {
+    color: black;
+    background-color: yellow;
+    border-radius: 10px;
+    border: yellow 5px solid;
+  }
+  
+  .current {
+    color: white;
+    background-color: green;
+    border-color: green;
+  }
+
+  .skipped {
+    color: white;
+    background-color: red;
+    border-color: red;
+  }
+}
+
+
+
 .card-collection {
   display:flex;
   flex-wrap: wrap;
