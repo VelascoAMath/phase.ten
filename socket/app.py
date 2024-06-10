@@ -342,8 +342,10 @@ def player_action(data):
 			deckToTest = None
 			str_deckToTest = []
 			if data["direction"] == "start":
+				deckToTest = cards + gamePhaseDeck.deck
 				str_deckToTest = str_cards + str_gamePhaseDeck
 			elif data["direction"] == "end":
+				deckToTest = gamePhaseDeck.deck + cards
 				str_deckToTest = str_gamePhaseDeck + str_cards
 			else:
 				return json.dumps({"type": "rejection", "message": f"{data['direction']} is not a valid direction"})
