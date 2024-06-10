@@ -139,6 +139,13 @@ def get_games():
     return game_set
 
 
+def id_to_gamePhaseDeck(gamePhaseDeck_id: str) -> GamePhaseDeck:
+    for (id, game_id, phase, deck_json) in list(
+            cur.execute("SELECT id, game_id, phase, deck FROM gamePhaseDecks WHERE id = ?", (gamePhaseDeck_id,))):
+        deck = [Card.fromJSONDict(x) for x in json.loads(deck_json)]
+        phaseDeck = GamePhaseDeck(id, game_id, phase, deck)
+        return phaseDeck
+
 def game_id_to_gamePhaseDecks(game_id: str):
     phaseDeck_set = []
     for (id, phase, deck_json) in list(
@@ -264,7 +271,50 @@ def player_action(data):
         case "do_skip":
             pass
         case "put_down":
-            pass
+            if not player.completed_phase:
+                return json.dumps({"type": "rejection", "message": "You need to complete your phase before you put down"})
+            
+            gamePhaseDeck = id_to_gamePhaseDeck(data["phase_deck_id"])
+            cards = [Card.fromJSONDict(x) for x in data["cards"]]
+            str_cards = [str(x) for x in cards]
+            str_gamePhaseDeck = [str(x) for x in gamePhaseDeck.deck]
+
+            deckToTest = None
+            str_deckToTest = None
+            if data["direction"] == "start":
+                deckToTest = cards + gamePhaseDeck.deck
+                str_deckToTest = str_cards + str_gamePhaseDeck
+            elif data["direction"] == "end":
+                deckToTest = gamePhaseDeck.deck + cards
+                str_deckToTest = str_gamePhaseDeck + str_cards
+            else:
+                return json.dumps({"type": "rejection", "message": f"{data['direction']} is not a valid direction"})
+
+            phase = gamePhaseDeck.phase
+
+            command = f"java RE -p {phase} -d {' '.join(str_deckToTest)}"
+            output = subprocess.check_output(command, shell=True).decode("utf-8").strip()
+            if output == "true":
+                # Remove the cards from the player's hand
+                for card in cards:
+                    if card not in hand:
+                        return json.dumps({"type": "rejection", "message": f"{str(card)} is not in your hand"})
+                    else:
+                        hand.remove(card)
+                json_hand = [x.toJSONDict() for x in hand]
+                cur.execute("UPDATE players SET hand=? WHERE id = ?",
+                            (json.dumps(json_hand), player_id))
+                
+                json_deckToTest = [x.toJSONDict() for x in deckToTest]
+                cur.execute("UPDATE gamePhaseDecks SET deck=? WHERE id = ?", 
+                            (json.dumps(json_deckToTest), data["phase_deck_id"]))
+                con.commit()
+
+                
+            else:
+                return json.dumps({"type": "rejection", "message": "Unable to put down these cards to the phase!"})
+
+            
         case "complete_phase":
             if player.completed_phase:
                 return json.dumps({"type": "rejection", "message": "You've already completed your phase!"})

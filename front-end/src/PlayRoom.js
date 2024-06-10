@@ -49,7 +49,7 @@ const getDeckDivs = function(deck, selectedCards, setSelectedCards){
 
 
 export default function PlayRoom({props}) {
-    const{state, dispatch, socket} = props;
+    const{state, socket} = props;
 
 	const params = useParams();
 	const game_id = params?.id;
@@ -57,7 +57,6 @@ export default function PlayRoom({props}) {
     const user_id = state["user-id"];
     const game = state["game-list"]?.filter(game => game.id === game_id)[0];
     const [selectedCards, setSelectedCards] = useState([]);
-    const [wantToCompletePhase, setWantToCompletePhase] = useState(false);
     const [wantToSkip, setWantToSkip] = useState(false);
     const [selectedSkipPlayer, setSelectedSkipPlayer] = useState(null);
 
@@ -135,7 +134,13 @@ export default function PlayRoom({props}) {
         if(socket.readyState === socket.OPEN){
             socket.send(JSON.stringify({type: "player_action", action: "complete_phase", player_id: player_id, cards: selectedCards}));
         }
+    }
 
+    const putDown = function(phase_deck_id, direction) {
+        setSelectedCards([]);
+        if(socket.readyState === socket.OPEN){
+            socket.send(JSON.stringify({type: "player_action", action: "put_down", player_id: player_id, phase_deck_id: phase_deck_id, direction: direction, cards: selectedCards}));
+        }
     }
 
     const sortByColor = function(){
@@ -182,10 +187,13 @@ export default function PlayRoom({props}) {
                 <button onClick={() => {sortByColor(hand)}}>Sort by color</button>
             </div>
             <div className="player-console">
+                <button onClick={drawDeck}>Draw Deck</button>
+                <button onClick={drawDiscard}>Draw Discard</button>
+                <button onClick={discardSelected}>Discard Selected Card</button>
+            </div>
+            <div className="player-console">
                 {wantToSkip && <button onClick={() => {setWantToSkip(false); setSelectedSkipPlayer(null)}}>Don't Skip Player</button>}
                 {!wantToSkip && <button onClick={() => setWantToSkip(true)}>Skip Player</button>}    
-                {!wantToCompletePhase && <button onClick={() => {setWantToCompletePhase(true)}}>Complete Phase</button>}
-                {wantToCompletePhase && <button onClick={() => {setWantToCompletePhase(false)}}>I don't have my phase</button>}
             </div>
             {
                 wantToSkip && 
@@ -197,23 +205,23 @@ export default function PlayRoom({props}) {
                     {selectedSkipPlayer && <button onClick={skipPlayer}>Skip Player</button>}
                 </div>
             }
-            <div className="player-console">
-                <button onClick={drawDeck}>Draw Deck</button>
-                <button onClick={drawDiscard}>Draw Discard</button>
-                <button onClick={discardSelected}>Discard Selected Card</button>
-            </div>
             <div>
-                {game["phase_decks"].map((deck) => {return  <div className="phase-deck-collection" key={deck.id}> <h2>{deck.phase}:</h2> <div className="card-collection">{getDeckDivs(deck["deck"], selectedCards, setSelectedCards)} </div> </div> })}
+                {game["phase_decks"].map((deck) => {
+                    return (
+                        <div className="phase-deck-collection" key={deck.id}>
+                            <button onClick={() => {putDown(deck.id, "start")}}>Put down selected cards at the start</button>
+                            <h2>{deck.phase}:</h2> <div className="card-collection">{getDeckDivs(deck["deck"], selectedCards, setSelectedCards)} </div>
+                            <button onClick={() => {putDown(deck.id, "end")}}>Put down selected cards at the end</button>
+                        </div>
+                        ); })}
             </div>
-            {wantToCompletePhase && 
             <div style={{display: "flex", flexDirection: "column", justifyContent: "center"}}>
-                <h2 style={{marginLeft: "auto", marginRight: "auto"}}>Select your cards for the phase</h2>
+                <h2 style={{marginLeft: "auto", marginRight: "auto"}}>Selected card(s)</h2>
                 <div className="card-collection">
                     {getDeckDivs(selectedCards, selectedCards, setSelectedCards)}
                 </div>
                 <button onClick={completePhase}>Complete Phase</button>
             </div>
-            }
             
 
             {/* <div className="card-collection">
