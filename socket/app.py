@@ -7,9 +7,8 @@ import sqlite3
 import subprocess
 
 import websockets
-from vel_data_structures import AVL_Set, AVL_Dict
 
-from Card import Card
+from Card import Card, Rank
 from Game import Game
 from Player import Player
 from User import User
@@ -96,18 +95,18 @@ cur.execute(
 con.commit()
 
 
-def id_to_user(user_id):
+def id_to_user(user_id: str) -> User:
     for (id, name, token) in list(cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))):
         u = User(id, name, token)
         return u
 
 
-def name_in_user(name):
+def name_in_user(name: str) -> User:
     return not (cur.execute("SELECT * FROM users WHERE name = ?",
                             (name,)).fetchone() is None)
 
 
-def name_to_user(name):
+def name_to_user(name: str) -> User:
     for (id, name, token) in list(cur.execute("SELECT * FROM users WHERE name = ?", (name,))):
         u = User(id, name, token)
         return u
@@ -118,7 +117,7 @@ async def send_users():
     websockets.broadcast(connected, json.dumps({"type": "get_users", "users": [u.toJSONDict() for u in user_list]}))
 
 
-def id_to_game(game_id):
+def id_to_game(game_id: str) -> Game:
     for (id, phase_list, deck_json, discard_json, current_player, owner, in_progress) in list(cur.execute(
             "SELECT * FROM games WHERE id = ?", (game_id,))):
         deck = [Card.fromJSONDict(x) for x in json.loads(deck_json)]
@@ -140,7 +139,7 @@ def get_games():
     return game_set
 
 
-def game_id_to_gamePhaseDecks(game_id):
+def game_id_to_gamePhaseDecks(game_id: str):
     phaseDeck_set = []
     for (id, phase, deck_json) in list(
             cur.execute("SELECT id, phase, deck FROM gamePhaseDecks WHERE game_id = ?", (game_id,))):
@@ -169,7 +168,7 @@ async def send_games():
     )
 
 
-def id_to_player(player_id):
+def id_to_player(player_id: str) -> Player:
     for (id, game_id, user_id, hand_json, turn_index, phase_index, completed_phase, skip_cards) in list(cur.execute(
             "SELECT * FROM players WHERE id = ?", (player_id,))):
         hand = [Card.fromJSONDict(x) for x in json.loads(hand_json)]
@@ -177,7 +176,7 @@ def id_to_player(player_id):
         return p
 
 
-def game_user_id_to_player(game_id, user_id):
+def game_user_id_to_player(game_id: str, user_id: str) -> Player:
     for (id, game_id, user_id, hand_json, turn_index, phase_index, completed_phase, skip_cards) in list(cur.execute(
             "SELECT * FROM players WHERE game_id = ? AND user_id = ?", (game_id, user_id))):
         hand = [Card.fromJSONDict(x) for x in json.loads(hand_json)]
@@ -185,7 +184,7 @@ def game_user_id_to_player(game_id, user_id):
         return p
 
 
-def game_user_id_in_player(game_id, user_id):
+def game_user_id_in_player(game_id: str, user_id: str) -> bool:
     return not (cur.execute("SELECT * FROM players WHERE game_id = ? AND user_id = ?",
                             (game_id, user_id)).fetchone() is None)
 
@@ -298,7 +297,28 @@ def player_action(data):
                 return json.dumps({"type": "rejection", "message": "Not a valid phase!"})
 
         case "skip_player":
-            pass
+            contains_skip = False
+            skip_card = None
+            for card in hand:
+                if card.rank is Rank.SKIP:
+                    contains_skip = True
+                    skip_card = card
+                    break
+            if contains_skip:
+                to_id = data["to"]
+                to_player = game_user_id_to_player(game_id, to_id)
+                to_player.skip_cards += 1
+                hand.remove(skip_card)
+                json_hand = [x.toJSONDict() for x in hand]
+
+                cur.execute("UPDATE players SET skip_cards=? WHERE id = ?",
+                            (to_player.skip_cards, to_player.id))
+                cur.execute("UPDATE players SET hand=? WHERE id = ?", 
+                            (json.dumps(json_hand), player_id))
+                con.commit()
+            else:
+                return json.dumps({"type": "rejection", "message": "You don't have a skip card!"})
+
         case "discard":
             card_id = data["card_id"]
             selected_card = None
@@ -322,7 +342,10 @@ def player_action(data):
             pass
         case _:
             raise Exception(f"Unrecognized player option {data['action']}")
-    return json.dumps({"type": "get_player", "game_id": game_id, "user_id": user_id, "player": player.toJSONDict()})
+    
+    player_dict = player.toJSONDict()
+    player_dict["phase"] = game.phase_list[player.phase_index]
+    return json.dumps({"type": "get_player", "game_id": game_id, "user_id": user_id, "player": player_dict})
 
 
 def handle_data(data, websocket):
@@ -374,14 +397,17 @@ def handle_data(data, websocket):
         case "get_player":
             game_id = data["game_id"]
             user_id = data["user_id"]
+            game = id_to_game(game_id)
             if game_user_id_in_player(game_id, user_id):
                 player = game_user_id_to_player(game_id, user_id)
+                player_dict = player.toJSONDict()
+                player_dict["phase"] = game.phase_list[player.phase_index]
                 return json.dumps(
                     {
                         "type": "get_player",
                         "game_id": game_id,
                         "user_id": user_id,
-                        "player": player.toJSONDict(),
+                        "player": player_dict,
                     }
                 )
             else:

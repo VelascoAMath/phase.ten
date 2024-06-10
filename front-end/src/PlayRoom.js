@@ -58,6 +58,8 @@ export default function PlayRoom({props}) {
     const game = state["game-list"]?.filter(game => game.id === game_id)[0];
     const [selectedCards, setSelectedCards] = useState([]);
     const [wantToCompletePhase, setWantToCompletePhase] = useState(false);
+    const [wantToSkip, setWantToSkip] = useState(false);
+    const [selectedSkipPlayer, setSelectedSkipPlayer] = useState(null);
 
     if(game === undefined){
         return <div>{game_id} is not a valid game room!</div>
@@ -120,6 +122,14 @@ export default function PlayRoom({props}) {
         }
     }
 
+    const skipPlayer = function() {
+        setSelectedSkipPlayer(null);
+        setWantToSkip(false);
+        if(socket.readyState === socket.OPEN){
+            socket.send(JSON.stringify({type: "player_action", action: "skip_player", player_id: player_id, to: selectedSkipPlayer}))
+        }
+    }
+
     const completePhase = function() {
         setSelectedCards([]);
         if(socket.readyState === socket.OPEN){
@@ -150,6 +160,13 @@ export default function PlayRoom({props}) {
             <div>
                 User is {name} {user_id}
             </div>
+            <h2 style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
+                You are on phase {player.phase_index + 1} - {player.phase}
+            </h2>
+            <h2 style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
+                {(player.completed_phase === 0) && "You have not completed your phase"}
+                {(player.completed_phase === 1) && "You have completed your phase"}
+            </h2>
             <div>
                 Play room {game_id}
             </div>
@@ -163,8 +180,24 @@ export default function PlayRoom({props}) {
             <div className="player-console">
                 <button onClick={() => {sortByRank(hand)}}>Sort by rank</button>
                 <button onClick={() => {sortByColor(hand)}}>Sort by color</button>
+            </div>
+            <div className="player-console">
+                {wantToSkip && <button onClick={() => {setWantToSkip(false); setSelectedSkipPlayer(null)}}>Don't Skip Player</button>}
+                {!wantToSkip && <button onClick={() => setWantToSkip(true)}>Skip Player</button>}    
                 {!wantToCompletePhase && <button onClick={() => {setWantToCompletePhase(true)}}>Complete Phase</button>}
                 {wantToCompletePhase && <button onClick={() => {setWantToCompletePhase(false)}}>I don't have my phase</button>}
+            </div>
+            {
+                wantToSkip && 
+                <div style={{display: "flex", flexDirection: "column", alignItems: "center", border: "5px white solid"}}>
+                    <h3>Who do you want to skip?</h3>
+                    <div>
+                        {game.users.filter(user => user.id !== player.user_id).map(user => <button key={user.id} style={{border: (user.id === selectedSkipPlayer ? "solid red 2px": "")}} onClick={() => setSelectedSkipPlayer(user.id)}>{user.name}</button> )}
+                    </div>
+                    {selectedSkipPlayer && <button onClick={skipPlayer}>Skip Player</button>}
+                </div>
+            }
+            <div className="player-console">
                 <button onClick={drawDeck}>Draw Deck</button>
                 <button onClick={drawDiscard}>Draw Discard</button>
                 <button onClick={discardSelected}>Discard Selected Card</button>
@@ -183,9 +216,9 @@ export default function PlayRoom({props}) {
             }
             
 
-            <div className="card-collection">
+            {/* <div className="card-collection">
                 {getDeckDivs(game["deck"], selectedCards, setSelectedCards)}
-            </div>
+            </div> */}
         </div>
     )
 }
