@@ -64,26 +64,11 @@ function gameRoomView(user_id, gameList, socket, selectedGame, setSelectedGame) 
     }
 
     return  (
-    <div>
-        <h1>Games you are hosting</h1>
-        <div>
-            <h2>Waiting for Players to join</h2>
-            <div className="rooms-to-join">
-                {hostWaitGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1}`, game.id, () => {setSelectedGame(game.id)}, ("available " + (selectedGame === game.id ? "selected": ""))))}
-            </div>
+    <>
+        <div className="room-section">
             <h2>Games in progress</h2>
-            <div className="rooms-to-join">
+            <div className="rooms">
                 {hostStartedGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1}`, game.id, () => {setSelectedGame(game.id)}, ("in-progress " + (selectedGame === game.id ? "selected": "")) ))}
-            </div>
-        </div>
-        <h1>Games you have joined</h1>
-        <div>
-            <h2>Waiting for players to join</h2>
-            <div className="rooms-to-join">
-                {joinWaitGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1}`, game.id, () => {setSelectedGame(game.id); if(!game['user-in-game']){joinGame(game.id, user_id, socket)} }, ("available " + (selectedGame === game.id ? "selected": "")) ))}
-            </div>
-            <h2>Games in progress</h2>
-            <div className="rooms-to-join">
                 {joinStartedGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1}`, game.id, () => {
                     if(!game["user-in-game"] && (game.in_progress === 0 || game.in_progress === false)) {
                         joinGame(game.id, user_id, socket);
@@ -91,16 +76,23 @@ function gameRoomView(user_id, gameList, socket, selectedGame, setSelectedGame) 
                     if((game.in_progress === 1 || game.in_progress === true) && game["user-in-game"]){
                         setSelectedGame(game.id);
                     }
-                    },
-                    ("in-progress " + (selectedGame === game.id ? "selected": "")) ))}
+                },
+                ("in-progress " + (selectedGame === game.id ? "selected": "")) ))}
             </div>
-
         </div>
-    </div>
+        <div className="room-section">
+            <h2>Waiting for players to join</h2>
+            <div className="rooms">
+                {hostWaitGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1}`, game.id, () => {setSelectedGame(game.id)}, ("available " + (selectedGame === game.id ? "selected": ""))))}
+                {joinWaitGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1}`, game.id, () => {setSelectedGame(game.id); if(!game['user-in-game']){joinGame(game.id, user_id, socket)} }, ("available " + (selectedGame === game.id ? "selected": "")) ))}
+            </div>
+        </div>
+
+    </>
     );
 }
 
-export default function GameRoom({props}) {
+export default function Lobby({props}) {
 
     const{state, socket} = props;
     const [selectedGame, setSelectedGame] = useState(null);
@@ -162,10 +154,10 @@ export default function GameRoom({props}) {
 
             {(!state["game-list"] || state["game-list"]?.length === 0) && "There seem to be no games. Why don't you create one?"}
             
+            <Button onClick={createGame}>Create Game</Button>
             <div className="rooms-to-join">
                 {(state["game-list"]?.length > 0) && gameRoomView(state["user-id"], state["game-list"], socket, selectedGame, setSelectedGame)}
             </div>
-            <Button onClick={createGame}>Create Game</Button>
         </div>
     )
 }

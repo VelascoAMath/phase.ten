@@ -19,7 +19,7 @@ export default function Home({props}) {
 				<Link to="/cards">Look at cards</Link>
 			</div> */}
 			<div>
-				<Link to="/games">Play a game</Link>
+				<Link to="/lobby">Play a game</Link>
 			</div>
 			{/* <div>
 				<Link to="/test_game">Test out our websockets</Link>

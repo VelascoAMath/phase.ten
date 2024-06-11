@@ -6,7 +6,7 @@ import Home from './Home.js';
 
 import PlayerListing from './PlayerListing';
 import PlayerCreation from './PlayerCreation'
-import GameRoom from './GameRoom';
+import Lobby from './Lobby';
 import { Route } from "wouter";
 import inputReducer from './InputReducer.js';
 import PlayerLogin from './PlayerLogin.js';
@@ -17,7 +17,7 @@ const initState = {
   "user-id": localStorage.getItem("user-id"),
   "user-name": localStorage.getItem("user-name"),
   "user-token": localStorage.getItem("user-token"),
-  "socket": new WebSocket("ws://192.168.0.40:8001"),
+  "socket": new WebSocket("ws://localhost:8001"),
   "game-list": [],
 };
 
@@ -129,8 +129,8 @@ function App() {
       {/* <Route path="/test_game">
         <GamePlay socket={socket}/>
       </Route> */}
-      <Route path="/games">
-        <GameRoom props={{state, dispatch, socket}}></GameRoom>
+      <Route path="/lobby">
+        <Lobby props={{state, dispatch, socket}}></Lobby>
       </Route>
       <Route path="/play/:id">
         <PlayRoom props={{state, dispatch, socket}}/>

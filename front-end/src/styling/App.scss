@@ -39,7 +39,7 @@ a {
     border-top: 3px white solid;
     border-right: 3px white solid;
     border-bottom: 3px white solid;
-    text-align: center; 
+    text-align: center;
   }
 
   .phase:first-child {
@@ -70,7 +70,7 @@ a {
     border-radius: 10px;
     border: yellow 5px solid;
   }
-  
+
   .current {
     color: white;
     background-color: green;
@@ -105,17 +105,17 @@ a {
     font-size: 20px;
     text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;
   }
-  
+
   .selected {
     border: turquoise 2px solid;
     font-size: x-large;
   }
-  
+
   .skip {
     background-color: black;
   color: antiquewhite;
   }
-  
+
   .wild {
     background: linear-gradient(90deg, red 0%, blue 33%, yellow 66%, green 100%);
     color: white;
@@ -135,33 +135,47 @@ a {
 
 .rooms-to-join {
   display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  align-content: flex-end;
-  gap: 10px 10px;
-  font-size: large;
+  justify-content: space-around;
   background-color: darkblue;
+  height: 50vh;
 
-  .room-to-join {
-    background-color: rgb(0, 0, 0);
-    padding: 5px;
-    border: solid 1px black;
-    border-radius: 5px;
-  }
-  .available {
-    background-color: green;
-  }
+  .room-section{
 
-  .waiting {
-    background-color: mediumturquoise;
-  }
+    display: flex;
+    flex-direction: column;
+    width: 50%;
 
-  .in-progress {
-    background-color: darkorange;
-  }
+    .rooms {
 
-  .selected {
-    border: solid 5px turquoise;
-  }
+      display: flex;
+      flex-wrap: wrap;
+      overflow-y: scroll;
 
+
+      .room-to-join {
+        width: 75px;
+        background-color: rgb(0, 0, 0);
+        padding: 5px;
+        border: solid 1px black;
+        border-radius: 5px;
+      }
+
+      .available {
+        background-color: green;
+      }
+
+      .waiting {
+        background-color: mediumturquoise;
+      }
+
+      .in-progress {
+        background-color: darkorange;
+      }
+
+      .selected {
+        border: solid 5px turquoise;
+      }
+    }
+
+  }
 }
