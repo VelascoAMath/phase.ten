@@ -15,6 +15,7 @@ from User import User
 from GamePhaseDeck import GamePhaseDeck
 
 connected = set()
+socket_to_player_id = {}
 
 DEFAULT_PHASE_LIST = [
 	"S3+S3",
@@ -117,6 +118,28 @@ async def send_users():
 	user_list = [User(id, name, token) for (id, name, token) in cur.execute("SELECT * FROM users")]
 	websockets.broadcast(connected, json.dumps({"type": "get_users", "users": [u.toJSONDict() for u in user_list]}))
 
+async def send_players():
+	for (socket, player_id) in socket_to_player_id.items():
+
+
+		player = id_to_player(player_id)
+		game = id_to_game(player.game_id)
+		user_id = player.user_id
+		game_id = game.id
+		player_dict = player.toJSONDict()
+		if player.phase_index < len(game.phase_list):
+			player_dict["phase"] = game.phase_list[player.phase_index]
+		else:
+			player_dict["phase"] = "WINNER"
+
+		await socket.send(json.dumps(
+			{
+				"type": "get_player",
+				"game_id": game_id,
+				"user_id": user_id,
+				"player": player_dict,
+			}
+		))
 
 def id_to_game(game_id: str) -> Game:
 	for (id, phase_list, deck_json, discard_json, current_player, owner, in_progress) in list(cur.execute(
@@ -599,6 +622,7 @@ def handle_data(data, websocket):
 			game = id_to_game(game_id)
 			if game_user_id_in_player(game_id, user_id):
 				player = game_user_id_to_player(game_id, user_id)
+				socket_to_player_id[websocket] = player.id
 				player_dict = player.toJSONDict()
 				if player.phase_index < len(game.phase_list):
 					player_dict["phase"] = game.phase_list[player.phase_index]
@@ -750,10 +774,13 @@ async def handler(websocket):
 			await websocket.send(message)
 			await send_games()
 			await send_users()
+			await send_players()
 	except Exception as e:
 		print(e)
 		if websocket in connected:
 			connected.remove(websocket)
+		if websocket in socket_to_player_id:
+			socket_to_player_id.pop(websocket)
 		raise e
 
 
