@@ -87,6 +87,11 @@ export default function PlayRoom({props}) {
             </div>
     }
 
+    if (player["phase"] === "WINNER"){
+        return <div className="winner">You have won!!!</div>
+    }
+
+
 
 
     const hand = player["hand"];
@@ -97,6 +102,15 @@ export default function PlayRoom({props}) {
     const hasSkip = hand.filter(card => {return card.rank === "S"}).length > 0;
 
     const roomPlayers = game["players"];
+
+    // Another player has won
+    if(roomPlayers.filter((player) => (player.phase_index >= game.phase_list.length)).length){
+        return (
+            <div className="winner">
+                Sucks to be a loser
+            </div>
+        )
+    }
 
 
 
