@@ -57,16 +57,6 @@ cur.execute(
 	");"
 )
 cur.execute(
-	"CREATE TABLE IF NOT EXISTS gameHits ("
-	"	id TEXT NOT NULL,"
-	"	game TEXT NOT NULL,"
-	"	phase TEXT NOT NULL,"
-	"	deck TEXT NOT NULL,"
-	"	CONSTRAINT gameHits_pk PRIMARY KEY (id),"
-	"	CONSTRAINT gameHits_games_FK FOREIGN KEY (game) REFERENCES games(id)"
-	");"
-)
-cur.execute(
 	"CREATE TABLE IF NOT EXISTS players ("
 	"	id TEXT NOT NULL,"
 	"	game_id TEXT NOT NULL,"
