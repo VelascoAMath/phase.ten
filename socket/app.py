@@ -534,16 +534,16 @@ def player_action(data):
 	if len(player.hand) == 0:
 		game.deck = Card.getNewDeck()
 		random.shuffle(game.deck)
-		game.discard = []
+		game.discard = [game.deck.pop()]
 
-		# Other players lost so we'll set their index to 0
+		# Other players lost, so we'll set their index to 0
 		cur.execute("UPDATE players SET phase_index=0 WHERE game_id=? AND id != ?",
 		            (game_id, player_id))
 
 		roomPlayers = game_id_to_players(game.id)
 		# Update the player info
 		for i, roomPlayer in enumerate(roomPlayers):
-			roomPlayer.hand = [game.deck.pop() for _ in range(10)]
+			roomPlayer.hand = [game.deck.pop() for _ in range(INITIAL_HAND_SIZE)]
 			roomPlayer.drew_card = False
 			# We move the player list up one turn
 			roomPlayer.turn_index = (i + 1) % len(roomPlayers)
@@ -561,8 +561,9 @@ def player_action(data):
 		# Remove all phase decks
 		cur.execute("DELETE FROM gamePhaseDecks WHERE game_id=?", (game.id,))
 		json_deck = [x.toJSONDict() for x in game.deck]
+		json_discard = [x.toJSONDict() for x in game.discard]
 		cur.execute("UPDATE games SET deck=?,discard=?,current_player=? WHERE id=?",
-		            (json.dumps(json_deck), json.dumps([]), game.current_player, game.id))
+		            (json.dumps(json_deck), json.dumps([ ]), game.current_player, game.id))
 		con.commit()
 
 	player_dict = player.toJSONDict()
