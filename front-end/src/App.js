@@ -17,7 +17,7 @@ const initState = {
   "user-id": localStorage.getItem("user-id"),
   "user-name": localStorage.getItem("user-name"),
   "user-token": localStorage.getItem("user-token"),
-  "socket": new WebSocket("ws://localhost:8001"),
+  "socket": new WebSocket("ws://192.168.0.40:8001"),
   "game-list": [],
 };
 
@@ -101,7 +101,7 @@ function App() {
 
   return (
     <div>
-      {state["user-name"]}:{state["user-id"]}
+      <h2>{state["user-name"]}</h2>
       <div>
                 {state["user-list"]?.map(user => {
                     const setUser = function(){

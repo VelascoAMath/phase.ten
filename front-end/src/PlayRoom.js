@@ -84,9 +84,6 @@ export default function PlayRoom({props}) {
     if(player === undefined){
         return <div>
             <div>You are not a player in this game!</div>
-            <div>{game_id}</div>
-            <div>{user_id}</div>
-            {JSON.stringify(state)}
             </div>
     }
 
@@ -134,6 +131,7 @@ export default function PlayRoom({props}) {
     const skipPlayer = function() {
         setSelectedSkipPlayer(null);
         setWantToSkip(false);
+        setSelectedCards([]);
         if(socket.readyState === socket.OPEN){
             socket.send(JSON.stringify({type: "player_action", action: "skip_player", player_id: player_id, to: selectedSkipPlayer}))
         }
@@ -172,9 +170,6 @@ export default function PlayRoom({props}) {
 
     return (
         <div>
-            <div>
-                User is {name} {user_id}
-            </div>
             <div className="phase-list">
                 {game.phase_list.map((phase, idx) => <div className={"phase " + ((player.phase_index === idx) ? "selected": "")}>{phase}</div>)}
             </div>
@@ -196,8 +191,8 @@ export default function PlayRoom({props}) {
                 Play room {game_id}
             </div>
 
-            <div className="card-collection">
-                {getDeckDivs(discardDeck, selectedCards, setSelectedCards) }
+            <div style={{alignItems: "center", gap: "10px 10px"}} className="card-collection">
+                {getDeckDivs(discardDeck.slice(discardDeck.length-1), selectedCards, setSelectedCards) }
             </div>
             <div className="card-collection">
                 {getDeckDivs(player["hand"], selectedCards, setSelectedCards )}
