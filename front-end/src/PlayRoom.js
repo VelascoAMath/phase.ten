@@ -253,11 +253,6 @@ export default function PlayRoom({props}) {
                 </div>
                 {isCurrentPlayer && (selectedCards.length > 0) && <button onClick={completePhase}>Complete Phase</button>}
             </div>
-            
-
-            {/* <div className="card-collection">
-                {getDeckDivs(game["deck"], selectedCards, setSelectedCards)}
-            </div> */}
         </div>
     )
 }

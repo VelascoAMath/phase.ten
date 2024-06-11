@@ -32,8 +32,8 @@ DEFAULT_PHASE_LIST = [
 INITIAL_HAND_SIZE = 10
 # We'll start from a new database everytime we start the server
 # This is just until we can get something that definitely works
-# if os.path.exists("phase_ten.db"):
-# 	os.remove("phase_ten.db")
+if os.path.exists("phase_ten.db"):
+	os.remove("phase_ten.db")
 
 con = sqlite3.connect("phase_ten.db")
 # con = sqlite3.connect(":memory:")
@@ -512,6 +512,10 @@ def player_action(data):
 		game.deck = Card.getNewDeck()
 		random.shuffle(game.deck)
 		game.discard = []
+
+		# Other players lost so we'll set their index to 0
+		cur.execute("UPDATE players SET phase_index=0 WHERE game_id=? AND id != ?",
+		            (game_id, player_id))
 
 		roomPlayers = game_id_to_players(game.id)
 		# Update the player info
