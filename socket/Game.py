@@ -5,7 +5,7 @@ from Card import *
 
 @dataclasses.dataclass(order=True)
 class Game:
-	id: str = ""
+	id: str = dataclasses.field(default_factory=lambda: str(uuid.uuid4()))
 	phase_list: list = dataclasses.field(default_factory=list)
 	deck: list = dataclasses.field(default_factory=list)
 	discard: list = dataclasses.field(default_factory=list)

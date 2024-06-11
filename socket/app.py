@@ -5,6 +5,7 @@ import random
 import secrets
 import sqlite3
 import subprocess
+import uuid
 
 import websockets
 
@@ -252,13 +253,13 @@ def create_game(data):
 			}
 		)
 	else:
-		g = Game(secrets.token_urlsafe(16), DEFAULT_PHASE_LIST, [], [], 0, user_id, False)
+		g = Game(str(uuid.uuid4()), DEFAULT_PHASE_LIST, [], [], 0, user_id, False)
 		try:
 			cur.execute(
 				"INSERT INTO games (id, phase_list, deck, discard, current_player, owner, in_progress) VALUES (?, ?, ?, ?, ?, ?, ?)",
 				(g.id, json.dumps(DEFAULT_PHASE_LIST), "[]", "[]", user_id, user_id, 0))
 
-			p = Player(secrets.token_urlsafe(16), g.id, user_id)
+			p = Player(game_id=g.id, user_id=user_id)
 			cur.execute(
 				"INSERT INTO players (id, game_id, user_id, hand) VALUES (?, ?, ?, ?)", (p.id, g.id, user_id, "[]")
 			)
@@ -576,9 +577,8 @@ def handle_data(data, websocket):
 			will_send = True
 			if will_send:
 				u = User(
-					secrets.token_urlsafe(16),
-					data["name"],
-					secrets.token_urlsafe(16),
+					id=str(uuid.uuid4()),
+					name=data["name"],
 				)
 				try:
 					# Add this new user to our databases
@@ -663,7 +663,7 @@ def handle_data(data, websocket):
 				)
 			else:
 				try:
-					p = Player(secrets.token_urlsafe(16), game_id, user_id)
+					p = Player(game_id=game_id, user_id=user_id)
 					cur.execute("INSERT INTO players (id, game_id, user_id, hand) VALUES (?, ?, ?, ?)",
 					            (p.id, game_id, user_id, "[]"))
 					con.commit()
