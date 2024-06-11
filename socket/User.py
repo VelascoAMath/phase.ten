@@ -1,12 +1,15 @@
 import dataclasses
 import json
+import secrets
+import uuid
+from uuid import UUID
 
 
 @dataclasses.dataclass(order=True)
 class User:
-    id: str = ""
+    id: UUID = dataclasses.field(default_factory=lambda: str(uuid.uuid4()))
     name: str = ""
-    token: str = ""
+    token: str = dataclasses.field(default_factory=lambda:secrets.token_hex(16))
     
 
     def toJSON(self):
@@ -43,6 +46,9 @@ def main():
     print(u)
     print(u.toJSON())
     print(User.fromJSON(u.toJSON()))
+    print(u == User.fromJSON(u.toJSON()))
+    u = User()
+    print(u)
 
 
 if __name__ == "__main__":
