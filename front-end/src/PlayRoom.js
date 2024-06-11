@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams } from "wouter";
+import { checkCircleFill, xCircle, xCircleFill } from "./Icons";
 
 
 const rankToColor = {
@@ -192,9 +193,6 @@ export default function PlayRoom({props}) {
     }
 
 
-
-
-
     return (
         <div>
             <div className="phase-list">
@@ -203,7 +201,12 @@ export default function PlayRoom({props}) {
             <div className="room-players">
                 {roomPlayers.map((player) => {
                     const className = "player " + ((player.user_id === game.current_player) ? "current ": "") + ((player.skip_cards > 0) ? "skipped": "");
-                    return <div className={className} key={player.id}> <div>{player.name}</div> <div>Phase {player.phase_index + 1}</div> </div>
+                    return (<div className={className} key={player.id}> <div>{player.name}</div>
+                        <div>Phase {player.phase_index + 1}</div>
+                        <div>{game.phase_list[player.phase_index]}</div>
+                        {!player.completed_phase && <div style={{display: "flex", alignItems: "flex-end"}}> <div>Phase:</div> <div/> {xCircleFill()} </div>}
+                        {player.completed_phase && <div style={{display: "flex", alignItems: "flex-end"}}> <div>Phase:</div> <div/> {checkCircleFill()} </div>}
+                    </div>);
                     }
                 )}
             </div>

@@ -210,13 +210,15 @@ async def send_games():
 			game_dict["users"].append(id_to_user(user_id).toJSONDict())
 
 		game_dict["players"] = []
-		for (player_id, user_id, user_name, turn_index, phase_index, skip_cards) in list(
-				cur.execute("SELECT players.id, users.id, users.name, turn_index, phase_index, skip_cards "
+		for (player_id, user_id, user_name, turn_index, phase_index, completed_phase, skip_cards) in list(
+				cur.execute("SELECT players.id, users.id, users.name, turn_index, phase_index, completed_phase, skip_cards "
 				            "FROM players JOIN users WHERE players.user_id = users.id AND "
 				            "players.game_id = ? ORDER BY turn_index;", (game.id,))):
+
 			game_dict["players"].append(
 				{"player_id": player_id, "user_id": user_id, "name": user_name, "turn_index": turn_index,
 				 "phase_index": phase_index,
+				 "completed_phase": (completed_phase == 1),
 				 "skip_cards": skip_cards})
 
 		game_dict["phase_decks"] = [x.toJSONDict() for x in game_id_to_gamePhaseDecks(game.id)]
