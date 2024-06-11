@@ -3,6 +3,7 @@ import json
 import random
 import re
 import secrets
+import uuid
 from enum import Enum
 
 
@@ -155,7 +156,7 @@ class Color(Enum):
 class Card:
 	color: Color = dataclasses.field(default_factory=lambda: Color.WILD)
 	rank: Rank = dataclasses.field(default_factory=lambda: Rank.WILD)
-	id: str = dataclasses.field(default_factory=lambda: secrets.token_urlsafe(16))
+	id: str = dataclasses.field(default_factory=lambda: str(uuid.uuid4()))
 
 	def __post_init__(self):
 		if self.color is Color.WILD and self.rank is not Rank.WILD:
