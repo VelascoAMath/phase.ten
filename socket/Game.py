@@ -23,7 +23,7 @@ class Game:
 			"discard": [x.toJSONDict() for x in self.discard],
 			"current_player": self.current_player,
 			"owner": self.owner,
-			"in_progress": (1 if self.in_progress else 0),
+			"in_progress": self.in_progress,
 		}
 	
 	def toJSON(self):
@@ -38,7 +38,7 @@ class Game:
 		discard = []
 		for c in data["discard"]:
 			discard.append(Card.fromJSONDict(c))
-		return Game(data["id"], data["phase_list"], deck, discard, data["current_player"], data["owner"], (True if data["in_progress"] == 1 else False))
+		return Game(data["id"], data["phase_list"], deck, discard, data["current_player"], data["owner"], data["in_progress"])
 	
 
 

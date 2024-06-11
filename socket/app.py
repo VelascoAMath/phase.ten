@@ -34,8 +34,8 @@ DEFAULT_PHASE_LIST = [
 INITIAL_HAND_SIZE = 10
 # We'll start from a new database everytime we start the server
 # This is just until we can get something that definitely works
-if os.path.exists("phase_ten.db"):
-	os.remove("phase_ten.db")
+# if os.path.exists("phase_ten.db"):
+# 	os.remove("phase_ten.db")
 
 con = sqlite3.connect("phase_ten.db")
 # con = sqlite3.connect(":memory:")
@@ -209,7 +209,7 @@ async def send_games():
 			game_dict["players"].append(
 				{"player_id": player_id, "user_id": user_id, "name": user_name, "turn_index": turn_index,
 				 "phase_index": phase_index,
-				 "completed_phase": (completed_phase == 1),
+				 "completed_phase": completed_phase,
 				 "skip_cards": skip_cards})
 
 		game_dict["phase_decks"] = [x.toJSONDict() for x in game_id_to_gamePhaseDecks(game.id)]

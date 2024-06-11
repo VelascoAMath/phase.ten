@@ -18,16 +18,6 @@ class Player:
     completed_phase: bool = False
     skip_cards: int = 0
 
-    def __post_init__(self):
-        if self.drew_card == 1:
-            self.drew_card = True
-        if self.drew_card == 0:
-            self.drew_card = False
-        if self.completed_phase == 1:
-            self.completed_phase = True
-        if self.completed_phase == 0:
-            self.completed_phase = False
-
     def toJSON(self):
         return json.dumps(self.toJSONDict())
     
@@ -39,8 +29,8 @@ class Player:
             "hand": [x.toJSONDict() for x in self.hand],
             "turn_index": self.turn_index,
             "phase_index": self.phase_index,
-            "drew_card": (1 if self.drew_card else 0),
-            "completed_phase": (1 if self.completed_phase else 0),
+            "drew_card": self.drew_card,
+            "completed_phase": self.completed_phase,
             "skip_cards": self.skip_cards,
         }
     
