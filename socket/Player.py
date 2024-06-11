@@ -1,12 +1,13 @@
 import dataclasses
 import json
+import uuid
 
 from Card import Card
 
 
 @dataclasses.dataclass(order=True)
 class Player:
-    id: str = ""
+    id: str = dataclasses.field(default_factory=lambda: str(uuid.uuid4()))
     game_id: str = ""
     user_id: str = ""
     hand: list = dataclasses.field(default_factory=list)
