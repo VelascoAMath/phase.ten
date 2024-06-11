@@ -19,9 +19,22 @@ const getClassFromRank = function(rank) {
     return 'card';
 }
 
-const getDeckDivs = function(deck, selectedCards, setSelectedCards){
+const getDeckDivs = function(deck){
     
-    
+    return deck.map(
+        (card, idx) => {
+            let className = getClassFromRank(card.rank);
+            return(
+                <div style={{backgroundColor: rankToColor[card.color]}} key={idx} className={className}>
+                    {card.rank}
+                </div>
+            );
+        }
+    );
+}
+
+
+const getDeckDivsSelectable = function(deck, selectedCards, setSelectedCards){
     
     return deck.map(
         (card, idx) => {
@@ -206,10 +219,18 @@ export default function PlayRoom({props}) {
             </div>
 
             <div style={{alignItems: "center", gap: "10px 10px"}} className="card-collection">
-                {getDeckDivs(discardDeck.slice(discardDeck.length-1), selectedCards, setSelectedCards) }
+                <div style={{display: "flex"}}>
+                    {isCurrentPlayer && (player["drew_card"] === 0) && (discardDeck.length > 0) && (discardDeck[discardDeck.length - 1].rank !== "S") && <button onClick={drawDiscard}>Draw Discard</button>}
+                    {getDeckDivs(discardDeck.slice(discardDeck.length-1)) }
+
+                </div>
+                <div style={{display: "flex"}}>
+                    <div className="card">Deck</div>
+                    {isCurrentPlayer && (player["drew_card"] === 0) && <button onClick={drawDeck}>Draw Deck</button>}
+                </div>
             </div>
             <div className="card-collection">
-                {getDeckDivs(player["hand"], selectedCards, setSelectedCards )}
+                {getDeckDivsSelectable(player["hand"], selectedCards, setSelectedCards )}
             </div>
             <div className="player-console">
                 <button onClick={() => {sortByRank(hand)}}>Sort by rank</button>
@@ -218,9 +239,7 @@ export default function PlayRoom({props}) {
             {(player["drew_card"] === 1) && <div className="player-console">
                 <button onClick={discardSelected}>Discard Selected Card</button>
             </div>}
-            {isCurrentPlayer && (player["drew_card"] === 0) && <div className="player-console">
-                <button onClick={drawDeck}>Draw Deck</button>
-                {(discardDeck.length > 0) && (discardDeck[discardDeck.length - 1].rank !== "S") && <button onClick={drawDiscard}>Draw Discard</button>}
+            {isCurrentPlayer && (player["drew_card"] === 0) && <div className="player-console">                
             </div>}
             {(player["drew_card"] === 1) && isCurrentPlayer && hasSkip && <div className="player-console">
                 {wantToSkip && <button onClick={() => {setWantToSkip(false); setSelectedSkipPlayer(null)}}>Don't Skip Player</button>}
@@ -240,16 +259,16 @@ export default function PlayRoom({props}) {
                 {game["phase_decks"].map((deck) => {
                     return (
                         <div className="phase-deck-collection" key={deck.id}>
-                            <button onClick={() => {putDown(deck.id, "start")}}>Put down selected cards at the start</button>
-                            <h2>{deck.phase}:</h2> <div className="card-collection">{getDeckDivs(deck["deck"], selectedCards, setSelectedCards)} </div>
-                            <button onClick={() => {putDown(deck.id, "end")}}>Put down selected cards at the end</button>
+                            <button style={{width: "150px"}} onClick={() => {putDown(deck.id, "start")}}>Put down selected cards at the start</button>
+                            <h2>{deck.phase}:</h2> <div className="card-collection">{getDeckDivs(deck["deck"])} </div>
+                            <button style={{width: "150px"}} onClick={() => {putDown(deck.id, "end")}}>Put down selected cards at the end</button>
                         </div>
                         ); })}
             </div>
             <div style={{display: "flex", flexDirection: "column", justifyContent: "center"}}>
                 <h2 style={{marginLeft: "auto", marginRight: "auto"}}>Selected card(s)</h2>
                 <div className="card-collection">
-                    {getDeckDivs(selectedCards, selectedCards, setSelectedCards)}
+                    {getDeckDivsSelectable(selectedCards, selectedCards, setSelectedCards)}
                 </div>
                 {isCurrentPlayer && (selectedCards.length > 0) && <button onClick={completePhase}>Complete Phase</button>}
             </div>
