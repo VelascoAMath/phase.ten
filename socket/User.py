@@ -7,7 +7,7 @@ from uuid import UUID
 
 @dataclasses.dataclass(order=True)
 class User:
-    id: UUID = dataclasses.field(default_factory=lambda: str(uuid.uuid4()))
+    id: str = dataclasses.field(default_factory=lambda: str(uuid.uuid4()))
     name: str = ""
     token: str = dataclasses.field(default_factory=lambda:secrets.token_hex(16))
     
