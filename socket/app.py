@@ -83,7 +83,7 @@ cur.execute(
 	"phase"	TEXT NOT NULL,
 	"deck"	TEXT NOT NULL,
 	CONSTRAINT gamesPhaseDecks_games_FK FOREIGN KEY(game_id) REFERENCES games(id),
-	CONSTRAINT gamePhaseDecks PRIMARY KEY("id")
+	CONSTRAINT gamePhaseDecks_pk PRIMARY KEY("id")
 );""")
 con.commit()
 
