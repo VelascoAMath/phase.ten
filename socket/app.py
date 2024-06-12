@@ -529,9 +529,10 @@ def player_action(data):
 		random.shuffle(game.deck)
 		game.discard = [game.deck.pop()]
 
-		# Other players lost, so we'll set their index to 0
-		cur.execute("UPDATE players SET phase_index=0 WHERE game_id=? AND id != ?",
-		            (game_id, player_id))
+		if player.phase_index >= len(game.phase_list):
+			# Other players lost, so we'll set their index to 0
+			cur.execute("UPDATE players SET phase_index=0 WHERE game_id=? AND id != ?",
+						(game_id, player_id))
 
 		roomPlayers = game_id_to_players(game.id)
 		# Update the player info
