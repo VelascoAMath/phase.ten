@@ -205,8 +205,8 @@ export default function PlayRoom({props}) {
                         <div>Phase {player.phase_index + 1}</div>
                         <div>{game.phase_list[player.phase_index]}</div>
                         {!player.completed_phase && <div style={{display: "flex", alignItems: "flex-end"}}> <div>Phase:</div> <div/> {xCircleFill()} </div>}
-                        {player.completed_phase && <div style={{display: "flex", alignItems: "flex-end"}}> <div>Phase:</div> <div/> {checkCircleFill()} </div>}
-                    </div>);
+                        { !!player.completed_phase && <div style={{display: "flex", alignItems: "flex-end"}}> <div>Phase:</div> <div/> {checkCircleFill()} </div>}
+                        </div>);
                     }
                 )}
             </div>
