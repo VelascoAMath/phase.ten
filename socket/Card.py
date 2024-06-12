@@ -191,11 +191,11 @@ class Card:
 				deck.append(Card(color, rank))
 				deck.append(Card(color, rank))
 			
-			for _ in range(4):
-				deck.append(Card(Color.SKIP, Rank.SKIP))
-			
-			for _ in range(8):
-				deck.append(Card(Color.WILD, Rank.WILD))
+		for _ in range(4):
+			deck.append(Card(Color.SKIP, Rank.SKIP))
+
+		for _ in range(8):
+			deck.append(Card(Color.WILD, Rank.WILD))
 		return deck
 	
 	def __str__(self):
