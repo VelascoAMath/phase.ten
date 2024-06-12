@@ -783,39 +783,43 @@ async def main():
 
 
 if __name__ == "__main__":
+	DEBUG = False
+
+
 	# Create our Regular Expression Compiler for phases
 	if not os.path.exists("RE.class"):
 		subprocess.check_output(["javac", "RE.java"])
 
-	if not name_in_user("Alfredo"):
-		handle_data({"type": "new_user", "name": "Alfredo"}, None)
-	if not name_in_user("Naly"):
-		handle_data({"type": "new_user", "name": "Naly"}, None)
-	if not name_in_user("Yer"):
-		handle_data({"type": "new_user", "name": "Yer"}, None)
-	if not name_in_user("Averie"):
-		handle_data({"type": "new_user", "name": "Averie"}, None)
+	if DEBUG:
+		if not name_in_user("Alfredo"):
+			handle_data({"type": "new_user", "name": "Alfredo"}, None)
+		if not name_in_user("Naly"):
+			handle_data({"type": "new_user", "name": "Naly"}, None)
+		if not name_in_user("Yer"):
+			handle_data({"type": "new_user", "name": "Yer"}, None)
+		if not name_in_user("Averie"):
+			handle_data({"type": "new_user", "name": "Averie"}, None)
 
-	alfredo = name_to_user("Alfredo")
-	naly = name_to_user("Naly")
-	yer = name_to_user("Yer")
-	averie = name_to_user("Averie")
+		alfredo = name_to_user("Alfredo")
+		naly = name_to_user("Naly")
+		yer = name_to_user("Yer")
+		averie = name_to_user("Averie")
 
-	handle_data({"type": "create_game", "user_id": alfredo.id}, None)
-	game0 = get_games()[0]
-	handle_data({"type": "create_game", "user_id": yer.id}, None)
-	game1 = get_games()[0] if get_games()[0].id != game0.id else get_games()[1]
+		handle_data({"type": "create_game", "user_id": alfredo.id}, None)
+		game0 = get_games()[0]
+		handle_data({"type": "create_game", "user_id": yer.id}, None)
+		game1 = get_games()[0] if get_games()[0].id != game0.id else get_games()[1]
 
-	handle_data({"type": "join_game", "user_id": naly.id, "game_id": game0.id}, None)
-	handle_data({"type": "start_game", "user_id": alfredo.id, "game_id": game0.id}, None)
-	handle_data({"type": "join_game", "user_id": alfredo.id, "game_id": game1.id}, None)
-	handle_data({"type": "join_game", "user_id": naly.id, "game_id": game1.id}, None)
-	handle_data({"type": "join_game", "user_id": averie.id, "game_id": game1.id}, None)
-	handle_data({"type": "start_game", "user_id": yer.id, "game_id": game1.id}, None)
-	game0 = id_to_game(game0.id)
-	game1 = id_to_game(game1.id)
+		handle_data({"type": "join_game", "user_id": naly.id, "game_id": game0.id}, None)
+		handle_data({"type": "start_game", "user_id": alfredo.id, "game_id": game0.id}, None)
+		handle_data({"type": "join_game", "user_id": alfredo.id, "game_id": game1.id}, None)
+		handle_data({"type": "join_game", "user_id": naly.id, "game_id": game1.id}, None)
+		handle_data({"type": "join_game", "user_id": averie.id, "game_id": game1.id}, None)
+		handle_data({"type": "start_game", "user_id": yer.id, "game_id": game1.id}, None)
+		game0 = id_to_game(game0.id)
+		game1 = id_to_game(game1.id)
 
-	alfredo_p = game_user_id_to_player(game0.id, alfredo.id)
-	naly_p = game_user_id_to_player(game0.id, naly.id)
+		alfredo_p = game_user_id_to_player(game0.id, alfredo.id)
+		naly_p = game_user_id_to_player(game0.id, naly.id)
 
 	asyncio.run(main())
