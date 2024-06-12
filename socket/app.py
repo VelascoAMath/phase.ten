@@ -90,7 +90,7 @@ con.commit()
 
 def id_to_user(user_id: str) -> User:
 	for (id, name, token) in list(cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))):
-		u = User(id, name, token)
+		u = User(uuid.UUID(id), name, token)
 		return u
 
 
@@ -101,12 +101,12 @@ def name_in_user(name: str) -> bool:
 
 def name_to_user(name: str) -> User:
 	for (id, name, token) in list(cur.execute("SELECT * FROM users WHERE name = ?", (name,))):
-		u = User(id, name, token)
+		u = User(uuid.UUID(id), name, token)
 		return u
 
 
 async def send_users():
-	user_list = [User(id, name, token) for (id, name, token) in cur.execute("SELECT * FROM users")]
+	user_list = [User(uuid.UUID(id), name, token) for (id, name, token) in cur.execute("SELECT * FROM users")]
 	websockets.broadcast(connected, json.dumps({"type": "get_users", "users": [u.toJSONDict() for u in user_list]}))
 
 async def send_players():
@@ -578,14 +578,14 @@ def handle_data(data, websocket):
 			will_send = True
 			if will_send:
 				u = User(
-					id=str(uuid.uuid4()),
+					id=uuid.uuid4(),
 					name=data["name"],
 				)
 				try:
 					# Add this new user to our databases
 					cur.execute(
 						"INSERT INTO users (id, name, token) VALUES (?, ?, ?);",
-						(u.id, u.name, u.token),
+						(str(u.id), u.name, u.token),
 					)
 					con.commit()
 					return json.dumps({"type": "new_user", "user": u.toJSONDict()})
