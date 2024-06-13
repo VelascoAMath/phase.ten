@@ -103,7 +103,7 @@ export default function PlayRoom({props}) {
         return <div></div>;
     }
 
-    if (game["winner"] !== "NONE"){
+    if (game["winner"] !== "None"){
         if(game["winner"] === user_id) {
             return <div className="winner">You have won!!!</div>
         } else {
@@ -266,7 +266,7 @@ export default function PlayRoom({props}) {
                 <div className="card-collection">
                     {getDeckDivsSelectable(selectedCards, selectedCards, setSelectedCards)}
                 </div>
-                {isCurrentPlayer && (selectedCards.length > 0) && <button onClick={completePhase}>Complete Phase</button>}
+                {isCurrentPlayer && (selectedCards.length > 0) && player["drew_card"] && <button onClick={completePhase}>Complete Phase</button>}
             </div>
         </div>
     )
