@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "wouter";
+import { useLocation, useParams } from "wouter";
 import { checkCircleFill, xCircle, xCircleFill } from "./Icons";
 
 
@@ -66,6 +66,7 @@ export default function PlayRoom({props}) {
     const{state, socket} = props;
 
 	const params = useParams();
+    let [_, navigate] = useLocation();
 	const game_id = params?.id;
     const name = state["user-name"];
     const user_id = state["user-id"];
@@ -80,14 +81,14 @@ export default function PlayRoom({props}) {
         if(socket.readyState === socket.OPEN){
             socket.send(JSON.stringify({type: "get_player", "user_id": user_id, "game_id": game_id }));
         }
-        return <div>Getting player data {socket.readyState} {JSON.stringify(state["player"])}</div>
+        return <div>Getting player data</div>
     }
     // Or we have old player information
     if(state["player"]["game_id"] !== game_id || state["player"]["user_id"] !== user_id){
 
         if(socket.readyState === socket.OPEN){
             socket.send(JSON.stringify({type: "get_player", "user_id": user_id, "game_id": game_id }));
-            return <div>Getting player data {JSON.stringify(state["player"])}</div>
+            return <div>Getting player data</div>
         }
     }
 
@@ -97,9 +98,9 @@ export default function PlayRoom({props}) {
 
     const player = state["player"]["player"];
     if(player === undefined){
-        return <div>
-            <div>You are not a player in this game!</div>
-            </div>
+        alert("You are not a player in this game!");
+        navigate("/lobby");
+        return <div></div>;
     }
 
     if (game["winner"] !== "NONE"){
