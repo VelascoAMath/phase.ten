@@ -15,7 +15,7 @@ from Player import Player
 from User import User
 from GamePhaseDeck import GamePhaseDeck
 
-DEBUG = False
+DEBUG = True
 
 connected = set()
 socket_to_player_id = {}
@@ -57,6 +57,7 @@ cur.execute(
 	"	in_progress INTEGER DEFAULT (0) NOT NULL,"
 	"	CONSTRAINT games_pk PRIMARY KEY (id),"
 	"	CONSTRAINT games_users_FK FOREIGN KEY (owner) REFERENCES users(id)"
+	"	CONSTRAINT games_current_player_FK FOREIGN KEY (owner) REFERENCES users(id)"
 	");"
 )
 cur.execute(
