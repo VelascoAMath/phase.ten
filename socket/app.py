@@ -55,9 +55,11 @@ cur.execute(
 	"	current_player TEXT NOT NULL,"
 	"	owner TEXT NOT NULL,"
 	"	in_progress INTEGER DEFAULT (0) NOT NULL,"
+	"	winner TEXT,"
 	"	CONSTRAINT games_pk PRIMARY KEY (id),"
 	"	CONSTRAINT games_users_FK FOREIGN KEY (owner) REFERENCES users(id)"
 	"	CONSTRAINT games_current_player_FK FOREIGN KEY (owner) REFERENCES users(id)"
+	"	CONSTRAINT games_winner_FK FOREIGN KEY (owner) REFERENCES users(id)"
 	");"
 )
 cur.execute(
@@ -476,24 +478,23 @@ def player_action(data):
 		random.shuffle(game.deck)
 		game.discard = [game.deck.pop()]
 		
-		if player.phase_index >= len(game.phase_list):
-			# Other players lost, so we'll set their index to 0
-			cur.execute("UPDATE players SET phase_index=0 WHERE game_id=? AND id != ?",
-			            (game_id, player_id))
-		
-		roomPlayers = game.get_players()
-		# Update the player info
-		for i, roomPlayer in enumerate(roomPlayers):
-			roomPlayer.hand = [game.deck.pop() for _ in range(INITIAL_HAND_SIZE)]
-			roomPlayer.drew_card = False
-			# We move the player list up one turn
-			roomPlayer.turn_index = (i + 1) % len(roomPlayers)
-			if roomPlayer.completed_phase:
-				roomPlayer.phase_index += 1
-				roomPlayer.completed_phase = False
-				roomPlayer.skip_cards = 0
-			
-			roomPlayer.save()
+		# Player has won
+		if player.phase_index >= len(game.phase_list) - 1 and player.completed_phase:
+			game.winner = player.user_id
+		else:
+			roomPlayers = game.get_players()
+			# Update the player info
+			for i, roomPlayer in enumerate(roomPlayers):
+				roomPlayer.hand = [game.deck.pop() for _ in range(INITIAL_HAND_SIZE)]
+				roomPlayer.drew_card = False
+				# We move the player list up one turn
+				roomPlayer.turn_index = (i + 1) % len(roomPlayers)
+				if roomPlayer.completed_phase:
+					roomPlayer.phase_index += 1
+					roomPlayer.completed_phase = False
+					roomPlayer.skip_cards = 0
+				
+				roomPlayer.save()
 		
 		game.current_player = roomPlayers[-1].user_id
 		# Remove all phase decks
@@ -691,6 +692,7 @@ async def handler(websocket):
 			event = await websocket.recv()
 			data = json.loads(event)
 			message = handle_data(data, websocket)
+			print(message)
 			await websocket.send(message)
 			await send_games()
 			await send_users()

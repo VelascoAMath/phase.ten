@@ -21,7 +21,7 @@ const getClassFromRank = function(rank) {
 }
 
 const getDeckDivs = function(deck){
-    
+
     return deck.map(
         (card, idx) => {
             let className = getClassFromRank(card.rank);
@@ -36,7 +36,7 @@ const getDeckDivs = function(deck){
 
 
 const getDeckDivsSelectable = function(deck, selectedCards, setSelectedCards){
-    
+
     return deck.map(
         (card, idx) => {
             let className = getClassFromRank(card.rank);
@@ -102,11 +102,13 @@ export default function PlayRoom({props}) {
             </div>
     }
 
-    if (player["phase"] === "WINNER"){
-        return <div className="winner">You have won!!!</div>
+    if (game["winner"] !== "NONE"){
+        if(game["winner"] === user_id) {
+            return <div className="winner">You have won!!!</div>
+        } else {
+            return <div className="winner">Sucks to be a loser</div>
+        }
     }
-
-
 
 
     const hand = player["hand"];
@@ -117,17 +119,6 @@ export default function PlayRoom({props}) {
     const hasSkip = hand.filter(card => {return card.rank === "S"}).length > 0;
 
     const roomPlayers = game["players"];
-
-    // Another player has won
-    if(roomPlayers.filter((player) => (player.phase_index >= game.phase_list.length)).length){
-        return (
-            <div className="winner">
-                Sucks to be a loser
-            </div>
-        )
-    }
-
-
 
     const drawDeck = function(){
         if(socket.readyState === socket.OPEN){
@@ -140,8 +131,9 @@ export default function PlayRoom({props}) {
             socket.send(JSON.stringify({type: "player_action", action: "draw_discard", player_id: player_id}));
         }
     }
-    
+
     const discardSelected = function() {
+        setSelectedCards([]);
         if(selectedCards.length > 1){
             alert("You can only discard one card!");
             return;
@@ -153,7 +145,6 @@ export default function PlayRoom({props}) {
         if(socket.readyState === socket.OPEN){
             const message = JSON.stringify({type: "player_action", action: "discard", player_id: player_id, card_id: selectedCards[0].id});
             socket.send(message);
-            setSelectedCards([]);
         }
     }
 
@@ -243,14 +234,14 @@ export default function PlayRoom({props}) {
             {(player["drew_card"]) && <div className="player-console">
                 <button onClick={discardSelected}>Discard Selected Card</button>
             </div>}
-            {isCurrentPlayer && (!player["drew_card"]) && <div className="player-console">                
+            {isCurrentPlayer && (!player["drew_card"]) && <div className="player-console">
             </div>}
             {(player["drew_card"]) && isCurrentPlayer && hasSkip && <div className="player-console">
                 {wantToSkip && <button onClick={() => {setWantToSkip(false); setSelectedSkipPlayer(null)}}>Don't Skip Player</button>}
-                {!wantToSkip && <button onClick={() => setWantToSkip(true)}>Skip Player</button>}    
+                {!wantToSkip && <button onClick={() => setWantToSkip(true)}>Skip Player</button>}
             </div>}
             {
-                (player["drew_card"]) && wantToSkip && 
+                (player["drew_card"]) && wantToSkip &&
                 <div style={{display: "flex", flexDirection: "column", alignItems: "center", border: "5px white solid"}}>
                     <h3>Who do you want to skip?</h3>
                     <div>

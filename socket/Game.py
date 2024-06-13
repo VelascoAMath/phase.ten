@@ -1,4 +1,5 @@
 import sqlite3
+import uuid
 from pprint import pprint
 from typing import ClassVar, Self
 
@@ -17,21 +18,24 @@ class Game:
 	owner: uuid.UUID = None
 	# If the game has started
 	in_progress: bool = False
+	winner: uuid.UUID = None
 	cur: ClassVar[sqlite3.Cursor] = None
 
 	def save(self):
 		
 		json_deck = [x.toJSONDict() for x in self.deck]
 		json_discard = [x.toJSONDict() for x in self.discard]
+		winner = None if self.winner is None else str(self.winner)
 		if Game.exists(self.id):
 			Game.cur.execute(
-				"UPDATE games SET phase_list=?, deck=?, discard=?, current_player=?, owner=?, in_progress=? WHERE id=?",
-				(json.dumps(self.phase_list), json.dumps(json_deck), json.dumps(json_discard), str(self.current_player), str(self.owner), self.in_progress, str(self.id)))
+				"UPDATE games SET phase_list=?, deck=?, discard=?, current_player=?, owner=?, in_progress=?, winner=? WHERE id=?",
+				(json.dumps(self.phase_list), json.dumps(json_deck), json.dumps(json_discard), str(self.current_player), str(self.owner), self.in_progress, winner, str(self.id)))
 		else:
 			Game.cur.execute(
-				"INSERT INTO games (id, phase_list, deck, discard, current_player, owner, in_progress) VALUES (?, ?, ?, ?, ?, ?, ?)",
+				"INSERT INTO games (id, phase_list, deck, discard, current_player, owner, in_progress, winner) VALUES "
+				"(?, ?, ?, ?, ?, ?, ?, ?)",
 				(str(self.id), json.dumps(self.phase_list), json.dumps(json_deck), json.dumps(json_discard),
-				 str(self.current_player), str(self.owner), self.in_progress))
+				 str(self.current_player), str(self.owner), self.in_progress, winner))
 
 	def delete(self):
 		Game.cur.execute("DELETE FROM games WHERE id = ?", (str(self.id),))
@@ -58,7 +62,7 @@ class Game:
 	def get_by_id(id):
 		if isinstance(id, uuid.UUID):
 			id = str(id)
-		for (id, phase_list, deck_json, discard_json, current_player, owner, in_progress) in list(Game.cur.execute(
+		for (id, phase_list, deck_json, discard_json, current_player, owner, in_progress, winner) in list(Game.cur.execute(
 			"SELECT * FROM games WHERE id = ?", (id,))):
 			deck = [Card.fromJSONDict(x) for x in json.loads(deck_json)]
 			discard = [Card.fromJSONDict(x) for x in json.loads(discard_json)]
@@ -73,6 +77,10 @@ class Game:
 				game.in_progress = in_progress == 1
 			else:
 				game.in_progress = in_progress
+			if winner is None:
+				game.winner = winner
+			else:
+				game.winner = uuid.UUID(winner)
 			return game
 		
 		raise Exception(f"{id} is not a valid game id!")
@@ -80,7 +88,7 @@ class Game:
 	@staticmethod
 	def all() -> list:
 		game_list = []
-		for (id, phase_list, deck_json, discard_json, current_player, owner, in_progress) in Game.cur.execute(
+		for (id, phase_list, deck_json, discard_json, current_player, owner, in_progress, winner) in Game.cur.execute(
 			"SELECT * FROM games"):
 			deck = [Card.fromJSONDict(x) for x in json.loads(deck_json)]
 			discard = [Card.fromJSONDict(x) for x in json.loads(discard_json)]
@@ -95,6 +103,10 @@ class Game:
 				game.in_progress = in_progress == 1
 			else:
 				game.in_progress = in_progress
+			if winner is None:
+				game.winner = winner
+			else:
+				game.winner = uuid.UUID(winner)
 			game_list.append(game)
 		return game_list
 	
@@ -108,6 +120,7 @@ class Game:
 			"current_player": str(self.current_player),
 			"owner": str(self.owner),
 			"in_progress": self.in_progress,
+			"winner": str(self.winner),
 		}
 	
 	def toJSON(self):
@@ -122,12 +135,14 @@ class Game:
 		discard = []
 		for c in data["discard"]:
 			discard.append(Card.fromJSONDict(c))
-		return Game(uuid.UUID(data["id"]), data["phase_list"], deck, discard, uuid.UUID(data["current_player"]), uuid.UUID(data["owner"]), data["in_progress"])
+		return Game(uuid.UUID(data["id"]), data["phase_list"], deck, discard, uuid.UUID(data["current_player"]), uuid.UUID(data["owner"]), data["in_progress"], uuid.UUID(data["winner"]))
 	
 
 
 def main():
 	deck = Card.getNewDeck()
+	while len(deck) > 10:
+		deck.pop()
 
 	random.seed(0)
 	random.shuffle(deck)
@@ -145,7 +160,7 @@ def main():
 		"S5+S3",
 	]
 	discard_list = [deck.pop() for _ in range(5)]
-	g = Game(uuid.uuid4(), phase_list, deck, discard_list, uuid.uuid4(), uuid.uuid4(), True)
+	g = Game(uuid.uuid4(), phase_list, deck, discard_list, uuid.uuid4(), uuid.uuid4(), True, uuid.uuid4())
 	print(g)
 	h = Game.fromJSON(g.toJSON())
 	print(h)
