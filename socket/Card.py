@@ -263,11 +263,11 @@ def main():
 			print()
 
 
-deck = Card.getNewDeck()
-random.shuffle(deck)
-print([str(x) for x in deck])
-deck.sort(key=lambda x: x.color.value)
-print([str(x) for x in deck])
+	deck = Card.getNewDeck()
+	random.shuffle(deck)
+	print([str(x) for x in deck])
+	deck.sort(key=lambda x: x.color.value)
+	print([str(x) for x in deck])
 
 if __name__ == "__main__":
 	main()
