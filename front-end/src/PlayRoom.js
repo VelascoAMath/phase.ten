@@ -69,14 +69,11 @@ export default function PlayRoom({props}) {
 	const game_id = params?.id;
     const name = state["user-name"];
     const user_id = state["user-id"];
-    const game = state["game-list"]?.filter(game => game.id === game_id)[0];
+    const game = state["game"];
     const [selectedCards, setSelectedCards] = useState([]);
     const [wantToSkip, setWantToSkip] = useState(false);
     const [selectedSkipPlayer, setSelectedSkipPlayer] = useState(null);
 
-    if(game === undefined){
-        return <div>{game_id} is not a valid game room!</div>
-    }
 
     // Either we haven't made a call to get the player data
     if(state["player"] === undefined){
@@ -92,6 +89,10 @@ export default function PlayRoom({props}) {
             socket.send(JSON.stringify({type: "get_player", "user_id": user_id, "game_id": game_id }));
             return <div>Getting player data {JSON.stringify(state["player"])}</div>
         }
+    }
+
+    if(game === undefined){
+        return <div>{game_id} is not a valid game room!</div>
     }
 
     const player = state["player"]["player"];

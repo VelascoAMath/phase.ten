@@ -127,6 +127,38 @@ async def send_players():
 				"player": player_dict,
 			}
 		))
+		game_dict = Game.get_by_id(game_id).toJSONDict()
+		
+		# Don't send the entire deck
+		if "deck" in game_dict:
+			del game_dict["deck"]
+		
+		game_dict["players"] = []
+		game_dict["users"] = []
+		player_list = game.get_players()
+		for player in player_list:
+			user_dict = User.get_by_id(player.user_id).toJSONDict()
+			player_dict = player.toJSONDict()
+			player_dict["name"] = User.get_by_id(player.user_id).name
+			
+			if "hand" in player_dict:
+				del player_dict["hand"]
+			
+			if "token" in user_dict:
+				del user_dict["token"]
+			
+			game_dict["players"].append(player_dict)
+			game_dict["users"].append(user_dict)
+		
+		game_dict["phase_decks"] = [x.toJSONDict() for x in game_id_to_gamePhaseDecks(str(game.id))]
+
+		await socket.send(json.dumps(
+			{
+				"type": "get_game",
+				"game": game_dict
+			}
+		))
+		
 
 
 def id_to_gamePhaseDeck(gamePhaseDeck_id: str) -> GamePhaseDeck:
@@ -152,26 +184,22 @@ async def send_games():
 	game_list = []
 	for game in Game.all():
 		game_dict = game.toJSONDict()
+		if "deck" in game_dict:
+			del game_dict["deck"]
+		if "discard" in game_dict:
+			del game_dict["discard"]
+		
 		game_dict["users"] = []
 		user_id_list = list(cur.execute(
 			"SELECT users.id FROM users JOIN players ON users.id = players.user_id JOIN games ON players.game_id = games.id WHERE games.id = ?",
 			(str(game.id),)
 		))
 		for (user_id,) in user_id_list:
-			game_dict["users"].append(User.get_by_id(user_id).toJSONDict())
+			user_dict = User.get_by_id(user_id).toJSONDict()
+			if "token" in user_dict:
+				del user_dict["token"]
+			game_dict["users"].append(user_dict)
 		
-		game_dict["players"] = []
-		for (player_id, user_id, user_name, turn_index, phase_index, completed_phase, skip_cards) in list(
-			cur.execute("SELECT players.id, users.id, users.name, turn_index, phase_index, completed_phase, skip_cards "
-			            "FROM players JOIN users WHERE players.user_id = users.id AND "
-			            "players.game_id = ? ORDER BY turn_index;", (str(game.id),))):
-			game_dict["players"].append(
-				{"player_id": player_id, "user_id": user_id, "name": user_name, "turn_index": turn_index,
-				 "phase_index": phase_index,
-				 "completed_phase": completed_phase,
-				 "skip_cards": skip_cards})
-		
-		game_dict["phase_decks"] = [x.toJSONDict() for x in game_id_to_gamePhaseDecks(str(game.id))]
 		game_list.append(game_dict)
 	
 	websockets.broadcast(
@@ -523,6 +551,10 @@ def handle_data(data, websocket):
 		case "get_player":
 			game_id = data["game_id"]
 			user_id = data["user_id"]
+			
+			if not Game.exists(game_id):
+				return json.dumps({"type": "ignore", "message": f"Game room {game_id} is not valid!"})
+			
 			game = Game.get_by_id(game_id)
 			if Player.exists_game_user(game_id, user_id):
 				player = Player.get_by_game_user_id(game_id, user_id)

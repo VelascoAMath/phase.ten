@@ -132,12 +132,14 @@ button {
 .phase-deck-collection .card-collection {
   display: flex;
 }
-.phase-deck-collection button {
-  max-width: 50px;
-  font-size: small;
-}
-.phase-deck-collection .card {
-  width: 30px;
+@media (width < 992px) {
+  .phase-deck-collection button {
+    max-width: 50px;
+    font-size: small;
+  }
+  .phase-deck-collection .card {
+    width: 30px;
+  }
 }
 
 .rooms-to-join {

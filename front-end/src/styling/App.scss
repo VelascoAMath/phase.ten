@@ -148,13 +148,15 @@ button {
     display: flex;
 
     }
-    button {
-      max-width: 50px;
-      font-size: small; 
-    }
+    @media (width < sizes.$lg) {   
+        button {
+          max-width: 50px;
+          font-size: small; 
+      }
     .card {
       width: 30px;
     }
+  }
 }
 
 .rooms-to-join {
