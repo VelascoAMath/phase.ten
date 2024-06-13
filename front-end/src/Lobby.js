@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import Button from 'react-bootstrap/Button';
 import { useLocation } from "wouter";
 
 
@@ -116,45 +115,53 @@ export default function Lobby({props}) {
         const user_id = state["user-id"];
         const gameList = state["game-list"];
         if(gameList?.length === 0){
-            return;
+            return [];
         }
 
         const game = gameList.filter((game) => {return game.id === selectedGame})[0];
         if(game === null || game === undefined){
             setSelectedGame(null);
-            return;
+            return [];
         }
         const game_id = game.id;
         if(game.owner === user_id){
             if(game.in_progress){
-                return (
-                    <>
-                        <button onClick={() => {unjoinGame(game_id, user_id, socket); setSelectedGame(null)} }>Delete Game</button>
-                        <button onClick={() => {navigate("/play/" + game_id)} }>Enter Game</button>
-                    </>
-                );
+                return [
+                    <button onClick={() => {navigate("/play/" + game_id)} }>Enter Game</button>,
+                    <button style={{backgroundColor: "red", color: "white"}} onClick={() => {if (window.confirm("Are you sure you want to delete this game?")) {unjoinGame(game_id, user_id, socket); setSelectedGame(null)}}}>Delete Game</button>,
+                ];
             } else {
-                return <button onClick={() => {startGame(game_id, user_id, socket); setSelectedGame(null); navigate("/play/" + game_id) }}>Start Game</button>;
+                return [
+                    <button onClick={() => {startGame(game_id, user_id, socket); setSelectedGame(null); navigate("/play/" + game_id) }}>Start Game</button>,
+                    <button style={{backgroundColor: "red", color: "white"}} onClick={() => {if (window.confirm("Are you sure you want to delete this game?")) {unjoinGame(game_id, user_id, socket); setSelectedGame(null)}}}>Delete Game</button>,
+                ];
             }
         } else {
             if(game.in_progress){
-                return <button onClick={() => navigate("/play/" + game_id)}>Play Game</button>
+                return [<button onClick={() => navigate("/play/" + game_id)}>Play Game</button>]
             } else {
-                return <button onClick={() => {unjoinGame(game_id, user_id, socket); setSelectedGame(null)}}>Unjoin Game</button>
+                return [<button onClick={() => {unjoinGame(game_id, user_id, socket); setSelectedGame(null)}}>Unjoin Game</button>]
             }
         }
     }
 
+    let buttonList = [<button onClick={createGame}>Create Game</button>];
+    if (selectedGame){
+        buttonList.push(...getButtonForGameAction());
+    }
+    while(buttonList.length < 3){
+        buttonList.push(<div></div>);
+    }
 
     return (
         <div>
-            {selectedGame &&
-                getButtonForGameAction()
-            }
 
             {(!state["game-list"] || state["game-list"]?.length === 0) && "There seem to be no games. Why don't you create one?"}
-            
-            <Button onClick={createGame}>Create Game</Button>
+
+            <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
+                {buttonList}
+            </div>
+
             <div className="rooms-to-join">
                 {(state["game-list"]?.length > 0) && gameRoomView(state["user-id"], state["game-list"], socket, selectedGame, setSelectedGame)}
             </div>

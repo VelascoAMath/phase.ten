@@ -223,33 +223,33 @@ export default function PlayRoom({props}) {
 
             <div style={{alignItems: "center", gap: "10px 10px"}} className="card-collection">
                 <div style={{display: "flex"}}>
-                    {isCurrentPlayer && (player["drew_card"] === 0) && (discardDeck.length > 0) && (discardDeck[discardDeck.length - 1].rank !== "S") && <button onClick={drawDiscard}>Draw Discard</button>}
+                    {isCurrentPlayer && (!player["drew_card"]) && (discardDeck.length > 0) && (discardDeck[discardDeck.length - 1].rank !== "S") && <button onClick={drawDiscard}>Draw Discard</button>}
                     {getDeckDivs(discardDeck.slice(discardDeck.length-1)) }
 
                 </div>
                 <div style={{display: "flex"}}>
                     <div className="card">Deck</div>
-                    {isCurrentPlayer && (player["drew_card"] === 0) && <button onClick={drawDeck}>Draw Deck</button>}
+                    {isCurrentPlayer && (!player["drew_card"]) && <button onClick={drawDeck}>Draw Deck</button>}
                 </div>
             </div>
-            <div className="card-collection">
+            <div style={{marginTop: "10px"}} className="card-collection">
                 {getDeckDivsSelectable(player["hand"], selectedCards, setSelectedCards )}
             </div>
             <div className="player-console">
                 <button onClick={() => {sortByRank(hand)}}>Sort by rank</button>
                 <button onClick={() => {sortByColor(hand)}}>Sort by color</button>
             </div>
-            {(player["drew_card"] === 1) && <div className="player-console">
+            {(player["drew_card"]) && <div className="player-console">
                 <button onClick={discardSelected}>Discard Selected Card</button>
             </div>}
-            {isCurrentPlayer && (player["drew_card"] === 0) && <div className="player-console">                
+            {isCurrentPlayer && (!player["drew_card"]) && <div className="player-console">                
             </div>}
-            {(player["drew_card"] === 1) && isCurrentPlayer && hasSkip && <div className="player-console">
+            {(player["drew_card"]) && isCurrentPlayer && hasSkip && <div className="player-console">
                 {wantToSkip && <button onClick={() => {setWantToSkip(false); setSelectedSkipPlayer(null)}}>Don't Skip Player</button>}
                 {!wantToSkip && <button onClick={() => setWantToSkip(true)}>Skip Player</button>}    
             </div>}
             {
-                (player["drew_card"] === 1) && wantToSkip && 
+                (player["drew_card"]) && wantToSkip && 
                 <div style={{display: "flex", flexDirection: "column", alignItems: "center", border: "5px white solid"}}>
                     <h3>Who do you want to skip?</h3>
                     <div>

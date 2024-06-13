@@ -15,6 +15,8 @@ from Player import Player
 from User import User
 from GamePhaseDeck import GamePhaseDeck
 
+DEBUG = False
+
 connected = set()
 socket_to_player_id = {}
 
@@ -34,8 +36,8 @@ DEFAULT_PHASE_LIST = [
 INITIAL_HAND_SIZE = 10
 # We'll start from a new database everytime we start the server
 # This is just until we can get something that definitely works
-# if os.path.exists("phase_ten.db"):
-# 	os.remove("phase_ten.db")
+if DEBUG and os.path.exists("phase_ten.db"):
+	os.remove("phase_ten.db")
 
 con = sqlite3.connect("phase_ten.db")
 # con = sqlite3.connect(":memory:")
@@ -87,34 +89,27 @@ cur.execute(
 );""")
 con.commit()
 
-
-def id_to_user(user_id: str) -> User:
-	for (id, name, token) in list(cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))):
-		u = User(uuid.UUID(id), name, token)
-		return u
-
-
-def name_in_user(name: str) -> bool:
-	return not (cur.execute("SELECT * FROM users WHERE name = ?",
-	                        (name,)).fetchone() is None)
-
-
-def name_to_user(name: str) -> User:
-	for (id, name, token) in list(cur.execute("SELECT * FROM users WHERE name = ?", (name,))):
-		u = User(uuid.UUID(id), name, token)
-		return u
+User.setCursor(cur)
+Game.setCursor(cur)
+Player.setCursor(cur)
 
 
 async def send_users():
-	user_list = [User(uuid.UUID(id), name, token) for (id, name, token) in cur.execute("SELECT * FROM users")]
+	user_list = User.all()
 	websockets.broadcast(connected, json.dumps({"type": "get_users", "users": [u.toJSONDict() for u in user_list]}))
 
+
 async def send_players():
+	socket_to_delete = set()
 	for (socket, player_id) in socket_to_player_id.items():
-
-
-		player = id_to_player(player_id)
-		game = id_to_game(player.game_id)
+		
+		player = Player.get_by_id(player_id)
+		# This player is deleted
+		# We'll need to send a different player to this socket
+		if player is None:
+			socket_to_delete.add(player)
+			break
+		game = Game.get_by_id(player.game_id)
 		user_id = player.user_id
 		game_id = game.id
 		player_dict = player.toJSONDict()
@@ -122,41 +117,20 @@ async def send_players():
 			player_dict["phase"] = game.phase_list[player.phase_index]
 		else:
 			player_dict["phase"] = "WINNER"
-
+		
 		await socket.send(json.dumps(
 			{
 				"type": "get_player",
-				"game_id": game_id,
-				"user_id": user_id,
+				"game_id": str(game_id),
+				"user_id": str(user_id),
 				"player": player_dict,
 			}
 		))
 
-def id_to_game(game_id: str) -> Game:
-	for (id, phase_list, deck_json, discard_json, current_player, owner, in_progress) in list(cur.execute(
-			"SELECT * FROM games WHERE id = ?", (game_id,))):
-		deck = [Card.fromJSONDict(x) for x in json.loads(deck_json)]
-		discard = [Card.fromJSONDict(x) for x in json.loads(discard_json)]
-		game = Game(id, json.loads(phase_list), deck, discard, current_player, owner, in_progress)
-		return game
-
-	raise Exception(f"{game_id} is not a valid game id!")
-
-
-def get_games():
-	game_set = []
-	for (id, phase_list, deck_json, discard_json, current_player, owner, in_progress) in cur.execute(
-			"SELECT * FROM games"):
-		deck = [Card.fromJSONDict(x) for x in json.loads(deck_json)]
-		discard = [Card.fromJSONDict(x) for x in json.loads(discard_json)]
-		game = Game(id, json.loads(phase_list), deck, discard, current_player, owner, in_progress)
-		game_set.append(game)
-	return game_set
-
 
 def id_to_gamePhaseDeck(gamePhaseDeck_id: str) -> GamePhaseDeck:
 	for (id, game_id, phase, deck_json) in list(
-			cur.execute("SELECT id, game_id, phase, deck FROM gamePhaseDecks WHERE id = ?", (gamePhaseDeck_id,))):
+		cur.execute("SELECT id, game_id, phase, deck FROM gamePhaseDecks WHERE id = ?", (gamePhaseDeck_id,))):
 		deck = [Card.fromJSONDict(x) for x in json.loads(deck_json)]
 		phaseDeck = GamePhaseDeck(id, game_id, phase, deck)
 		return phaseDeck
@@ -165,87 +139,48 @@ def id_to_gamePhaseDeck(gamePhaseDeck_id: str) -> GamePhaseDeck:
 def game_id_to_gamePhaseDecks(game_id: str):
 	phaseDeck_set = []
 	for (id, phase, deck_json) in list(
-			cur.execute("SELECT id, phase, deck FROM gamePhaseDecks WHERE game_id = ?", (game_id,))):
+		cur.execute("SELECT id, phase, deck FROM gamePhaseDecks WHERE game_id = ?", (game_id,))):
 		deck = [Card.fromJSONDict(x) for x in json.loads(deck_json)]
 		phaseDeck = GamePhaseDeck(id, game_id, phase, deck)
 		phaseDeck_set.append(phaseDeck)
 	return phaseDeck_set
 
 
-def game_id_to_players(game_id):
-	player_list = []
-
-	for (id, user_id, json_hand, turn_index, phase_index, drew_card, completed_phase, skip_cards) in list(
-			cur.execute(
-				"SELECT players.id, user_id, hand, turn_index, phase_index, drew_card, completed_phase, skip_cards "
-				"FROM players JOIN users ON players.user_id = users.id WHERE game_id = ? ORDER BY turn_index;",
-				(game_id,))):
-		hand = [Card.fromJSONDict(x) for x in json.loads(json_hand)]
-		player = Player(id, game_id, user_id, hand, turn_index, phase_index, drew_card == 1, completed_phase == 1,
-		                skip_cards)
-		player_list.append(player)
-
-	return player_list
-
 
 async def send_games():
 	game_list = []
-	for game in get_games():
+	for game in Game.all():
 		game_dict = game.toJSONDict()
 		game_dict["users"] = []
 		user_id_list = list(cur.execute(
 			"SELECT users.id FROM users JOIN players ON users.id = players.user_id JOIN games ON players.game_id = games.id WHERE games.id = ?",
-			(game.id,)
+			(str(game.id),)
 		))
 		for (user_id,) in user_id_list:
-			game_dict["users"].append(id_to_user(user_id).toJSONDict())
-
+			game_dict["users"].append(User.get_by_id(user_id).toJSONDict())
+		
 		game_dict["players"] = []
 		for (player_id, user_id, user_name, turn_index, phase_index, completed_phase, skip_cards) in list(
-				cur.execute("SELECT players.id, users.id, users.name, turn_index, phase_index, completed_phase, skip_cards "
-				            "FROM players JOIN users WHERE players.user_id = users.id AND "
-				            "players.game_id = ? ORDER BY turn_index;", (game.id,))):
-
+			cur.execute("SELECT players.id, users.id, users.name, turn_index, phase_index, completed_phase, skip_cards "
+			            "FROM players JOIN users WHERE players.user_id = users.id AND "
+			            "players.game_id = ? ORDER BY turn_index;", (str(game.id),))):
 			game_dict["players"].append(
 				{"player_id": player_id, "user_id": user_id, "name": user_name, "turn_index": turn_index,
 				 "phase_index": phase_index,
 				 "completed_phase": completed_phase,
 				 "skip_cards": skip_cards})
-
-		game_dict["phase_decks"] = [x.toJSONDict() for x in game_id_to_gamePhaseDecks(game.id)]
+		
+		game_dict["phase_decks"] = [x.toJSONDict() for x in game_id_to_gamePhaseDecks(str(game.id))]
 		game_list.append(game_dict)
-
+	
 	websockets.broadcast(
 		connected, json.dumps({"type": "get_games", "games": game_list})
 	)
 
 
-def id_to_player(player_id: str) -> Player:
-	for (id, game_id, user_id, hand_json, turn_index, phase_index, drew_deck, completed_phase, skip_cards) in list(
-			cur.execute(
-				"SELECT * FROM players WHERE id = ?", (player_id,))):
-		hand = [Card.fromJSONDict(x) for x in json.loads(hand_json)]
-		p = Player(id, game_id, user_id, hand, turn_index, phase_index, drew_deck, completed_phase, skip_cards)
-		return p
-
-
-def game_user_id_to_player(game_id: str, user_id: str) -> Player:
-	for (id, game_id, user_id, hand_json, turn_index, phase_index, drew_deck, completed_phase, skip_cards) in list(
-			cur.execute(
-				"SELECT * FROM players WHERE game_id = ? AND user_id = ?", (game_id, user_id))):
-		hand = [Card.fromJSONDict(x) for x in json.loads(hand_json)]
-		p = Player(id, game_id, user_id, hand, turn_index, phase_index, drew_deck, completed_phase, skip_cards)
-		return p
-
-
-def game_user_id_in_player(game_id: str, user_id: str) -> bool:
-	return not (cur.execute("SELECT * FROM players WHERE game_id = ? AND user_id = ?",
-	                        (game_id, user_id)).fetchone() is None)
-
-
 def create_game(data):
 	user_id = data["user_id"]
-	if cur.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone() is None:
+	if not User.exists(user_id):
 		return json.dumps(
 			{
 				"type": "rejection",
@@ -253,28 +188,26 @@ def create_game(data):
 			}
 		)
 	else:
-		g = Game(str(uuid.uuid4()), DEFAULT_PHASE_LIST, [], [], 0, user_id, False)
 		try:
-			cur.execute(
-				"INSERT INTO games (id, phase_list, deck, discard, current_player, owner, in_progress) VALUES (?, ?, ?, ?, ?, ?, ?)",
-				(g.id, json.dumps(DEFAULT_PHASE_LIST), "[]", "[]", user_id, user_id, 0))
-
+			g = Game(phase_list=DEFAULT_PHASE_LIST, deck=[], discard=[], owner=user_id, current_player=user_id,
+			         in_progress=False)
+			g.save()
+			
 			p = Player(game_id=g.id, user_id=user_id)
-			cur.execute(
-				"INSERT INTO players (id, game_id, user_id, hand) VALUES (?, ?, ?, ?)", (p.id, g.id, user_id, "[]")
-			)
+			p.save()
 			con.commit()
 			# For each game, let's also list the players who are in it
 			game_dict = g.toJSONDict()
 			game_dict["users"] = []
 			for (user_id,) in cur.execute(
-					f"SELECT users.id FROM users JOIN players ON users.id = players.user_id JOIN games ON players.game_id = games.id WHERE games.id = ?;",
-					(g.id,)
+				f"SELECT users.id FROM users JOIN players "
+				"ON users.id = players.user_id JOIN games ON players.game_id = games.id WHERE games.id = ?;",
+				(str(g.id),)
 			):
-				game_dict["users"].append(id_to_user(user_id).toJSONDict())
-
+				game_dict["users"].append(User.get_by_id(user_id).toJSONDict())
+			
 			return json.dumps({"type": "create_game", "game": game_dict})
-
+		
 		except Exception as e:
 			raise e
 			return json.dumps({"type": "rejection", "message": "Cannot create game"})
@@ -283,33 +216,36 @@ def create_game(data):
 def player_action(data):
 	player_id = data["player_id"]
 	(game_id, user_id) = cur.execute("SELECT game_id, user_id FROM players WHERE id = ?", (player_id,)).fetchone()
-	player = id_to_player(player_id)
+	player = Player.get_by_id(player_id)
 	hand = player.hand
-	game = id_to_game(game_id)
-
+	game = Game.get_by_id(game_id)
+	
 	complete_turn = False
-
+	
 	# Players are always allowed to sort their cards
 	# Any other action requires you to wait until your turn
+	is_sorting = False
 	if data["action"] == "sort_by_color":
 		hand.sort(key=lambda x: x.color.value)
-		json_hand = [x.toJSONDict() for x in hand]
-		cur.execute("UPDATE players SET hand=? WHERE id = ?",
-		            (json.dumps(json_hand), player_id))
+		player.save()
 		con.commit()
+		is_sorting = True
 	elif data["action"] == "sort_by_rank":
 		hand.sort(key=lambda x: x.rank.value)
-		json_hand = [x.toJSONDict() for x in hand]
-		cur.execute("UPDATE players SET hand=? WHERE id = ?",
-		            (json.dumps(json_hand), player_id))
+		player.save()
 		con.commit()
+		is_sorting = True
 	elif game.current_player != player.user_id:
 		return json.dumps({"type": "rejection", "message": "It's not your turn"})
-
+	
 	# The only action possible is do_skip when you are skipped
 	if data["action"] != "do_skip" and player.skip_cards > 0:
 		data["action"] = "do_skip"
 
+	if not is_sorting:
+		if (not (data["action"] == "draw_deck" or data["action"] == "draw_discard")) and not player.drew_card:
+			return json.dumps({"type": "rejection", "message": "YOU HAVE TO DRAW FIRST!!!!"})
+	
 	match data["action"]:
 		case "draw_deck":
 			# You can only draw once per turn
@@ -318,13 +254,10 @@ def player_action(data):
 			hand.append(game.deck.pop())
 			json_hand = [x.toJSONDict() for x in hand]
 			player.drew_card = True
-			cur.execute("UPDATE players SET hand=?, drew_card=1 WHERE id = ?",
-			            (json.dumps(json_hand), player_id))
-			json_deck = [x.toJSONDict() for x in game.deck]
-			cur.execute("UPDATE games SET deck=? WHERE id = ?",
-			            (json.dumps(json_deck), game_id))
+			player.save()
+			game.save()
 			con.commit()
-
+		
 		case "draw_discard":
 			# You can only draw once per turn
 			if player.drew_card:
@@ -336,25 +269,22 @@ def player_action(data):
 			hand.append(game.discard.pop())
 			json_hand = [x.toJSONDict() for x in hand]
 			player.drew_card = True
-			cur.execute("UPDATE players SET hand=?, drew_card=1 WHERE id = ?",
-			            (json.dumps(json_hand), player_id))
-			json_discard = [x.toJSONDict() for x in game.discard]
-			cur.execute("UPDATE games SET discard=? WHERE id = ?",
-			            (json.dumps(json_discard), game_id))
+			player.save()
+			game.save()
 			con.commit()
 		case "do_skip":
 			pass
-
+		
 		case "put_down":
 			if not player.completed_phase:
 				return json.dumps(
 					{"type": "rejection", "message": "You need to complete your phase before you put down"})
-
+			
 			gamePhaseDeck = id_to_gamePhaseDeck(data["phase_deck_id"])
 			cards = [Card.fromJSONDict(x) for x in data["cards"]]
 			str_cards = [str(x) for x in cards]
 			str_gamePhaseDeck = [str(x) for x in gamePhaseDeck.deck]
-
+			
 			deckToTest = None
 			str_deckToTest = []
 			if data["direction"] == "start":
@@ -365,9 +295,9 @@ def player_action(data):
 				str_deckToTest = str_gamePhaseDeck + str_cards
 			else:
 				return json.dumps({"type": "rejection", "message": f"{data['direction']} is not a valid direction"})
-
+			
 			phase = gamePhaseDeck.phase
-
+			
 			command = f"java RE -p {phase} -d {' '.join(str_deckToTest)}"
 			output = subprocess.check_output(command, shell=True).decode("utf-8").strip()
 			if output == "true":
@@ -378,33 +308,32 @@ def player_action(data):
 					else:
 						hand.remove(card)
 				json_hand = [x.toJSONDict() for x in hand]
-				cur.execute("UPDATE players SET hand=? WHERE id = ?",
-				            (json.dumps(json_hand), player_id))
-
+				player.save()
+				
 				json_deckToTest = [x.toJSONDict() for x in deckToTest]
 				cur.execute("UPDATE gamePhaseDecks SET deck=? WHERE id = ?",
 				            (json.dumps(json_deckToTest), data["phase_deck_id"]))
 				con.commit()
-
-
+			
+			
 			else:
 				return json.dumps({"type": "rejection", "message": "Unable to put down these cards to the phase!"})
-
+		
 		case "complete_phase":
 			if player.completed_phase:
 				return json.dumps({"type": "rejection", "message": "You've already completed your phase!"})
-
+			
 			cards = [Card.fromJSONDict(x) for x in data["cards"]]
 			str_cards = [str(x) for x in cards]
 			phase = game.phase_list[player.phase_index]
 			command = f"java RE -p {phase} -d {' '.join(str_cards)}"
 			output = subprocess.check_output(command, shell=True).decode("utf-8").strip()
 			if output == "true":
-
+				
 				for phase_comp in phase.split('+'):
-
+					
 					num_cards = int(phase_comp[1:])
-
+					
 					card_component = cards[:num_cards]
 					# Remove the cards from the player's hand
 					for card in card_component:
@@ -418,17 +347,16 @@ def player_action(data):
 					json_cards = [x.toJSONDict() for x in card_component]
 					cur.execute("INSERT INTO gamePhaseDecks (id, game_id, phase, deck) VALUES (?, ?, ?, ?)",
 					            (secrets.token_urlsafe(16), game_id, phase_comp[:1], json.dumps(json_cards)))
-
+					
 					json_hand = [x.toJSONDict() for x in hand]
-					cur.execute("UPDATE players SET hand=?, completed_phase=1 WHERE id = ?",
-					            (json.dumps(json_hand), player_id))
+					player.save()
 					con.commit()
-
-
-
+			
+			
+			
 			else:
 				return json.dumps({"type": "rejection", "message": "Not a valid phase!"})
-
+		
 		case "skip_player":
 			if not player.drew_card:
 				return json.dumps({"type": "rejection", "message": "Draw a card before you attempt to skip someone"})
@@ -442,21 +370,18 @@ def player_action(data):
 			if contains_skip:
 				# Give the other player a skip card
 				to_id = data["to"]
-				to_player = game_user_id_to_player(game_id, to_id)
+				to_player = Player.get_by_game_user_id(game_id, to_id)
 				to_player.skip_cards += 1
 				hand.remove(skip_card)
-				json_hand = [x.toJSONDict() for x in hand]
-
-				cur.execute("UPDATE players SET skip_cards=? WHERE id = ?",
-				            (to_player.skip_cards, to_player.id))
-				cur.execute("UPDATE players SET hand=? WHERE id = ?",
-				            (json.dumps(json_hand), player_id))
+				
+				player.save()
+				to_player.save()
 				con.commit()
 				complete_turn = True
-
+			
 			else:
 				return json.dumps({"type": "rejection", "message": "You don't have a skip card!"})
-
+		
 		case "discard":
 			card_id = data["card_id"]
 			selected_card = None
@@ -467,17 +392,13 @@ def player_action(data):
 			if selected_card is not None:
 				hand.remove(selected_card)
 				game.discard.append(selected_card)
-
+				
 				json_hand = [x.toJSONDict() for x in hand]
-				cur.execute("UPDATE players SET hand=? WHERE id = ?",
-				            (json.dumps(json_hand), player_id))
-
-				json_discard = [x.toJSONDict() for x in game.discard]
-				cur.execute("UPDATE games SET discard=? WHERE id = ?",
-				            (json.dumps(json_discard), game_id))
+				player.save()
+				game.save()
 				con.commit()
 			complete_turn = True
-
+		
 		case "finish_hand":
 			pass
 		case "sort_by_color":
@@ -486,11 +407,11 @@ def player_action(data):
 			pass
 		case _:
 			raise Exception(f"Unrecognized player option {data['action']}")
-
+	
 	# User had discarded, skipped, or been skipped
 	# We need to advance the game to the next player
 	if complete_turn:
-		roomPlayers = game_id_to_players(game.id)
+		roomPlayers = game.get_players()
 		current_player_index = -1
 		for i, roomPlayer in enumerate(roomPlayers):
 			if roomPlayer.user_id == game.current_player:
@@ -498,43 +419,40 @@ def player_action(data):
 				break
 		if i == -1:
 			raise Exception(f"Couldn't find the current player!")
-
+		
 		current_player_index = (current_player_index + 1) % len(roomPlayers)
 		next_player = roomPlayers[current_player_index]
-
+		
 		# Perform the skipping operations
 		while next_player.skip_cards > 0:
 			next_player.skip_cards -= 1
 			next_player.drew_card = False
 			game.discard.append(Card(Color.SKIP, Rank.SKIP))
-			cur.execute("UPDATE players SET skip_cards=?, drew_card=0 WHERE id=?",
-			            (next_player.skip_cards, next_player.id))
+			player.save()
+			next_player.save()
 			con.commit()
 			current_player_index = (current_player_index + 1) % len(roomPlayers)
 			next_player = roomPlayers[current_player_index]
-
+		
 		game.current_player = next_player.user_id
 		player.drew_card = False
-
-		cur.execute("UPDATE games SET current_player=? WHERE id = ?", (game.current_player, game.id))
-		cur.execute("UPDATE players SET drew_card=0 WHERE id=?", (player.id,))
-		json_discard = [x.toJSONDict() for x in game.discard]
-		cur.execute("UPDATE games SET discard=? WHERE id = ?",
-		            (json.dumps(json_discard), game_id))
+		
+		player.save()
+		game.save()
 		con.commit()
-
+	
 	# Player has completed their hand
 	if len(player.hand) == 0:
 		game.deck = Card.getNewDeck()
 		random.shuffle(game.deck)
 		game.discard = [game.deck.pop()]
-
+		
 		if player.phase_index >= len(game.phase_list):
 			# Other players lost, so we'll set their index to 0
 			cur.execute("UPDATE players SET phase_index=0 WHERE game_id=? AND id != ?",
-						(game_id, player_id))
-
-		roomPlayers = game_id_to_players(game.id)
+			            (game_id, player_id))
+		
+		roomPlayers = game.get_players()
 		# Update the player info
 		for i, roomPlayer in enumerate(roomPlayers):
 			roomPlayer.hand = [game.deck.pop() for _ in range(INITIAL_HAND_SIZE)]
@@ -545,21 +463,15 @@ def player_action(data):
 				roomPlayer.phase_index += 1
 				roomPlayer.completed_phase = False
 				roomPlayer.skip_cards = 0
-
-			json_hand = [x.toJSONDict() for x in roomPlayer.hand]
-			cur.execute("UPDATE players SET hand=?,turn_index=?,phase_index=?,drew_card=0,completed_phase=0,"
-			            "skip_cards=0 WHERE id=?",
-			            (json.dumps(json_hand), roomPlayer.turn_index, roomPlayer.phase_index, roomPlayer.id))
-
+			
+			roomPlayer.save()
+		
 		game.current_player = roomPlayers[-1].user_id
 		# Remove all phase decks
 		cur.execute("DELETE FROM gamePhaseDecks WHERE game_id=?", (game.id,))
-		json_deck = [x.toJSONDict() for x in game.deck]
-		json_discard = [x.toJSONDict() for x in game.discard]
-		cur.execute("UPDATE games SET deck=?,discard=?,current_player=? WHERE id=?",
-		            (json.dumps(json_deck), json.dumps([ ]), game.current_player, game.id))
+		game.save()
 		con.commit()
-
+	
 	player_dict = player.toJSONDict()
 	player_dict["phase"] = game.phase_list[player.phase_index]
 	return json.dumps({"type": "get_player", "game_id": game_id, "user_id": user_id, "player": player_dict})
@@ -568,7 +480,7 @@ def player_action(data):
 def handle_data(data, websocket):
 	print()
 	print(data)
-
+	
 	match data["type"]:
 		case "connection":
 			return json.dumps({"type": "connection"})
@@ -577,20 +489,17 @@ def handle_data(data, websocket):
 		case "new_user":
 			will_send = True
 			if will_send:
-				u = User(
-					id=uuid.uuid4(),
-					name=data["name"],
-				)
 				try:
 					# Add this new user to our databases
-					cur.execute(
-						"INSERT INTO users (id, name, token) VALUES (?, ?, ?);",
-						(str(u.id), u.name, u.token),
+					u = User(
+						id=uuid.uuid4(),
+						name=data["name"],
 					)
+					u.save()
 					con.commit()
 					return json.dumps({"type": "new_user", "user": u.toJSONDict()})
-
-
+				
+				
 				except Exception as e:
 					# This happens because the SQL statement failed
 					print(e)
@@ -607,22 +516,22 @@ def handle_data(data, websocket):
 						"message": f"User already exists with the name {data['name']}",
 					}
 				)
-
+		
 		case "get_users":
 			return json.dumps({"type": "ignore"})
 		case "get_player":
 			game_id = data["game_id"]
 			user_id = data["user_id"]
-			game = id_to_game(game_id)
-			if game_user_id_in_player(game_id, user_id):
-				player = game_user_id_to_player(game_id, user_id)
+			game = Game.get_by_id(game_id)
+			if Player.exists_game_user(game_id, user_id):
+				player = Player.get_by_game_user_id(game_id, user_id)
 				socket_to_player_id[websocket] = player.id
 				player_dict = player.toJSONDict()
 				if player.phase_index < len(game.phase_list):
 					player_dict["phase"] = game.phase_list[player.phase_index]
 				else:
 					player_dict["phase"] = "WINNER"
-
+				
 				return json.dumps(
 					{
 						"type": "get_player",
@@ -639,16 +548,16 @@ def handle_data(data, websocket):
 						"user_id": user_id,
 					}
 				)
-
+		
 		case "create_game":
 			return create_game(data)
-
+		
 		case "join_game":
 			game_id = data["game_id"]
 			user_id = data["user_id"]
-			game = id_to_game(game_id)
-
-			if game_user_id_in_player(game_id, user_id):
+			game = Game.get_by_id(game_id)
+			
+			if Player.get_by_game_user_id(game_id, user_id):
 				return json.dumps(
 					{
 						"type": "rejection",
@@ -665,57 +574,46 @@ def handle_data(data, websocket):
 			else:
 				try:
 					p = Player(game_id=game_id, user_id=user_id)
-					cur.execute("INSERT INTO players (id, game_id, user_id, hand) VALUES (?, ?, ?, ?)",
-					            (p.id, game_id, user_id, "[]"))
+					p.save()
 					con.commit()
-
+					
 					return json.dumps({"type": "ignore"})
 				except Exception as e:
 					print(e)
-					user = id_to_user(user_id)
+					user = User.get_by_id(user_id)
 					return json.dumps({"type": "rejection", "message": f"({user.name} cannot join game {game_id}"})
 		case "unjoin_game":
 			game_id = data["game_id"]
 			user_id = data["user_id"]
-			game = id_to_game(game_id)
-
+			game = Game.get_by_id(game_id)
+			
 			# The host is deleting the game
-			if game.owner == user_id:
-				dead_player_key_list = [
-					player_id
-					for player_id in cur.execute(
-						f"SELECT game_id, user_id from players"
-					)
-				]
-				cur.execute(f"DELETE FROM games WHERE id = '{game_id}'")
-				cur.execute(f"DELETE FROM players WHERE game_id = '{game_id}'")
+			if str(game.owner) == user_id:
+				game.delete()
 				con.commit()
-
-
+			
 			else:
-				cur.execute(
-					f"DELETE FROM players WHERE game_id = '{game_id}' AND user_id = '{user_id}'"
-				)
+				Player.get_by_game_user_id(game_id, user_id).delete()
 				con.commit()
-
+			
 			return json.dumps({"type": "ignore"})
 		case "get_games":
 			return json.dumps({"type": "ignore"})
-
+		
 		case "start_game":
 			game_id = data["game_id"]
 			user_id = data["user_id"]
-
-			game = id_to_game(game_id)
-
-			if game.owner == user_id and not game.in_progress:
+			
+			game = Game.get_by_id(game_id)
+			
+			if str(game.owner) == user_id and not game.in_progress:
 				game_user_id_list = list(
 					cur.execute(f"SELECT game_id, user_id FROM players WHERE game_id = ?", (game_id,)))
 				player_list = [
-					game_user_id_to_player(game_id, user_id)
+					Player.get_by_game_user_id(game_id, user_id)
 					for (game_id, user_id) in game_user_id_list
 				]
-
+				
 				deck = Card.getNewDeck()
 				random.shuffle(deck)
 				random.shuffle(player_list)
@@ -723,19 +621,14 @@ def handle_data(data, websocket):
 					player.phase_index = 0
 					player.turn_index = i
 					player.hand = [deck.pop() for _ in range(INITIAL_HAND_SIZE)]
-					json_hand = [x.toJSONDict() for x in player.hand]
-					command = f"UPDATE players SET phase_index=0, turn_index={i}, hand='{json.dumps(json_hand)}' WHERE id = '{player.id}'"
-					cur.execute(command)
+					player.save()
 					con.commit()
-
+				
 				game.discard = [deck.pop()]
 				game.deck = deck
 				game.in_progress = True
 				game.current_player = player_list[0].user_id
-				json_deck = [x.toJSONDict() for x in deck]
-				json_discard = [x.toJSONDict() for x in game.discard]
-				command = f"UPDATE games SET deck='{json.dumps(json_deck)}', discard='{json.dumps(json_discard)}', current_player='{player_list[0].user_id}', in_progress=1 WHERE id='{game.id}'"
-				cur.execute(command)
+				game.save()
 				con.commit()
 				return json.dumps({"type": "ignore"})
 			else:
@@ -758,7 +651,7 @@ def handle_data(data, websocket):
 
 async def handler(websocket):
 	connected.add(websocket)
-
+	
 	# if True:
 	try:
 		while True:
@@ -784,43 +677,61 @@ async def main():
 
 
 if __name__ == "__main__":
-	DEBUG = False
-
-
+	
 	# Create our Regular Expression Compiler for phases
 	if not os.path.exists("RE.class"):
 		subprocess.check_output(["javac", "RE.java"])
-
+	
 	if DEBUG:
-		if not name_in_user("Alfredo"):
+		# Create our users
+		if not User.name_in_user("Alfredo"):
 			handle_data({"type": "new_user", "name": "Alfredo"}, None)
-		if not name_in_user("Naly"):
+		if not User.name_in_user("Naly"):
 			handle_data({"type": "new_user", "name": "Naly"}, None)
-		if not name_in_user("Yer"):
+		if not User.name_in_user("Yer"):
 			handle_data({"type": "new_user", "name": "Yer"}, None)
-		if not name_in_user("Averie"):
+		if not User.name_in_user("Averie"):
 			handle_data({"type": "new_user", "name": "Averie"}, None)
-
-		alfredo = name_to_user("Alfredo")
-		naly = name_to_user("Naly")
-		yer = name_to_user("Yer")
-		averie = name_to_user("Averie")
-
-		handle_data({"type": "create_game", "user_id": alfredo.id}, None)
-		game0 = get_games()[0]
-		handle_data({"type": "create_game", "user_id": yer.id}, None)
-		game1 = get_games()[0] if get_games()[0].id != game0.id else get_games()[1]
-
-		handle_data({"type": "join_game", "user_id": naly.id, "game_id": game0.id}, None)
-		handle_data({"type": "start_game", "user_id": alfredo.id, "game_id": game0.id}, None)
-		handle_data({"type": "join_game", "user_id": alfredo.id, "game_id": game1.id}, None)
-		handle_data({"type": "join_game", "user_id": naly.id, "game_id": game1.id}, None)
-		handle_data({"type": "join_game", "user_id": averie.id, "game_id": game1.id}, None)
-		handle_data({"type": "start_game", "user_id": yer.id, "game_id": game1.id}, None)
-		game0 = id_to_game(game0.id)
-		game1 = id_to_game(game1.id)
-
-		alfredo_p = game_user_id_to_player(game0.id, alfredo.id)
-		naly_p = game_user_id_to_player(game0.id, naly.id)
-
+		
+		alfredo = User.name_to_user("Alfredo")
+		naly = User.name_to_user("Naly")
+		yer = User.name_to_user("Yer")
+		averie = User.name_to_user("Averie")
+		
+		# Create a game
+		handle_data({"type": "create_game", "user_id": str(alfredo.id)}, None)
+		game0 = Game.all()[0]
+		
+		# Have a player join and unjoin
+		handle_data({"type": "join_game", "user_id": str(naly.id), "game_id": str(game0.id)}, None)
+		handle_data({"type": "unjoin_game", "user_id": str(naly.id), "game_id": str(game0.id)}, None)
+		
+		# Have a host delete an empty game room
+		handle_data({"type": "unjoin_game", "user_id": str(alfredo.id), "game_id": str(game0.id)}, None)
+		
+		# Have a host delete a game that's started
+		handle_data({"type": "create_game", "user_id": str(alfredo.id)}, None)
+		game0 = Game.all()[0]
+		handle_data({"type": "join_game", "user_id": str(naly.id), "game_id": str(game0.id)}, None)
+		handle_data({"type": "start_game", "user_id": str(alfredo.id), "game_id": str(game0.id)}, None)
+		handle_data({"type": "unjoin_game", "user_id": str(alfredo.id), "game_id": str(game0.id)}, None)
+		
+		# Create the game rooms for web-browser testing
+		handle_data({"type": "create_game", "user_id": str(alfredo.id)}, None)
+		game0 = Game.all()[0]
+		handle_data({"type": "join_game", "user_id": str(naly.id), "game_id": str(game0.id)}, None)
+		handle_data({"type": "create_game", "user_id": str(yer.id)}, None)
+		game1 = Game.all()[0] if Game.all()[0].id != game0.id else Game.all()[1]
+		
+		handle_data({"type": "start_game", "user_id": str(alfredo.id), "game_id": str(game0.id)}, None)
+		handle_data({"type": "join_game", "user_id": str(alfredo.id), "game_id": str(game1.id)}, None)
+		handle_data({"type": "join_game", "user_id": str(naly.id), "game_id": str(game1.id)}, None)
+		handle_data({"type": "join_game", "user_id": str(averie.id), "game_id": str(game1.id)}, None)
+		handle_data({"type": "start_game", "user_id": str(yer.id), "game_id": str(game1.id)}, None)
+		game0 = Game.get_by_id(game0.id)
+		game1 = Game.get_by_id(game1.id)
+		
+		alfredo_p = Player.get_by_game_user_id(game0.id, alfredo.id)
+		naly_p = Player.get_by_game_user_id(game0.id, naly.id)
+	
 	asyncio.run(main())

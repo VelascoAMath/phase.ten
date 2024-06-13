@@ -27,13 +27,13 @@ class User:
 		return [User(uuid.UUID(id), name, token) for (id, name, token) in User.cur.execute("SELECT * FROM users")]
 	@staticmethod
 	def exists(id: str | uuid.UUID):
-		if (isinstance(id, uuid.UUID)):
+		if isinstance(id, uuid.UUID):
 			id = str(id)
 		return User.cur.execute("SELECT * FROM users WHERE id = ?", (id,)).fetchone() is not None
 	
 	@staticmethod
 	def get_by_id(id: str | uuid.UUID):
-		if (isinstance(id, uuid.UUID)):
+		if isinstance(id, uuid.UUID):
 			id = str(id)
 		for (id, name, token) in list(User.cur.execute("SELECT * FROM users WHERE id = ?", (id,))):
 			u = User(uuid.UUID(id), name, token)

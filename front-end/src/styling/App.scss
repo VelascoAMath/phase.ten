@@ -1,17 +1,21 @@
 @use 'sizes';
 
 body {
-    margin: 0;
-    padding: 20px;
-    font-family: sans-serif;
-    background-color: #0a0114;
-    color: white;
+  margin: 0;
+  padding: 20px;
+  font-family: sans-serif;
+  background-color: #0a0114;
+  color: white;
 }
 
 a {
   color: white;
 }
 
+
+button {
+  font-size: large;
+}
 
 .winner {
   font-size: 5rem;
@@ -60,7 +64,7 @@ a {
   background-color: purple;
   padding: 5px;
   border-radius: 10px;
-  width: 50%;
+  width: 100%;
   overflow-x: scroll;
   margin: auto;
   gap: 0px;
@@ -70,6 +74,7 @@ a {
     background-color: yellow;
     border-radius: 10px;
     border: yellow 5px solid;
+    min-width: 90px;
   }
 
   .current {
@@ -112,14 +117,10 @@ a {
     text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;
   }
 
-  .selected {
-    border: turquoise 2px solid;
-    font-size: x-large;
-  }
-
+  
   .skip {
     background-color: black;
-  color: antiquewhite;
+    color: antiquewhite;
   }
 
   .wild {
@@ -127,7 +128,12 @@ a {
     color: white;
     text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;
   }
-
+  
+  .selected {
+    border: turquoise 2px solid;
+    font-size: x-large;
+    }
+  
 }
 
 .phase-deck-collection {
@@ -137,6 +143,18 @@ a {
   align-items: baseline;
   margin-top: 20px;
   gap: 0px 20px;
+
+  .card-collection {
+    display: flex;
+
+    }
+    button {
+      max-width: 50px;
+      font-size: small; 
+    }
+    .card {
+      width: 30px;
+    }
 }
 
 .rooms-to-join {

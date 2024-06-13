@@ -10,6 +10,10 @@ a {
   color: white;
 }
 
+button {
+  font-size: large;
+}
+
 .winner {
   font-size: 5rem;
   font-weight: bold;
@@ -54,7 +58,7 @@ a {
   background-color: purple;
   padding: 5px;
   border-radius: 10px;
-  width: 50%;
+  width: 100%;
   overflow-x: scroll;
   margin: auto;
   gap: 0px;
@@ -64,6 +68,7 @@ a {
   background-color: yellow;
   border-radius: 10px;
   border: yellow 5px solid;
+  min-width: 90px;
 }
 .room-players .current {
   color: white;
@@ -102,10 +107,6 @@ a {
     font-size: large;
   }
 }
-.card-collection .selected {
-  border: turquoise 2px solid;
-  font-size: x-large;
-}
 .card-collection .skip {
   background-color: black;
   color: antiquewhite;
@@ -115,6 +116,10 @@ a {
   color: white;
   text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;
 }
+.card-collection .selected {
+  border: turquoise 2px solid;
+  font-size: x-large;
+}
 
 .phase-deck-collection {
   display: flex;
@@ -123,6 +128,16 @@ a {
   align-items: baseline;
   margin-top: 20px;
   gap: 0px 20px;
+}
+.phase-deck-collection .card-collection {
+  display: flex;
+}
+.phase-deck-collection button {
+  max-width: 50px;
+  font-size: small;
+}
+.phase-deck-collection .card {
+  width: 30px;
 }
 
 .rooms-to-join {
