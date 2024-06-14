@@ -98,7 +98,7 @@ class TestRE(unittest.TestCase):
 
     def test_strict_color(self):
         rr = RE("C4")
-        accepted_list = ["R1 R2 R11 R13", "W W W R7", "W W W W", "R1 R1 R1 R1", "W W W W"]
+        accepted_list = ["R1 R2 R11 R3", "W W W R7", "W W W W", "R1 R1 R1 R1", "W W W W"]
         for phase in accepted_list:
             deck = [Card.from_string(c) for c in phase.split(" ")]
             self.assertTrue(rr.isFullyAccepted(deck))
