@@ -128,7 +128,6 @@ class TestRE(unittest.TestCase):
             "W W W W W W W W W W W W",
         ]
         for phase in accepted_list:
-            print(phase)
             deck = [Card.from_string(c) for c in phase.split(" ")]
             self.assertTrue(rr.isFullyAccepted(deck))
 
