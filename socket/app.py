@@ -4,16 +4,16 @@ import os.path
 import random
 import secrets
 import sqlite3
-import subprocess
 import uuid
 
 import websockets
 
 from Card import Card, Rank, Color
 from Game import Game
-from Player import Player
-from User import User
 from GamePhaseDeck import GamePhaseDeck
+from Player import Player
+from RE import RE
+from User import User
 
 DEBUG = True
 
@@ -39,8 +39,11 @@ INITIAL_HAND_SIZE = 10
 if DEBUG and os.path.exists("phase_ten.db"):
 	os.remove("phase_ten.db")
 
-con = sqlite3.connect("phase_ten.db")
-# con = sqlite3.connect(":memory:")
+if DEBUG:
+	con = sqlite3.connect("phase_ten.db")
+else:
+	con = sqlite3.connect("phase_ten_live.db")
+
 cur = con.cursor()
 cur.execute(
 	"CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL, token TEXT NOT NULL);"
@@ -153,14 +156,13 @@ async def send_players():
 			game_dict["users"].append(user_dict)
 		
 		game_dict["phase_decks"] = [x.toJSONDict() for x in game_id_to_gamePhaseDecks(str(game.id))]
-
+		
 		await socket.send(json.dumps(
 			{
 				"type": "get_game",
 				"game": game_dict
 			}
 		))
-		
 
 
 def id_to_gamePhaseDeck(gamePhaseDeck_id: str) -> GamePhaseDeck:
@@ -181,7 +183,6 @@ def game_id_to_gamePhaseDecks(game_id: str):
 	return phaseDeck_set
 
 
-
 async def send_games():
 	game_list = []
 	for game in Game.all():
@@ -193,7 +194,8 @@ async def send_games():
 		
 		game_dict["users"] = []
 		user_id_list = list(cur.execute(
-			"SELECT users.id FROM users JOIN players ON users.id = players.user_id JOIN games ON players.game_id = games.id WHERE games.id = ?",
+			"SELECT users.id FROM users JOIN players ON users.id = players.user_id JOIN games "
+			"ON players.game_id = games.id WHERE games.id = ?",
 			(str(game.id),)
 		))
 		for (user_id,) in user_id_list:
@@ -272,7 +274,7 @@ def player_action(data):
 	# The only action possible is do_skip when you are skipped
 	if data["action"] != "do_skip" and player.skip_cards > 0:
 		data["action"] = "do_skip"
-
+	
 	if not is_sorting:
 		if (not (data["action"] == "draw_deck" or data["action"] == "draw_discard")) and not player.drew_card:
 			return json.dumps({"type": "rejection", "message": "YOU HAVE TO DRAW FIRST!!!!"})
@@ -283,7 +285,6 @@ def player_action(data):
 			if player.drew_card:
 				return json.dumps({"type": "rejection", "message": "You already drew for this round!"})
 			hand.append(game.deck.pop())
-			json_hand = [x.toJSONDict() for x in hand]
 			player.drew_card = True
 			player.save()
 			game.save()
@@ -298,7 +299,6 @@ def player_action(data):
 			if game.discard[-1].rank is Rank.SKIP:
 				return json.dumps({"type": "rejection", "message": "Can't take SKIP cards from the discard pile!"})
 			hand.append(game.discard.pop())
-			json_hand = [x.toJSONDict() for x in hand]
 			player.drew_card = True
 			player.save()
 			game.save()
@@ -313,40 +313,31 @@ def player_action(data):
 			
 			gamePhaseDeck = id_to_gamePhaseDeck(data["phase_deck_id"])
 			cards = [Card.fromJSONDict(x) for x in data["cards"]]
-			str_cards = [str(x) for x in cards]
-			str_gamePhaseDeck = [str(x) for x in gamePhaseDeck.deck]
 			
-			deckToTest = None
-			str_deckToTest = []
 			if data["direction"] == "start":
 				deckToTest = cards + gamePhaseDeck.deck
-				str_deckToTest = str_cards + str_gamePhaseDeck
 			elif data["direction"] == "end":
 				deckToTest = gamePhaseDeck.deck + cards
-				str_deckToTest = str_gamePhaseDeck + str_cards
 			else:
 				return json.dumps({"type": "rejection", "message": f"{data['direction']} is not a valid direction"})
 			
 			phase = gamePhaseDeck.phase
 			
-			command = f"java RE -p {phase} -d {' '.join(str_deckToTest)}"
-			output = subprocess.check_output(command, shell=True).decode("utf-8").strip()
-			if output == "true":
+			rr = RE(phase)
+			
+			if rr.isFullyAccepted(deckToTest):
 				# Remove the cards from the player's hand
 				for card in cards:
 					if card not in hand:
 						return json.dumps({"type": "rejection", "message": f"{str(card)} is not in your hand"})
 					else:
 						hand.remove(card)
-				json_hand = [x.toJSONDict() for x in hand]
 				player.save()
 				
 				json_deckToTest = [x.toJSONDict() for x in deckToTest]
 				cur.execute("UPDATE gamePhaseDecks SET deck=? WHERE id = ?",
 				            (json.dumps(json_deckToTest), data["phase_deck_id"]))
 				con.commit()
-			
-			
 			else:
 				return json.dumps({"type": "rejection", "message": "Unable to put down these cards to the phase!"})
 		
@@ -355,11 +346,9 @@ def player_action(data):
 				return json.dumps({"type": "rejection", "message": "You've already completed your phase!"})
 			
 			cards = [Card.fromJSONDict(x) for x in data["cards"]]
-			str_cards = [str(x) for x in cards]
 			phase = game.phase_list[player.phase_index]
-			command = f"java RE -p {phase} -d {' '.join(str_cards)}"
-			output = subprocess.check_output(command, shell=True).decode("utf-8").strip()
-			if output == "true":
+			rr = RE(phase)
+			if rr.isFullyAccepted(cards):
 				
 				for phase_comp in phase.split('+'):
 					
@@ -379,11 +368,8 @@ def player_action(data):
 					cur.execute("INSERT INTO gamePhaseDecks (id, game_id, phase, deck) VALUES (?, ?, ?, ?)",
 					            (secrets.token_urlsafe(16), game_id, phase_comp[:1], json.dumps(json_cards)))
 					
-					json_hand = [x.toJSONDict() for x in hand]
 					player.save()
 					con.commit()
-			
-			
 			
 			else:
 				return json.dumps({"type": "rejection", "message": "Not a valid phase!"})
@@ -424,7 +410,6 @@ def player_action(data):
 				hand.remove(selected_card)
 				game.discard.append(selected_card)
 				
-				json_hand = [x.toJSONDict() for x in hand]
 				player.save()
 				game.save()
 				con.commit()
@@ -478,11 +463,11 @@ def player_action(data):
 		random.shuffle(game.deck)
 		game.discard = [game.deck.pop()]
 		
+		roomPlayers = game.get_players()
 		# Player has won
 		if player.phase_index >= len(game.phase_list) - 1 and player.completed_phase:
 			game.winner = player.user_id
 		else:
-			roomPlayers = game.get_players()
 			# Update the player info
 			for i, roomPlayer in enumerate(roomPlayers):
 				roomPlayer.hand = [game.deck.pop() for _ in range(INITIAL_HAND_SIZE)]
@@ -528,7 +513,6 @@ def handle_data(data, websocket):
 					u.save()
 					con.commit()
 					return json.dumps({"type": "new_user", "user": u.toJSONDict()})
-				
 				
 				except Exception as e:
 					# This happens because the SQL statement failed
@@ -712,10 +696,6 @@ async def main():
 
 
 if __name__ == "__main__":
-	
-	# Create our Regular Expression Compiler for phases
-	if not os.path.exists("RE.class"):
-		subprocess.check_output(["javac", "RE.java"])
 	
 	if DEBUG:
 		# Create our users

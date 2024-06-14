@@ -305,7 +305,6 @@ class RE:
 		if m:
 			state_collection = []
 			for i, phase_component in enumerate(self.phase.split("+")):
-				print(i, phase_component)
 				
 				match phase_component[0]:
 					case "R":
