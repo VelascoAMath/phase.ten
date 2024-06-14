@@ -7,7 +7,7 @@ import uuid
 from enum import Enum
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class Rank(Enum):
 	ONE = 1
 	TWO = 2
@@ -26,6 +26,9 @@ class Rank(Enum):
 	
 	def __lt__(self, other):
 		return self.value < other.value
+	
+	def __hash__(self):
+		return self.value
 	
 	def __str__(self):
 		return self.__repr__()
@@ -104,7 +107,7 @@ class Rank(Enum):
 				raise Exception(f"{data} is not a valid rank!")
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class Color(Enum):
 	RED = 0
 	BLUE = 1
@@ -112,6 +115,9 @@ class Color(Enum):
 	YELLOW = 3
 	SKIP = 4
 	WILD = 5
+	
+	def __hash__(self):
+		return self.value
 	
 	def __str__(self):
 		return self.__repr__()
@@ -152,7 +158,7 @@ class Color(Enum):
 				raise Exception(f"{data} is not a valid color!")
 
 
-@dataclasses.dataclass(order=True, frozen=True)
+@dataclasses.dataclass(frozen=True)
 class Card:
 	color: Color = dataclasses.field(default_factory=lambda: Color.WILD)
 	rank: Rank = dataclasses.field(default_factory=lambda: Rank.WILD)
@@ -198,6 +204,8 @@ class Card:
 			deck.append(Card(Color.WILD, Rank.WILD))
 		return deck
 	
+	def __hash__(self):
+		return self.rank.value * len(Rank) + self.color.value
 	def __str__(self):
 		if self.color is Color.WILD and self.rank is Rank.WILD:
 			return "W"
