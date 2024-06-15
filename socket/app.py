@@ -15,7 +15,7 @@ from Player import Player
 from RE import RE
 from User import User
 
-DEBUG = True
+DEBUG = False
 
 connected = set()
 socket_to_player_id = {}
@@ -145,6 +145,7 @@ async def send_players():
 			user_dict = User.get_by_id(player.user_id).toJSONDict()
 			player_dict = player.toJSONDict()
 			player_dict["name"] = User.get_by_id(player.user_id).name
+			player_dict["hand_size"] = len(player.hand)
 			
 			if "hand" in player_dict:
 				del player_dict["hand"]

@@ -196,6 +196,7 @@ export default function PlayRoom({props}) {
                     const className = "player " + ((player.user_id === game.current_player) ? "current ": "") + ((player.skip_cards > 0) ? "skipped": "");
                     return (<div className={className} key={player.id}> <div>{player.name}</div>
                         <div>Phase {player.phase_index + 1}</div>
+                        <div>{player.hand_size} {player.hand_size === 1 ? "card": "cards"}</div>
                         <div>{game.phase_list[player.phase_index]}</div>
                         {!player.completed_phase && <div style={{display: "flex", alignItems: "flex-end"}}> <div>Phase:</div> <div/> {xCircleFill()} </div>}
                         { !!player.completed_phase && <div style={{display: "flex", alignItems: "flex-end"}}> <div>Phase:</div> <div/> {checkCircleFill()} </div>}
