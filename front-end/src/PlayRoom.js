@@ -26,7 +26,8 @@ const getDeckDivs = function(deck){
         (card, idx) => {
             let className = getClassFromRank(card.rank);
             return(
-                <div style={{backgroundColor: rankToColor[card.color]}} key={idx} className={className}>
+                // Implement the offsets so the cards overlap when using relative posititioning
+                <div style={{backgroundColor: rankToColor[card.color], left:(-20 * idx) + "px", zIndex:(idx) }} key={idx} className={className}>
                     {card.rank}
                 </div>
             );
@@ -256,9 +257,9 @@ export default function PlayRoom({props}) {
                 {game["phase_decks"].map((deck) => {
                     return (
                         <div className="phase-deck-collection" key={deck.id}>
-                            <button style={{width: "150px"}} onClick={() => {putDown(deck.id, "start")}}>Put down selected cards at the start</button>
+                            <button style={{width: "150px"}} onClick={() => {putDown(deck.id, "start")}}>Put down at start</button>
                             <h2>{deck.phase}:</h2> <div className="card-collection">{getDeckDivs(deck["deck"])} </div>
-                            <button style={{width: "150px"}} onClick={() => {putDown(deck.id, "end")}}>Put down selected cards at the end</button>
+                            <button style={{width: "150px"}} onClick={() => {putDown(deck.id, "end")}}>Put down at end</button>
                         </div>
                         ); })}
             </div>

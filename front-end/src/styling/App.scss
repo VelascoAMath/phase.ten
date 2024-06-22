@@ -146,6 +146,11 @@ button {
 
   .card-collection {
     display: flex;
+    justify-content: flex-start;
+    width: 100%;
+    max-width: 600px;
+    overflow-x: scroll;
+    flex-wrap: nowrap;
 
     }
     @media (width < sizes.$lg) {   
@@ -153,9 +158,12 @@ button {
           max-width: 50px;
           font-size: small; 
       }
-    .card {
-      width: 30px;
-    }
+      
+      // It's up the the developer to implement the offsets for the cards
+      .card {
+        position: relative;
+      }
+    
   }
 }
 
