@@ -253,6 +253,13 @@ export default function PlayRoom({props}) {
                     {selectedSkipPlayer && <button onClick={skipPlayer}>Skip Player</button>}
                 </div>
             }
+            <div style={{display: "flex", flexDirection: "column", justifyContent: "center"}}>
+                <h2 style={{marginLeft: "auto", marginRight: "auto"}}>Selected card(s)</h2>
+                <div className="card-collection">
+                    {getDeckDivsSelectable(selectedCards, selectedCards, setSelectedCards)}
+                </div>
+                {isCurrentPlayer && (selectedCards.length > 0) && player["drew_card"] && !player.completed_phase && <button onClick={completePhase}>Complete Phase</button>}
+            </div>
             <div>
                 {game["phase_decks"].map((deck) => {
                     return (
@@ -262,13 +269,6 @@ export default function PlayRoom({props}) {
                             <button style={{width: "150px"}} onClick={() => {putDown(deck.id, "end")}}>Put down at end</button>
                         </div>
                         ); })}
-            </div>
-            <div style={{display: "flex", flexDirection: "column", justifyContent: "center"}}>
-                <h2 style={{marginLeft: "auto", marginRight: "auto"}}>Selected card(s)</h2>
-                <div className="card-collection">
-                    {getDeckDivsSelectable(selectedCards, selectedCards, setSelectedCards)}
-                </div>
-                {isCurrentPlayer && (selectedCards.length > 0) && player["drew_card"] && !player.completed_phase && <button onClick={completePhase}>Complete Phase</button>}
             </div>
         </div>
     )
