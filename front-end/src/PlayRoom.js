@@ -216,7 +216,7 @@ export default function PlayRoom({props}) {
                 Play room {game_id}
             </div>
 
-            <div style={{alignItems: "center", gap: "10px 10px", flexWrap: "nowrap" }} className="card-collection">
+            <div style={{alignItems: "center", gap: "10px 10px", flexWrap: "nowrap", justifyContent: "space-between", margin: "auto", maxWidth: "750px" }} className="card-collection">
                 <div style={{display: "flex"}}>
                     {isCurrentPlayer && (!player["drew_card"]) && (discardDeck.length > 0) && (discardDeck[discardDeck.length - 1].rank !== "S") && <button onClick={drawDiscard}>Draw Discard</button>}
                     {getDeckDivs(discardDeck.slice(discardDeck.length-1)) }
