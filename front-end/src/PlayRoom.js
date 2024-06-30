@@ -268,7 +268,7 @@ export default function PlayRoom({props}) {
                 <div className="card-collection">
                     {getDeckDivsSelectable(selectedCards, selectedCards, setSelectedCards)}
                 </div>
-                {isCurrentPlayer && (selectedCards.length > 0) && player["drew_card"] && <button onClick={completePhase}>Complete Phase</button>}
+                {isCurrentPlayer && (selectedCards.length > 0) && player["drew_card"] && !player.completed_phase && <button onClick={completePhase}>Complete Phase</button>}
             </div>
         </div>
     )
