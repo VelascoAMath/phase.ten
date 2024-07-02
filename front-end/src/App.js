@@ -26,6 +26,11 @@ function App() {
   const [state, dispatch] = useReducer(inputReducer, initState);
   const [socketState, setSocketState] = useState(0);
   const [initialSocketCall, setInitialSocketCall] = useState(false);
+
+  
+  let ding = new Audio('turn_alarm.wav');
+  // console.log(ding.canPlayType('turn_alarm.wav'));
+
   
   const socket = state["socket"];
 

@@ -39,6 +39,7 @@ function joinGameButton(game, title, key, onClick, className){
 
 function gameRoomView(user_id, gameList, socket, selectedGame, setSelectedGame) {
     
+    let finishedGameList = [];
     let hostWaitGameList = [];
     let hostStartedGameList = [];
     let joinWaitGameList = [];
@@ -47,7 +48,10 @@ function gameRoomView(user_id, gameList, socket, selectedGame, setSelectedGame) 
     for(const game of gameList){
         game["user-in-game"] = !!(game.users.filter(user => {return user_id === user.id})?.length);
 
-        if(game.owner === user_id){
+
+        if(game.winner !== "None"){
+            finishedGameList.push(game);
+        } else if(game.owner === user_id){
             if(game.in_progress) {
                 hostStartedGameList.push(game);
             } else {
@@ -84,6 +88,12 @@ function gameRoomView(user_id, gameList, socket, selectedGame, setSelectedGame) 
             <div className="rooms">
                 {hostWaitGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1}`, game.id, () => {setSelectedGame(game.id)}, ("available " + (selectedGame === game.id ? "selected": ""))))}
                 {joinWaitGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1}`, game.id, () => {setSelectedGame(game.id); if(!game['user-in-game']){joinGame(game.id, user_id, socket)} }, ("available " + (selectedGame === game.id ? "selected": "")) ))}
+            </div>
+        </div>
+        <div className="room-section">
+            <h2>Finished Game</h2>
+            <div className="rooms">
+                {finishedGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1}`, game.id, () => {setSelectedGame(game.id)}, ("in-progress " + (selectedGame === game.id ? "selected": ""))))}
             </div>
         </div>
 

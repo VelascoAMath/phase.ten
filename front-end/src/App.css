@@ -131,6 +131,11 @@ button {
 }
 .phase-deck-collection .card-collection {
   display: flex;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 600px;
+  overflow-x: scroll;
+  flex-wrap: nowrap;
 }
 @media (width < 992px) {
   .phase-deck-collection button {
@@ -138,7 +143,7 @@ button {
     font-size: small;
   }
   .phase-deck-collection .card {
-    width: 30px;
+    position: relative;
   }
 }
 

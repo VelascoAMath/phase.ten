@@ -26,7 +26,8 @@ const getDeckDivs = function(deck){
         (card, idx) => {
             let className = getClassFromRank(card.rank);
             return(
-                <div style={{backgroundColor: rankToColor[card.color]}} key={idx} className={className}>
+                // Implement the offsets so the cards overlap when using relative posititioning
+                <div style={{backgroundColor: rankToColor[card.color], left:(-20 * idx) + "px", zIndex:(idx) }} key={idx} className={className}>
                     {card.rank}
                 </div>
             );
@@ -196,6 +197,7 @@ export default function PlayRoom({props}) {
                     const className = "player " + ((player.user_id === game.current_player) ? "current ": "") + ((player.skip_cards > 0) ? "skipped": "");
                     return (<div className={className} key={player.id}> <div>{player.name}</div>
                         <div>Phase {player.phase_index + 1}</div>
+                        <div>{player.hand_size} {player.hand_size === 1 ? "card": "cards"}</div>
                         <div>{game.phase_list[player.phase_index]}</div>
                         {!player.completed_phase && <div style={{display: "flex", alignItems: "flex-end"}}> <div>Phase:</div> <div/> {xCircleFill()} </div>}
                         { !!player.completed_phase && <div style={{display: "flex", alignItems: "flex-end"}}> <div>Phase:</div> <div/> {checkCircleFill()} </div>}
@@ -214,7 +216,7 @@ export default function PlayRoom({props}) {
                 Play room {game_id}
             </div>
 
-            <div style={{alignItems: "center", gap: "10px 10px"}} className="card-collection">
+            <div style={{alignItems: "center", gap: "10px 10px", flexWrap: "nowrap", justifyContent: "space-between", margin: "auto", maxWidth: "750px" }} className="card-collection">
                 <div style={{display: "flex"}}>
                     {isCurrentPlayer && (!player["drew_card"]) && (discardDeck.length > 0) && (discardDeck[discardDeck.length - 1].rank !== "S") && <button onClick={drawDiscard}>Draw Discard</button>}
                     {getDeckDivs(discardDeck.slice(discardDeck.length-1)) }
@@ -251,22 +253,22 @@ export default function PlayRoom({props}) {
                     {selectedSkipPlayer && <button onClick={skipPlayer}>Skip Player</button>}
                 </div>
             }
-            <div>
-                {game["phase_decks"].map((deck) => {
-                    return (
-                        <div className="phase-deck-collection" key={deck.id}>
-                            <button style={{width: "150px"}} onClick={() => {putDown(deck.id, "start")}}>Put down selected cards at the start</button>
-                            <h2>{deck.phase}:</h2> <div className="card-collection">{getDeckDivs(deck["deck"])} </div>
-                            <button style={{width: "150px"}} onClick={() => {putDown(deck.id, "end")}}>Put down selected cards at the end</button>
-                        </div>
-                        ); })}
-            </div>
             <div style={{display: "flex", flexDirection: "column", justifyContent: "center"}}>
                 <h2 style={{marginLeft: "auto", marginRight: "auto"}}>Selected card(s)</h2>
                 <div className="card-collection">
                     {getDeckDivsSelectable(selectedCards, selectedCards, setSelectedCards)}
                 </div>
-                {isCurrentPlayer && (selectedCards.length > 0) && player["drew_card"] && <button onClick={completePhase}>Complete Phase</button>}
+                {isCurrentPlayer && (selectedCards.length > 0) && player["drew_card"] && !player.completed_phase && <button onClick={completePhase}>Complete Phase</button>}
+            </div>
+            <div>
+                {game["phase_decks"].map((deck) => {
+                    return (
+                        <div className="phase-deck-collection" key={deck.id}>
+                            <button style={{width: "150px"}} onClick={() => {putDown(deck.id, "start")}}>Put down at start</button>
+                            <h2>{deck.phase}:</h2> <div className="card-collection">{getDeckDivs(deck["deck"])} </div>
+                            <button style={{width: "150px"}} onClick={() => {putDown(deck.id, "end")}}>Put down at end</button>
+                        </div>
+                        ); })}
             </div>
         </div>
     )

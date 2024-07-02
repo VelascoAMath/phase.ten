@@ -1,24 +1,31 @@
-# README
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
 
-Things you may want to cover:
 
-* Ruby version
+You will need two terminals to run this game
 
-* System dependencies
 
-* Configuration
+## Terminal 1
 
-* Database creation
+> cd front-end
+> npm install
+> npm start
 
-* Database initialization
 
-* How to run the test suite
 
-* Services (job queues, cache servers, search engines, etc.)
+## Terminal 2
 
-* Deployment instructions
+> cd socket
+> python app.py
 
-* ...
+
+
+
+In front-end/src/App.js the websocket is intially configured to connect to localhost
+If you wish to play this game on a local network, you will need to replace that with the local ip address of the server
+
+
+You will need Python3.12 to run this game without modifications
+You wil also need to download several libraries using pip
+If you cannot run app.py, look at the error messages to see what you need to install
+
+
