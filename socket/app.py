@@ -671,24 +671,18 @@ def handle_data(data, websocket):
 async def handler(websocket):
 	connected.add(websocket)
 	
-	# if True:
-	try:
-		while True:
-			event = await websocket.recv()
-			data = json.loads(event)
-			message = handle_data(data, websocket)
-			print(message)
-			await websocket.send(message)
-			await send_games()
-			await send_users()
-			await send_players()
-	except Exception as e:
-		print(e)
-		if websocket in connected:
-			connected.remove(websocket)
-		if websocket in socket_to_player_id:
-			socket_to_player_id.pop(websocket)
-		raise e
+	async for event in websocket:
+		data = json.loads(event)
+		message = handle_data(data, websocket)
+		print(message)
+		await websocket.send(message)
+		await send_games()
+		await send_users()
+		await send_players()
+	if websocket in connected:
+		connected.remove(websocket)
+	if websocket in socket_to_player_id:
+		socket_to_player_id.pop(websocket)
 
 
 async def main():
