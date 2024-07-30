@@ -476,7 +476,7 @@ def player_action(data):
 				# We move the player list up one turn
 				roomPlayer.turn_index = (i + 1) % len(roomPlayers)
 				if roomPlayer.completed_phase:
-					roomPlayer.phase_index = max(roomPlayer.phase_index + 1, len(DEFAULT_PHASE_LIST) - 1)
+					roomPlayer.phase_index = min(roomPlayer.phase_index + 1, len(DEFAULT_PHASE_LIST) - 1)
 					roomPlayer.completed_phase = False
 					roomPlayer.skip_cards = 0
 				
