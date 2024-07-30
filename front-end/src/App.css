@@ -157,6 +157,7 @@ button {
   display: flex;
   flex-direction: column;
   width: 50%;
+  border: solid white 1px
 }
 .rooms-to-join .room-section .rooms {
   display: flex;
