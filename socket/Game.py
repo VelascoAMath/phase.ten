@@ -15,7 +15,7 @@ class Game:
 	discard: list[Card] = dataclasses.field(default_factory=list)
 	current_player: uuid.UUID = None
 	# The player who originally created the game
-	owner: uuid.UUID = None
+	host: uuid.UUID = None
 	# If the game has started
 	in_progress: bool = False
 	winner: uuid.UUID = None
@@ -28,14 +28,14 @@ class Game:
 		winner = None if self.winner is None else str(self.winner)
 		if Game.exists(self.id):
 			Game.cur.execute(
-				"UPDATE games SET phase_list=?, deck=?, discard=?, current_player=?, owner=?, in_progress=?, winner=? WHERE id=?",
-				(json.dumps(self.phase_list), json.dumps(json_deck), json.dumps(json_discard), str(self.current_player), str(self.owner), self.in_progress, winner, str(self.id)))
+				"UPDATE games SET phase_list=?, deck=?, discard=?, current_player=?, host=?, in_progress=?, winner=? WHERE id=?",
+				(json.dumps(self.phase_list), json.dumps(json_deck), json.dumps(json_discard), str(self.current_player), str(self.host), self.in_progress, winner, str(self.id)))
 		else:
 			Game.cur.execute(
-				"INSERT INTO games (id, phase_list, deck, discard, current_player, owner, in_progress, winner) VALUES "
+				"INSERT INTO games (id, phase_list, deck, discard, current_player, host, in_progress, winner) VALUES "
 				"(?, ?, ?, ?, ?, ?, ?, ?)",
 				(str(self.id), json.dumps(self.phase_list), json.dumps(json_deck), json.dumps(json_discard),
-				 str(self.current_player), str(self.owner), self.in_progress, winner))
+				 str(self.current_player), str(self.host), self.in_progress, winner))
 
 	def delete(self):
 		Game.cur.execute("DELETE FROM games WHERE id = ?", (str(self.id),))
@@ -62,7 +62,7 @@ class Game:
 	def get_by_id(id):
 		if isinstance(id, uuid.UUID):
 			id = str(id)
-		for (id, phase_list, deck_json, discard_json, current_player, owner, in_progress, winner) in list(Game.cur.execute(
+		for (id, phase_list, deck_json, discard_json, current_player, host, in_progress, winner) in list(Game.cur.execute(
 			"SELECT * FROM games WHERE id = ?", (id,))):
 			deck = [Card.fromJSONDict(x) for x in json.loads(deck_json)]
 			discard = [Card.fromJSONDict(x) for x in json.loads(discard_json)]
@@ -72,7 +72,7 @@ class Game:
 			game.deck = deck
 			game.discard = discard
 			game.current_player = uuid.UUID(current_player)
-			game.owner = uuid.UUID(owner)
+			game.host = uuid.UUID(host)
 			if isinstance(in_progress, int):
 				game.in_progress = in_progress == 1
 			else:
@@ -88,7 +88,7 @@ class Game:
 	@staticmethod
 	def all() -> list:
 		game_list = []
-		for (id, phase_list, deck_json, discard_json, current_player, owner, in_progress, winner) in Game.cur.execute(
+		for (id, phase_list, deck_json, discard_json, current_player, host, in_progress, winner) in Game.cur.execute(
 			"SELECT * FROM games"):
 			deck = [Card.fromJSONDict(x) for x in json.loads(deck_json)]
 			discard = [Card.fromJSONDict(x) for x in json.loads(discard_json)]
@@ -98,7 +98,7 @@ class Game:
 			game.deck = deck
 			game.discard = discard
 			game.current_player = uuid.UUID(current_player)
-			game.owner = uuid.UUID(owner)
+			game.host = uuid.UUID(host)
 			if isinstance(in_progress, int):
 				game.in_progress = in_progress == 1
 			else:
@@ -118,7 +118,7 @@ class Game:
 			"deck": [x.toJSONDict() for x in self.deck],
 			"discard": [x.toJSONDict() for x in self.discard],
 			"current_player": str(self.current_player),
-			"owner": str(self.owner),
+			"host": str(self.host),
 			"in_progress": self.in_progress,
 			"winner": str(self.winner),
 		}
@@ -135,7 +135,7 @@ class Game:
 		discard = []
 		for c in data["discard"]:
 			discard.append(Card.fromJSONDict(c))
-		return Game(uuid.UUID(data["id"]), data["phase_list"], deck, discard, uuid.UUID(data["current_player"]), uuid.UUID(data["owner"]), data["in_progress"], uuid.UUID(data["winner"]))
+		return Game(uuid.UUID(data["id"]), data["phase_list"], deck, discard, uuid.UUID(data["current_player"]), uuid.UUID(data["host"]), data["in_progress"], uuid.UUID(data["winner"]))
 	
 
 

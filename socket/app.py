@@ -56,13 +56,13 @@ cur.execute(
 	"	deck TEXT NOT NULL,"
 	"	discard TEXT NOT NULL,"
 	"	current_player TEXT NOT NULL,"
-	"	owner TEXT NOT NULL,"
+	"	host TEXT NOT NULL,"
 	"	in_progress INTEGER DEFAULT (0) NOT NULL,"
 	"	winner TEXT,"
 	"	CONSTRAINT games_pk PRIMARY KEY (id),"
-	"	CONSTRAINT games_users_FK FOREIGN KEY (owner) REFERENCES users(id)"
-	"	CONSTRAINT games_current_player_FK FOREIGN KEY (owner) REFERENCES users(id)"
-	"	CONSTRAINT games_winner_FK FOREIGN KEY (owner) REFERENCES users(id)"
+	"	CONSTRAINT games_users_FK FOREIGN KEY (host) REFERENCES users(id)"
+	"	CONSTRAINT games_current_player_FK FOREIGN KEY (host) REFERENCES users(id)"
+	"	CONSTRAINT games_winner_FK FOREIGN KEY (host) REFERENCES users(id)"
 	");"
 )
 cur.execute(
@@ -223,7 +223,7 @@ def create_game(data):
 		)
 	else:
 		try:
-			g = Game(phase_list=DEFAULT_PHASE_LIST, deck=[], discard=[], owner=user_id, current_player=user_id,
+			g = Game(phase_list=DEFAULT_PHASE_LIST, deck=[], discard=[], host=user_id, current_player=user_id,
 			         in_progress=False)
 			g.save()
 			
@@ -607,7 +607,7 @@ def handle_data(data, websocket):
 			game = Game.get_by_id(game_id)
 			
 			# The host is deleting the game
-			if str(game.owner) == user_id:
+			if str(game.host) == user_id:
 				game.delete()
 				con.commit()
 			
@@ -625,7 +625,7 @@ def handle_data(data, websocket):
 			
 			game = Game.get_by_id(game_id)
 			
-			if str(game.owner) == user_id and not game.in_progress:
+			if str(game.host) == user_id and not game.in_progress:
 				game_user_id_list = list(
 					cur.execute(f"SELECT game_id, user_id FROM players WHERE game_id = ?", (game_id,)))
 				player_list = [
@@ -654,7 +654,7 @@ def handle_data(data, websocket):
 				return json.dumps(
 					{
 						"type": "rejection",
-						"message": "You are not the owner and cannot start this game",
+						"message": "You are not the host and cannot start this game",
 					}
 				)
 		case "player_action":
