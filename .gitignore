@@ -43,8 +43,15 @@
 *~
 socket/__pycache__/
 socket/*class
+socket/*gv
+socket/*pdf
 
 
 *.db
 *.css.map
+
+# IDE files
+.idea/misc.xml
+.idea/socket.iml
+
 
