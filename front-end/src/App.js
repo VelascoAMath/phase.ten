@@ -54,6 +54,8 @@ function App() {
     if(socket.readyState === socket.OPEN){
       socket.send(JSON.stringify({type: "disconnection"}));
     }
+    setSocketState(-1);
+
   }
     
 
@@ -109,7 +111,7 @@ function App() {
   return (
     <div>
       <h2>{state["user-name"]}</h2>
-      <div>
+      {/* <div>
                 {state["user-list"]?.map(user => {
                     const setUser = function(){
                         dispatch({type: "change-input", key: "user-id", value: user["id"]});
@@ -118,7 +120,7 @@ function App() {
                     }
                     return <button key={user.id} onClick={setUser}>{user.name}</button>
                 })}
-			</div>
+			</div> */}
       <Route path="/cards">
         <CardCreation/>
         <CardListing/>
