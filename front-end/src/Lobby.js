@@ -49,9 +49,9 @@ function gameRoomView(user_id, gameList, socket, selectedGame, setSelectedGame) 
         game["user-in-game"] = !!(game.users.filter(user => {return user_id === user.id})?.length);
 
 
-        if(game.winner !== "None"){
+        if(game.winner !== null){
             finishedGameList.push(game);
-        } else if(game.owner === user_id){
+        } else if(game.host === user_id){
             if(game.in_progress) {
                 hostStartedGameList.push(game);
             } else {
@@ -134,7 +134,7 @@ export default function Lobby({props}) {
             return [];
         }
         const game_id = game.id;
-        if(game.owner === user_id){
+        if(game.host === user_id){
             if(game.in_progress){
                 return [
                     <button onClick={() => {navigate("/play/" + game_id)} }>Enter Game</button>,

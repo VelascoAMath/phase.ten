@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, useParams } from "wouter";
-import { checkCircleFill, xCircle, xCircleFill } from "./Icons";
+import { checkCircleFill, xCircleFill } from "./Icons";
 
 
 const rankToColor = {
@@ -104,7 +104,7 @@ export default function PlayRoom({props}) {
         return <div></div>;
     }
 
-    if (game["winner"] !== "None"){
+    if (game["winner"] !== null){
         if(game["winner"] === user_id) {
             return <div className="winner">You have won!!!</div>
         } else {

@@ -2,7 +2,6 @@ import dataclasses
 import json
 import random
 import re
-import secrets
 import uuid
 from enum import Enum
 
@@ -215,9 +214,9 @@ class Card:
 		return f"{self.color}{self.rank}"
 	
 	def toJSON(self):
-		return json.dumps(self.toJSONDict())
+		return json.dumps(self.to_json_dict())
 	
-	def toJSONDict(self):
+	def to_json_dict(self):
 		return {"color": str(self.color), "rank": str(self.rank), "id": self.id}
 	
 	@staticmethod

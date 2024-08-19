@@ -1,147 +1,158 @@
 import dataclasses
 import json
-import sqlite3
 import uuid
-from typing import ClassVar, Self
+from configparser import ConfigParser
+
+import psycopg2
 
 from Card import Card
+from CardCollection import CardCollection
+from Game import Game
+from User import User
+from add_db_functions import add_db_functions
 
 
 @dataclasses.dataclass(order=True)
+@add_db_functions(db_name='players', single_foreign=[('game_id', Game), ('user_id', User)],
+                  unique_indices=[['game_id', 'turn_index'], ['game_id', 'user_id']], serial_set={'turn_index'})
 class Player:
-	id: uuid.UUID = dataclasses.field(default_factory=lambda: uuid.uuid4())
-	game_id: uuid.UUID = None
-	user_id: uuid.UUID = None
-	hand: list[Card] = dataclasses.field(default_factory=list)
-	# Does this player go first, second, etc
-	turn_index: int = -1
-	phase_index: int = 0
-	drew_card: bool = False
-	completed_phase: bool = False
-	skip_cards: int = 0
-	cur: ClassVar[sqlite3.Cursor] = None
-	
-	def save(self):
-		json_hand = [x.toJSONDict() for x in self.hand]
-		
-		if Player.exists(self.id):
-			Player.cur.execute("UPDATE players SET game_id=?,user_id=?,hand=?,turn_index=?,phase_index=?,drew_card=?,"
-			                   "completed_phase=?, skip_cards=? WHERE id=?", (str(self.game_id), str(self.user_id), json.dumps(json_hand), self.turn_index, self.phase_index, self.drew_card, self.completed_phase, self.skip_cards, str(self.id)))
-		else:
-			Player.cur.execute("INSERT INTO players (id, game_id, user_id, hand, turn_index, phase_index, drew_card, "
-			                   "completed_phase, skip_cards) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-			                   (str(self.id), str(self.game_id), str(self.user_id), json.dumps(json_hand), self.turn_index, self.phase_index, self.drew_card, self.completed_phase, self.skip_cards))
-
-	def delete(self):
-		Player.cur.execute("DELETE FROM players WHERE id=?", (str(self.id),))
-
-	@staticmethod
-	def exists(id: str | uuid.UUID):
-		if isinstance(id, uuid.UUID):
-			id = str(id)
-		return Player.cur.execute("SELECT * FROM players WHERE id = ?", (id,)).fetchone() is not None
-	
-	@staticmethod
-	def get_by_id(id: str | uuid.UUID):
-		if isinstance(id, uuid.UUID):
-			id = str(id)
-		for (id, game_id, user_id, hand_json, turn_index, phase_index, drew_deck, completed_phase, skip_cards) in list(
-			Player.cur.execute(
-				"SELECT * FROM players WHERE id = ?", (id,))):
-			hand = [Card.fromJSONDict(x) for x in json.loads(hand_json)]
-			
-			p = Player(uuid.UUID(id), uuid.UUID(game_id), uuid.UUID(user_id), hand, turn_index, phase_index, drew_deck == 1,
-			           completed_phase == 1, skip_cards)
-			return p
-	
-	@staticmethod
-	def get_by_game_user_id(game_id: str | uuid.UUID, user_id: str | uuid.UUID) -> Self:
-		if isinstance(game_id, uuid.UUID):
-			game_id = str(game_id)
-		if isinstance(user_id, uuid.UUID):
-			user_id = str(user_id)
-		
-		for (id, game_id, user_id, hand_json, turn_index, phase_index, drew_deck, completed_phase, skip_cards) in list(
-			Player.cur.execute(
-				"SELECT * FROM players WHERE game_id = ? AND user_id = ?", (game_id, user_id))):
-			hand = [Card.fromJSONDict(x) for x in json.loads(hand_json)]
-			p = Player(uuid.UUID(id), uuid.UUID(game_id), uuid.UUID(user_id), hand, turn_index, phase_index,
-			           drew_deck == 1, completed_phase == 1, skip_cards)
-			return p
-	
-	@staticmethod
-	def exists_game_user(game_id: str | uuid.UUID, user_id: str | uuid.UUID) -> bool:
-		if isinstance(game_id, uuid.UUID):
-			game_id = str(game_id)
-		if isinstance(user_id, uuid.UUID):
-			user_id = str(user_id)
-		
-		return not (Player.cur.execute("SELECT * FROM players WHERE game_id = ? AND user_id = ?",
-		                               (game_id, user_id)).fetchone() is None)
-	
-	@staticmethod
-	def setCursor(cur):
-		Player.cur = cur
-	
-	def toJSON(self):
-		return json.dumps(self.toJSONDict())
-	
-	def toJSONDict(self):
-		return {
-			"id": str(self.id),
-			"game_id": str(self.game_id),
-			"user_id": str(self.user_id),
-			"hand": [x.toJSONDict() for x in self.hand],
-			"turn_index": self.turn_index,
-			"phase_index": self.phase_index,
-			"drew_card": self.drew_card,
-			"completed_phase": self.completed_phase,
-			"skip_cards": self.skip_cards,
-		}
-	
-	@staticmethod
-	def fromJSON(data):
-		data = json.loads(data)
-		return Player.fromJSONDict(data)
-	
-	@staticmethod
-	def fromJSONDict(data):
-		return Player(
-			uuid.UUID(data["id"]),
-			uuid.UUID(data["game_id"]),
-			uuid.UUID(data["user_id"]),
-			[Card.fromJSONDict(x) for x in data["hand"]],
-			data["turn_index"],
-			data["phase_index"],
-			data["drew_card"],
-			data["completed_phase"],
-			data["skip_cards"],
-		)
+    id: uuid.UUID = dataclasses.field(default_factory=lambda: uuid.uuid4())
+    game_id: uuid.UUID = None
+    user_id: uuid.UUID = None
+    hand: CardCollection = dataclasses.field(default_factory=CardCollection)
+    # Does this player go first, second, etc
+    turn_index: int = -1
+    phase_index: int = 0
+    drew_card: bool = False
+    completed_phase: bool = False
+    skip_cards: CardCollection = dataclasses.field(default_factory=CardCollection)
+    
+    def toJSON(self):
+        return json.dumps(self.to_json_dict())
+    
+    def to_json_dict(self):
+        return {
+            "id": str(self.id),
+            "game_id": str(self.game_id),
+            "user_id": str(self.user_id),
+            "hand": self.hand.to_json_dict(),
+            "turn_index": self.turn_index,
+            "phase_index": self.phase_index,
+            "drew_card": self.drew_card,
+            "completed_phase": self.completed_phase,
+            "skip_cards": self.skip_cards.to_json_dict(),
+        }
+    
+    @staticmethod
+    def fromJSON(data):
+        data = json.loads(data)
+        return Player.from_json_dict(data)
+    
+    @staticmethod
+    def from_json_dict(data):
+        return Player(
+            uuid.UUID(data["id"]),
+            uuid.UUID(data["game_id"]),
+            uuid.UUID(data["user_id"]),
+            CardCollection(Card.fromJSONDict(card) for card in data["hand"]),
+            data["turn_index"],
+            data["phase_index"],
+            data["drew_card"],
+            data["completed_phase"],
+            CardCollection(Card.fromJSONDict(card) for card in data["skip_cards"]),
+        )
 
 
 def main():
-	p = Player(
-		uuid.uuid4(),
-		uuid.uuid4(),
-		uuid.uuid4(),
-		[
-			Card.from_string("R10"),
-			Card.from_string("W"),
-			Card.from_string("S"),
-			Card.from_string("B4"),
-		],
-		4,
-		8,
-		True,
-		True,
-		3
-	)
-	
-	print(p)
-	print(p.toJSON())
-	print(Player.fromJSON(p.toJSON()))
-	print(p == Player.fromJSON(p.toJSON()))
+    u = User(name="Alfredo")
+    g = Game(id=uuid.uuid4(), current_player=u.id, host=u.id)
+    p = Player(
+        id=uuid.uuid4(),
+        game_id=g.id,
+        user_id=u.id,
+        hand=CardCollection([
+            Card.from_string("R10"),
+            Card.from_string("W"),
+            Card.from_string("S"),
+            Card.from_string("B4"),
+        ]),
+        turn_index=4,
+        phase_index=8,
+        drew_card=True,
+        completed_phase=True,
+        skip_cards=CardCollection([Card.from_string("S"), Card.from_string("S"), Card.from_string("S")])
+    )
+    
+    print(p)
+    print(p.toJSON())
+    print(Player.fromJSON(p.toJSON()))
+    assert p == Player.fromJSON(p.toJSON())
+    parser = ConfigParser()
+    config = {}
+    
+    parser.read('database.ini')
+    if parser.has_section('postgresql'):
+        for param in parser.items('postgresql'):
+            config[param[0]] = param[1]
+    else:
+        raise Exception(f"No postgresql section in database.ini!")
+    
+    with psycopg2.connect(**config) as conn:
+        cur = conn.cursor()
+        User.set_cursor(cur)
+        Game.set_cursor(cur)
+        Player.set_cursor(cur)
+
+        cur.execute(
+            """
+            CREATE TEMP TABLE users (
+                id uuid NOT NULL,
+                name text NOT NULL,
+                "token" text NOT NULL,
+                CONSTRAINT users_pk PRIMARY KEY (id)
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS users_name_idx ON users (name);
+            """
+        )
+        cur.execute("""
+        CREATE TEMP TABLE games (
+            id uuid NOT NULL,
+            phase_list json NOT NULL,
+            deck json NOT NULL,
+            "discard" json NOT NULL,
+            current_player uuid NOT NULL,
+            host uuid NOT NULL,
+            in_progress boolean DEFAULT false NOT NULL,
+            winner uuid NULL,
+            CONSTRAINT game_pk PRIMARY KEY (id),
+            CONSTRAINT game_users_fk FOREIGN KEY (current_player) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+            CONSTRAINT game_users_fk_1 FOREIGN KEY (host) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+            CONSTRAINT game_users_fk_2 FOREIGN KEY (winner) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
+        cur.execute("""
+        CREATE TEMP TABLE players (
+            id uuid NOT NULL,
+            game_id uuid NOT NULL,
+            user_id uuid NOT NULL,
+            hand json NOT NULL,
+            turn_index serial NOT NULL,
+            phase_index int NOT NULL,
+            drew_card boolean DEFAULT false NOT NULL,
+            completed_phase boolean DEFAULT false NOT NULL,
+            skip_cards json NOT NULL,
+            CONSTRAINT players_pk PRIMARY KEY (id),
+            CONSTRAINT players_games_fk FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE ON UPDATE CASCADE,
+            CONSTRAINT players_users_fk FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        CREATE UNIQUE INDEX players_game_id_idx ON players (game_id,turn_index);
+        CREATE UNIQUE INDEX players_game_id_idx ON public.players (game_id,user_id);
+        """)
+        
+        u.save()
+        g.save()
+        p.save()
 
 
 if __name__ == "__main__":
-	main()
+    main()
