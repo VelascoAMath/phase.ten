@@ -67,9 +67,8 @@ export default function PlayRoom({props}) {
     const{state, socket} = props;
 
 	const params = useParams();
-    let [_, navigate] = useLocation();
+    let [, navigate] = useLocation();
 	const game_id = params?.id;
-    const name = state["user-name"];
     const user_id = state["user-id"];
     const game = state["game"];
     const [selectedCards, setSelectedCards] = useState([]);

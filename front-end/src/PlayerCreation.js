@@ -3,7 +3,7 @@ import React, { useState } from "react";
 export default function PlayerCreation({props}) {
 
 
-	const{state, dispatch, socket} = props;
+	const{state, socket} = props;
 
 	const [name, setName] = useState("");
 

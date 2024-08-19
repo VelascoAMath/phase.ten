@@ -105,7 +105,7 @@ export default function Lobby({props}) {
 
     const{state, socket} = props;
     const [selectedGame, setSelectedGame] = useState(null);
-    let [_, navigate] = useLocation();
+    let [ , navigate] = useLocation();
 
     if(!(state["user-id"] && state["user-token"])){
         return (

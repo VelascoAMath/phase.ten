@@ -28,7 +28,6 @@ function App() {
   const [initialSocketCall, setInitialSocketCall] = useState(false);
 
   
-  let ding = new Audio('turn_alarm.wav');
   // console.log(ding.canPlayType('turn_alarm.wav'));
 
   
@@ -75,7 +74,7 @@ function App() {
       let validToken = false;
       // Validate our stored session data
       for(const user of data["users"]){
-        if(user.id == state["user-id"] && user.name == state["user-name"] && user.token == state["user-token"]){
+        if(user.id === state["user-id"] && user.name === state["user-name"] && user.token === state["user-token"]){
           validToken = true;
           break;
         }
