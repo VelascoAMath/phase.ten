@@ -46,6 +46,7 @@ socket/*class
 socket/*gv
 socket/*pdf
 
+socket/database.ini
 
 *.db
 *.css.map
