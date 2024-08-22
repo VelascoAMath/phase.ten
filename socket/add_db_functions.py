@@ -213,8 +213,6 @@ def add_db_functions(db_name, unique_indices=None, single_foreign=None, plural_f
         cls.all = all
         cls.exists = exists
         cls.save = save
-        if not hasattr(cls, 'delete'):
-            cls.delete = delete
         cls.get_by_id = get_by_id
         cls.from_sql_tuple = from_sql_tuple
         
