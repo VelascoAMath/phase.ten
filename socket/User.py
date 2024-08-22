@@ -1,4 +1,5 @@
 import dataclasses
+import datetime
 import json
 import secrets
 import uuid
@@ -15,6 +16,8 @@ class User:
     id: uuid.UUID = dataclasses.field(default_factory=lambda: uuid.uuid4())
     name: str = ""
     token: str = dataclasses.field(default_factory=lambda: secrets.token_hex(16))
+    created_at: datetime.datetime = dataclasses.field(default_factory=lambda: datetime.datetime.now())
+    updated_at: datetime.datetime = dataclasses.field(default_factory=lambda: datetime.datetime.now())
     
     # @staticmethod
     def toJSON(self):
@@ -25,6 +28,8 @@ class User:
             "id": str(self.id),
             "name": self.name,
             "token": self.token,
+            "created_at": str(self.created_at),
+            "updated_at": str(self.updated_at)
         }
     
     @staticmethod
@@ -34,10 +39,21 @@ class User:
     
     @staticmethod
     def from_json_dict(data):
+        created_at = data["created_at"]
+        updated_at = data["updated_at"]
+        
+        if isinstance(created_at, str):
+            created_at = datetime.datetime.fromisoformat(created_at)
+        
+        if isinstance(updated_at, str):
+            updated_at = datetime.datetime.fromisoformat(updated_at)
+        
         return User(
             uuid.UUID(data["id"]),
             data["name"],
             data["token"],
+            created_at=created_at,
+            updated_at=updated_at,
         )
 
 
@@ -52,6 +68,7 @@ def main():
     print(u.toJSON())
     print(User.fromJSON(u.toJSON()))
     print(u == User.fromJSON(u.toJSON()))
+    assert u == User.fromJSON(u.toJSON())
     
     parser = ConfigParser()
     config = {}
@@ -71,6 +88,8 @@ def main():
                 id uuid NOT NULL,
                 name text NOT NULL,
                 "token" text NOT NULL,
+                created_at timestamp NOT NULL,
+                updated_at varchar NOT NULL,
                 CONSTRAINT users_pk PRIMARY KEY (id)
             );
             CREATE UNIQUE INDEX IF NOT EXISTS users_name_idx ON users (name);
@@ -86,10 +105,13 @@ def main():
         u2 = User.get_by_id(u.id)
         print(u2)
         print(u == u2)
+        assert u == u2
+        
         u2 = User.get_by_name("Alfredo")
         print(u2)
         print(u == u2)
         print(dir(u))
+        assert u == u2
 
 
 if __name__ == "__main__":

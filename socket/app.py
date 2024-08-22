@@ -55,6 +55,8 @@ cur.execute(
         id uuid NOT NULL,
         "name" text NOT NULL,
         "token" text NOT NULL,
+        created_at timestamp NOT NULL,
+        updated_at varchar NOT NULL,
         CONSTRAINT users_pk PRIMARY KEY (id)
     );
     CREATE UNIQUE INDEX IF NOT EXISTS users_name_idx ON public.users ("name");
