@@ -56,7 +56,7 @@ cur.execute(
         "name" text NOT NULL,
         "token" text NOT NULL,
         created_at timestamp NOT NULL,
-        updated_at varchar NOT NULL,
+        updated_at timestamp NOT NULL,
         CONSTRAINT users_pk PRIMARY KEY (id)
     );
     CREATE UNIQUE INDEX IF NOT EXISTS users_name_idx ON public.users ("name");
@@ -72,6 +72,8 @@ CREATE TABLE IF NOT EXISTS public.games (
     host uuid NOT NULL,
     in_progress boolean DEFAULT false NOT NULL,
     winner uuid DEFAULT NULL NULL,
+    created_at timestamp NOT NULL,
+    updated_at timestamp NOT NULL,
     CONSTRAINT games_pk PRIMARY KEY (id),
     CONSTRAINT games_users_fk FOREIGN KEY (current_player) REFERENCES public.users(id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT games_users_fk_1 FOREIGN KEY (host) REFERENCES public.users(id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -90,6 +92,8 @@ CREATE TABLE IF NOT EXISTS public.players (
     drew_card boolean DEFAULT false NOT NULL,
     completed_phase boolean DEFAULT false NOT NULL,
     skip_cards json NOT NULL,
+    created_at timestamp NOT NULL,
+    updated_at timestamp NOT NULL,
     CONSTRAINT players_pk PRIMARY KEY (id),
     CONSTRAINT players_games_fk FOREIGN KEY (game_id) REFERENCES public.games(id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT players_users_fk FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE ON UPDATE CASCADE
@@ -104,6 +108,8 @@ CREATE TABLE IF NOT EXISTS public.gamephasedecks (
     game_id uuid NOT NULL,
     phase text NOT NULL,
     deck json NOT NULL,
+    created_at timestamp NOT NULL,
+    updated_at timestamp NOT NULL,
     CONSTRAINT gamephasedecks_pk PRIMARY KEY (id),
     CONSTRAINT gamephasedecks_games_fk FOREIGN KEY (game_id) REFERENCES public.games(id) ON DELETE CASCADE ON UPDATE CASCADE
 );

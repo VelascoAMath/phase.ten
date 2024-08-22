@@ -1,4 +1,5 @@
 import dataclasses
+import datetime
 import json
 import uuid
 from configparser import ConfigParser
@@ -20,6 +21,11 @@ class GamePhaseDeck:
     game_id: uuid.UUID = dataclasses.field(default_factory=lambda: uuid.uuid4())
     phase: str = ""
     deck: CardCollection = dataclasses.field(default=CardCollection)
+    created_at: datetime.datetime = dataclasses.field(default_factory=lambda: datetime.datetime.now())
+    updated_at: datetime.datetime = dataclasses.field(default_factory=lambda: datetime.datetime.now())
+    
+    def __post_init__(self):
+        self.updated_at = self.created_at
     
     def toJSON(self):
         return json.dumps(self.to_json_dict())
@@ -30,6 +36,8 @@ class GamePhaseDeck:
             "game_id": str(self.game_id),
             "phase": self.phase,
             "deck": self.deck.to_json_dict(),
+            "created_at": str(self.created_at),
+            "updated_at": str(self.updated_at),
         }
     
     @staticmethod
@@ -39,11 +47,22 @@ class GamePhaseDeck:
     
     @staticmethod
     def from_json_dict(data):
+        created_at = data["created_at"]
+        updated_at = data["updated_at"]
+        
+        if isinstance(created_at, str):
+            created_at = datetime.datetime.fromisoformat(created_at)
+        
+        if isinstance(updated_at, str):
+            updated_at = datetime.datetime.fromisoformat(updated_at)
+        
         return GamePhaseDeck(
             uuid.UUID(data["id"]),
             uuid.UUID(data["game_id"]),
             data["phase"],
             CardCollection(Card.fromJSONDict(x) for x in data["deck"]),
+            created_at=created_at,
+            updated_at=updated_at,
         )
 
 
@@ -77,6 +96,8 @@ if __name__ == '__main__':
                 id uuid NOT NULL,
                 name text NOT NULL,
                 "token" text NOT NULL,
+                created_at timestamp NOT NULL,
+                updated_at timestamp NOT NULL,
                 CONSTRAINT users_pk PRIMARY KEY (id)
             );
             CREATE UNIQUE INDEX IF NOT EXISTS users_name_idx ON users (name);
@@ -92,6 +113,8 @@ if __name__ == '__main__':
             host uuid NOT NULL,
             in_progress boolean DEFAULT false NOT NULL,
             winner uuid NULL,
+            created_at timestamp NOT NULL,
+            updated_at timestamp NOT NULL,
             CONSTRAINT game_pk PRIMARY KEY (id),
             CONSTRAINT game_users_fk FOREIGN KEY (current_player) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
             CONSTRAINT game_users_fk_1 FOREIGN KEY (host) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -113,8 +136,8 @@ if __name__ == '__main__':
             CONSTRAINT players_games_fk FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE ON UPDATE CASCADE,
             CONSTRAINT players_users_fk FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
         );
-        CREATE UNIQUE INDEX players_game_id_idx ON players (game_id,turn_index);
-        CREATE UNIQUE INDEX players_game_id_idx ON public.players (game_id,user_id);
+        CREATE UNIQUE INDEX players_game_id_turn_index_idx ON players (game_id,turn_index);
+        CREATE UNIQUE INDEX players_game_id_user_id_idx ON players (game_id,user_id);
         """)
         cur.execute("""
         CREATE TEMP TABLE gamephasedecks (
@@ -122,6 +145,8 @@ if __name__ == '__main__':
             game_id uuid NOT NULL,
             phase text NOT NULL,
             deck json NOT NULL,
+            created_at timestamp NOT NULL,
+            updated_at timestamp NOT NULL,
             CONSTRAINT gamephasedecks_pk PRIMARY KEY (id),
             CONSTRAINT gamephasedecks_games_fk FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE ON UPDATE CASCADE
         );
@@ -131,4 +156,4 @@ if __name__ == '__main__':
         g.save()
         deck.save()
         
-        assert deck == deck.get_by_id(deck.id)
+        assert deck == GamePhaseDeck.get_by_id(deck.id)

@@ -1,4 +1,5 @@
 import dataclasses
+import datetime
 import json
 import uuid
 from configparser import ConfigParser
@@ -25,6 +26,11 @@ class Game:
     # If the game has started
     in_progress: bool = False
     winner: uuid.UUID = None
+    created_at: datetime.datetime = dataclasses.field(default_factory=lambda: datetime.datetime.now())
+    updated_at: datetime.datetime = dataclasses.field(default_factory=lambda: datetime.datetime.now())
+    
+    def __post_init__(self):
+        self.updated_at = self.created_at
     
     def to_json_dict(self):
         return {
@@ -36,6 +42,8 @@ class Game:
             "host": str(self.host),
             "in_progress": self.in_progress,
             "winner": None if self.winner is None else str(self.winner),
+            "created_at": str(self.created_at),
+            "updated_at": str(self.updated_at),
         }
     
     def toJSON(self):
@@ -54,8 +62,20 @@ class Game:
         discard = CardCollection()
         for c in data["discard"]:
             discard.append(Card.fromJSONDict(c))
+        
+        created_at = data["created_at"]
+        updated_at = data["updated_at"]
+        
+        if isinstance(created_at, str):
+            created_at = datetime.datetime.fromisoformat(created_at)
+
+        if isinstance(updated_at, str):
+            updated_at = datetime.datetime.fromisoformat(updated_at)
+        
         return Game(uuid.UUID(data["id"]), data["phase_list"], deck, discard, uuid.UUID(data["current_player"]),
-                    uuid.UUID(data["host"]), data["in_progress"], None if data["winner"] is None else uuid.UUID(data["winner"]))
+                    uuid.UUID(data["host"]), data["in_progress"],
+                    None if data["winner"] is None else uuid.UUID(data["winner"]),
+                    created_at=created_at, updated_at=updated_at)
 
 
 def main():
@@ -86,6 +106,7 @@ def main():
     g = Game(uuid.uuid4(), phase_list, deck, discard_list, alfredo.id, naly.id, True, alfredo.id)
     print(g)
     h = Game.fromJSON(g.toJSON())
+    print(h)
     assert g == h
     
     parser = ConfigParser()
@@ -108,6 +129,8 @@ def main():
                 id uuid NOT NULL,
                 name text NOT NULL,
                 "token" text NOT NULL,
+                created_at timestamp NOT NULL,
+                updated_at timestamp NOT NULL,
                 CONSTRAINT users_pk PRIMARY KEY (id)
             );
             CREATE UNIQUE INDEX IF NOT EXISTS users_name_idx ON users (name);
@@ -123,6 +146,8 @@ def main():
             host uuid NOT NULL,
             in_progress boolean DEFAULT false NOT NULL,
             winner uuid NULL,
+            created_at timestamp NOT NULL,
+            updated_at timestamp NOT NULL,
             CONSTRAINT game_pk PRIMARY KEY (id),
             CONSTRAINT game_users_fk FOREIGN KEY (current_player) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
             CONSTRAINT game_users_fk_1 FOREIGN KEY (host) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,

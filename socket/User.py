@@ -19,6 +19,9 @@ class User:
     created_at: datetime.datetime = dataclasses.field(default_factory=lambda: datetime.datetime.now())
     updated_at: datetime.datetime = dataclasses.field(default_factory=lambda: datetime.datetime.now())
     
+    def __post_init__(self):
+        self.updated_at = self.created_at
+    
     # @staticmethod
     def toJSON(self):
         return json.dumps(self.to_json_dict())
@@ -29,7 +32,7 @@ class User:
             "name": self.name,
             "token": self.token,
             "created_at": str(self.created_at),
-            "updated_at": str(self.updated_at)
+            "updated_at": str(self.updated_at),
         }
     
     @staticmethod
@@ -89,7 +92,7 @@ def main():
                 name text NOT NULL,
                 "token" text NOT NULL,
                 created_at timestamp NOT NULL,
-                updated_at varchar NOT NULL,
+                updated_at timestamp NOT NULL,
                 CONSTRAINT users_pk PRIMARY KEY (id)
             );
             CREATE UNIQUE INDEX IF NOT EXISTS users_name_idx ON users (name);

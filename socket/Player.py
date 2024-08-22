@@ -1,4 +1,5 @@
 import dataclasses
+import datetime
 import json
 import uuid
 from configparser import ConfigParser
@@ -26,6 +27,11 @@ class Player:
     drew_card: bool = False
     completed_phase: bool = False
     skip_cards: CardCollection = dataclasses.field(default_factory=CardCollection)
+    created_at: datetime.datetime = dataclasses.field(default_factory=lambda: datetime.datetime.now())
+    updated_at: datetime.datetime = dataclasses.field(default_factory=lambda: datetime.datetime.now())
+    
+    def __post_init__(self):
+        self.updated_at = self.created_at
     
     def toJSON(self):
         return json.dumps(self.to_json_dict())
@@ -41,6 +47,8 @@ class Player:
             "drew_card": self.drew_card,
             "completed_phase": self.completed_phase,
             "skip_cards": self.skip_cards.to_json_dict(),
+            "created_at": str(self.created_at),
+            "updated_at": str(self.updated_at),
         }
     
     @staticmethod
@@ -50,6 +58,15 @@ class Player:
     
     @staticmethod
     def from_json_dict(data):
+        created_at = data["created_at"]
+        updated_at = data["updated_at"]
+        
+        if isinstance(created_at, str):
+            created_at = datetime.datetime.fromisoformat(created_at)
+        
+        if isinstance(updated_at, str):
+            updated_at = datetime.datetime.fromisoformat(updated_at)
+        
         return Player(
             uuid.UUID(data["id"]),
             uuid.UUID(data["game_id"]),
@@ -60,6 +77,8 @@ class Player:
             data["drew_card"],
             data["completed_phase"],
             CardCollection(Card.fromJSONDict(card) for card in data["skip_cards"]),
+            created_at=created_at,
+            updated_at=updated_at,
         )
 
 
@@ -102,13 +121,15 @@ def main():
         User.set_cursor(cur)
         Game.set_cursor(cur)
         Player.set_cursor(cur)
-
+        
         cur.execute(
             """
             CREATE TEMP TABLE users (
                 id uuid NOT NULL,
                 name text NOT NULL,
                 "token" text NOT NULL,
+                created_at timestamp NOT NULL,
+                updated_at timestamp NOT NULL,
                 CONSTRAINT users_pk PRIMARY KEY (id)
             );
             CREATE UNIQUE INDEX IF NOT EXISTS users_name_idx ON users (name);
@@ -124,6 +145,8 @@ def main():
             host uuid NOT NULL,
             in_progress boolean DEFAULT false NOT NULL,
             winner uuid NULL,
+            created_at timestamp NOT NULL,
+            updated_at timestamp NOT NULL,
             CONSTRAINT game_pk PRIMARY KEY (id),
             CONSTRAINT game_users_fk FOREIGN KEY (current_player) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
             CONSTRAINT game_users_fk_1 FOREIGN KEY (host) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -141,12 +164,14 @@ def main():
             drew_card boolean DEFAULT false NOT NULL,
             completed_phase boolean DEFAULT false NOT NULL,
             skip_cards json NOT NULL,
+            created_at timestamp NOT NULL,
+            updated_at timestamp NOT NULL,
             CONSTRAINT players_pk PRIMARY KEY (id),
             CONSTRAINT players_games_fk FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE ON UPDATE CASCADE,
             CONSTRAINT players_users_fk FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
         );
-        CREATE UNIQUE INDEX players_game_id_idx ON players (game_id,turn_index);
-        CREATE UNIQUE INDEX players_game_id_idx ON public.players (game_id,user_id);
+        CREATE UNIQUE INDEX players_game_id_turn_index_idx ON players (game_id,turn_index);
+        CREATE UNIQUE INDEX players_game_id_user_id_idx ON players (game_id,user_id);
         """)
         
         u.save()
