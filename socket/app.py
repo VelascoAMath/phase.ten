@@ -132,13 +132,15 @@ async def send_users():
 async def send_players():
     socket_to_delete = set()
     for (socket, player_id) in socket_to_player_id.items():
-        
-        player = Player.get_by_id(player_id)
+
         # This player is deleted
         # We'll need to send a different player to this socket
-        if player is None:
-            socket_to_delete.add(player)
+
+        if not Player.exists(player_id):
+            socket_to_delete.add(socket)
             break
+
+        player = Player.get_by_id(player_id)
         game = Game.get_by_id(player.game_id)
         user_id = player.user_id
         game_id = game.id
