@@ -625,6 +625,8 @@ def handle_data(data, websocket):
                 conn.commit()
             
             else:
+                if game.in_progress:
+                    return json.dumps({"type": "error", "message": "Cannot leave game after it has already started!"})
                 Player.get_by_game_id_user_id(game_id, user_id).delete()
                 conn.commit()
             
