@@ -1,9 +1,11 @@
 import dataclasses
 import datetime
 import json
+import sqlite3
 import uuid
 from configparser import ConfigParser
 import random
+from typing import Self
 
 import psycopg2
 
@@ -76,6 +78,28 @@ class Game:
                     uuid.UUID(data["host"]), data["in_progress"],
                     None if data["winner"] is None else uuid.UUID(data["winner"]),
                     created_at=created_at, updated_at=updated_at)
+    
+    @classmethod
+    def set_cursor(cls, cur: sqlite3.Cursor | psycopg2.extensions.cursor):
+        pass
+    
+    @classmethod
+    def get_by_id(cls, game_id: str | uuid.UUID) -> Self:
+        pass
+    
+    def save(self):
+        pass
+    
+    @classmethod
+    def all(cls) -> list[Self]:
+        pass
+    
+    @classmethod
+    def exists(cls, game_id: str | uuid.UUID) -> bool:
+        pass
+    
+    def delete(self):
+        pass
 
 
 def main():

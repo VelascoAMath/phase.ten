@@ -1,8 +1,10 @@
 import dataclasses
 import datetime
 import json
+import sqlite3
 import uuid
 from configparser import ConfigParser
+from typing import Self
 
 import psycopg2
 
@@ -64,6 +66,24 @@ class GamePhaseDeck:
             created_at=created_at,
             updated_at=updated_at,
         )
+    
+    @classmethod
+    def set_cursor(cls, cur: sqlite3.Cursor | psycopg2.extensions.cursor):
+        pass
+    
+    @classmethod
+    def all_where_game_id(cls, game_id: str | uuid.UUID) -> list[Self]:
+        pass
+    
+    @classmethod
+    def get_by_id(cls, id: str | uuid.UUID) -> Self:
+        pass
+    
+    def save(self):
+        pass
+    
+    def delete(self):
+        pass
 
 
 if __name__ == '__main__':

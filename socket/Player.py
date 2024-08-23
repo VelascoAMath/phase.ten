@@ -1,8 +1,10 @@
 import dataclasses
 import datetime
 import json
+import sqlite3
 import uuid
 from configparser import ConfigParser
+from typing import Self
 
 import psycopg2
 
@@ -80,6 +82,36 @@ class Player:
             created_at=created_at,
             updated_at=updated_at,
         )
+    
+    @classmethod
+    def exists(cls, player_id: str | uuid.UUID) -> bool:
+        pass
+    
+    @classmethod
+    def set_cursor(cls, cur: sqlite3.Cursor | psycopg2.extensions.cursor):
+        pass
+    
+    @classmethod
+    def all(cls) -> list[Self]:
+        pass
+    
+    def save(self):
+        pass
+    
+    @classmethod
+    def get_by_id(cls, player_id: str | uuid.UUID) -> Self:
+        pass
+    
+    @classmethod
+    def get_by_game_id_user_id(cls, game_id: str | uuid.UUID, to_id: str | uuid.UUID) -> Self:
+        pass
+    
+    @classmethod
+    def exists_by_game_id_user_id(cls, game_id: str | uuid.UUID, user_id: str | uuid.UUID) -> bool:
+        pass
+    
+    def delete(self):
+        pass
 
 
 def main():
