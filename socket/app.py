@@ -194,7 +194,7 @@ async def send_players():
         game_dict["users"] = []
         
         player_list = [player for player in Player.all() if player.game_id == game.id]
-        player_list.sort(key=lambda player: player.turn_index)
+        player_list.sort(key=lambda p: p.turn_index)
         for player in player_list:
             user_dict = User.get_by_id(player.user_id).to_json_dict()
             player_dict = player.to_json_dict()
@@ -668,8 +668,7 @@ def handle_data(data, websocket):
             game = Game.get_by_id(game_id)
             
             if str(game.host) == user_id and not game.in_progress:
-                cur.execute("SELECT * FROM players WHERE game_id = %s", (game_id,))
-                player_list = [Player.from_sql_tuple(result) for result in cur.fetchall()]
+                player_list = [player for player in Player.all() if player.game_id == game.id]
                 
                 deck = Card.getNewDeck()
                 random.shuffle(deck)
