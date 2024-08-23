@@ -274,8 +274,7 @@ def create_game(data):
             
             return json.dumps({"type": "create_game", "game": game_dict})
         
-        except Exception as e:
-            raise e
+        except Exception:
             return json.dumps({"type": "rejection", "message": "Cannot create game"})
 
 
