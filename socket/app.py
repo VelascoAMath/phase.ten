@@ -116,6 +116,32 @@ CREATE TABLE IF NOT EXISTS public.gamephasedecks (
 
 """)
 
+cur.execute("""
+
+CREATE OR REPLACE VIEW public.players_with_names
+AS SELECT u.name,
+    p.game_id,
+    p.hand,
+    p.turn_index,
+    p.phase_index,
+    p.skip_cards,
+    p.drew_card,
+    p.completed_phase
+   FROM players p
+     JOIN users u ON p.user_id = u.id
+  ORDER BY p.game_id, p.turn_index;
+
+CREATE OR REPLACE VIEW public.completed_games AS select g.id, u."name" as "current player", g.phase_list, g.deck,
+g."discard", u2."name" as "host", g.in_progress, u3.name as "winner" from games g join users u on
+g.current_player =u.id join users u2 on u2.id = g.host join users u3 on g.winner = u3.id;
+
+
+CREATE OR REPLACE VIEW public.noncompleted_games AS select g.id, u."name" as "current player", g.phase_list, g.deck,
+g."discard", u2."name" as "host", g.in_progress, g.winner from games g join users u on g.current_player = u.id join
+users u2 on u2.id = g.host where g.winner is null;
+
+  """)
+
 conn.commit()
 
 User.set_cursor(cur)
