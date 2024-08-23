@@ -679,6 +679,8 @@ def handle_data(data, websocket):
                     player.phase_index = 0
                     player.turn_index = i
                     player.hand = CardCollection(deck.pop() for _ in range(INITIAL_HAND_SIZE))
+                    # We need to delete the player first because otherwise, we can't reset the turn index
+                    player.delete()
                     player.save()
                     conn.commit()
                 
