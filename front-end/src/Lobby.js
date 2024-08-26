@@ -93,7 +93,7 @@ export default function Lobby({props}) {
                 {gameList?.map((game) => {
                     const isHost = game.host === userId;
                     const isInGame = game.users.filter((user) => {return user.id === userId}).length > 0;
-                    const nonHostUsers = game.users.filter((user) => {return user.id != game.host});
+                    const nonHostUsers = game.users.filter((user) => {return user.id !== game.host});
                     
                     // Game in progress which we didn't join
                     if(!isInGame && game.in_progress){
