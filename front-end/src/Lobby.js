@@ -2,6 +2,15 @@ import React, { useState } from "react";
 import { useLocation } from "wouter";
 
 
+
+const starFill = function(){
+    return <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-star-fill" viewBox="0 0 16 16">
+    <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
+  </svg>;
+}
+
+
+
 function joinGame(game_id, user_id, socket) {
     if(socket.readyState === socket.OPEN){
         socket.send(JSON.stringify({type: "join_game", "user_id": user_id, "game_id": game_id }));
@@ -23,89 +32,20 @@ function startGame(game_id, user_id, socket){
 }
 
 
-function joinGameButton(game, title, key, onClick, className){
-    const nameList = game.users.map(user => {return <div key={user.id}>{user.name}</div>});
-    // If the user is already in the game, we cannot join
-    // This will mark the CSS and also disable clicking events
-    
-    return (
-        <div className={"room-to-join " + className} key={key} onClick={onClick}>
-            {title}
-            {nameList}
-        </div>
-    )
-}
-
-
-function gameRoomView(user_id, gameList, socket, selectedGame, setSelectedGame) {
-    
-    let finishedGameList = [];
-    let hostWaitGameList = [];
-    let hostStartedGameList = [];
-    let joinWaitGameList = [];
-    let joinStartedGameList = [];
-    
-    for(const game of gameList){
-        game["user-in-game"] = !!(game.users.filter(user => {return user_id === user.id})?.length);
-
-
-        if(game.winner !== null){
-            finishedGameList.push(game);
-        } else if(game.host === user_id){
-            if(game.in_progress) {
-                hostStartedGameList.push(game);
-            } else {
-                hostWaitGameList.push(game);
-            }
-        } else{
-            if(game.in_progress) {
-                joinStartedGameList.push(game)
-            } else {
-                joinWaitGameList.push(game);
-            }
-        }
-    }
-
-    return  (
-    <>
-        <div className="room-section">
-            <h2>Games in progress</h2>
-            <div className="rooms">
-                {hostStartedGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1}`, game.id, () => {setSelectedGame(game.id)}, ("in-progress " + (selectedGame === game.id ? "selected": "")) ))}
-                {joinStartedGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1}`, game.id, () => {
-                    if(!game["user-in-game"] && (game.in_progress === 0 || game.in_progress === false)) {
-                        joinGame(game.id, user_id, socket);
-                    }
-                    if((game.in_progress === 1 || game.in_progress === true) && game["user-in-game"]){
-                        setSelectedGame(game.id);
-                    }
-                },
-                ("in-progress " + (selectedGame === game.id ? "selected": "")) ))}
-            </div>
-        </div>
-        <div className="room-section">
-            <h2>Waiting for players to join</h2>
-            <div className="rooms">
-                {hostWaitGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1}`, game.id, () => {setSelectedGame(game.id)}, ("available " + (selectedGame === game.id ? "selected": ""))))}
-                {joinWaitGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1}`, game.id, () => {setSelectedGame(game.id); if(!game['user-in-game']){joinGame(game.id, user_id, socket)} }, ("available " + (selectedGame === game.id ? "selected": "")) ))}
-            </div>
-        </div>
-        <div className="room-section">
-            <h2>Finished Game</h2>
-            <div className="rooms">
-                {finishedGameList.map((game, idx) => joinGameButton(game, `Game ${idx+1}`, game.id, () => {setSelectedGame(game.id)}, ("in-progress " + (selectedGame === game.id ? "selected": ""))))}
-            </div>
-        </div>
-
-    </>
-    );
-}
-
 export default function Lobby({props}) {
 
     const{state, socket} = props;
     const [selectedGame, setSelectedGame] = useState(null);
     let [ , navigate] = useLocation();
+    const userId = state["user-id"];
+
+    let userIdToName = {};
+    if(state["user-list"]){
+        for(const user of state["user-list"]){
+            userIdToName[user.id] = user.name;
+        }
+    }
+
 
     if(!(state["user-id"] && state["user-token"])){
         return (
@@ -115,65 +55,74 @@ export default function Lobby({props}) {
         )
     }
 
+    const gameList = state["game-list"];
+
     const createGame = function() {
         if(socket.readyState === socket.OPEN){
             socket.send(JSON.stringify({type: "create_game", "user_id": state["user-id"] }));
         }
     }
-
-    function getButtonForGameAction() {
-        const user_id = state["user-id"];
-        const gameList = state["game-list"];
-        if(gameList?.length === 0){
-            return [];
-        }
-
-        const game = gameList.filter((game) => {return game.id === selectedGame})[0];
-        if(game === null || game === undefined){
-            setSelectedGame(null);
-            return [];
-        }
-        const game_id = game.id;
-        if(game.host === user_id){
-            if(game.in_progress){
-                return [
-                    <button onClick={() => {navigate("/play/" + game_id)} }>Enter Game</button>,
-                    <button style={{backgroundColor: "red", color: "white"}} onClick={() => {if (window.confirm("Are you sure you want to delete this game?")) {unjoinGame(game_id, user_id, socket); setSelectedGame(null)}}}>Delete Game</button>,
-                ];
+    
+    
+    function tryToDelete(game_id, user_id, socket){
+        if(socket.readyState === socket.OPEN){
+            if(selectedGame.in_progress){
+                if(window.confirm("Are you sure you want to delete this game? It's already in progress")){
+                    unjoinGame(game_id, user_id, socket);
+                    setSelectedGame(null);
+                }
             } else {
-                return [
-                    <button onClick={() => {startGame(game_id, user_id, socket); setSelectedGame(null); navigate("/play/" + game_id) }}>Start Game</button>,
-                    <button style={{backgroundColor: "red", color: "white"}} onClick={() => {if (window.confirm("Are you sure you want to delete this game?")) {unjoinGame(game_id, user_id, socket); setSelectedGame(null)}}}>Delete Game</button>,
-                ];
-            }
-        } else {
-            if(game.in_progress){
-                return [<button onClick={() => navigate("/play/" + game_id)}>Play Game</button>]
-            } else {
-                return [<button onClick={() => {unjoinGame(game_id, user_id, socket); setSelectedGame(null)}}>Unjoin Game</button>]
+                unjoinGame(game_id, user_id, socket);
+                setSelectedGame(null);
             }
         }
     }
 
-    let buttonList = [<button onClick={createGame}>Create Game</button>];
-    if (selectedGame){
-        buttonList.push(...getButtonForGameAction());
-    }
-    while(buttonList.length < 3){
-        buttonList.push(<div></div>);
-    }
 
     return (
         <div>
 
-            {(!state["game-list"] || state["game-list"]?.length === 0) && "There seem to be no games. Why don't you create one?"}
+            {(!gameList || gameList?.length === 0) && "There seem to be no games. Why don't you create one?"}
 
             <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
-                {buttonList}
+                <button onClick={createGame}>Create Game</button>
+                {selectedGame && <button onClick={() => {tryToDelete(selectedGame.id, userId, socket)}}>Delete Game</button>}
             </div>
 
             <div className="rooms-to-join">
-                {(state["game-list"]?.length > 0) && gameRoomView(state["user-id"], state["game-list"], socket, selectedGame, setSelectedGame)}
+                {gameList?.map((game) => {
+                    const isHost = game.host === userId;
+                    const isInGame = game.users.filter((user) => {return user.id === userId}).length > 0;
+                    const nonHostUsers = game.users.filter((user) => {return user.id != game.host});
+                    
+                    // Game in progress which we didn't join
+                    if(!isInGame && game.in_progress){
+                        return null;
+                    }
+
+                    let className = "room-to-join";
+                    if(game === selectedGame){
+                        className += " selected";
+                    }
+
+                    return (
+                        <div className={className} onClick={() => {if(game === selectedGame){setSelectedGame(null)} else {setSelectedGame(game)}}}>
+                            {game.in_progress && starFill()} Host: {userIdToName[game.host]}
+                            <hr/>
+                            {
+                                nonHostUsers.map((user) => {
+                                    return <div>{user.name}</div>
+                                })
+                            }
+                            <hr/>
+                            {!isInGame && !game.in_progress && <button onClick={() => joinGame(game.id, userId, socket)}>Join</button>}
+                            {isInGame && !isHost && !game.in_progress && <button onClick={() => {unjoinGame(game.id, userId, socket)}}>Unjoin</button>}
+                            {isInGame && !isHost && game.in_progress && <button onClick={() => {navigate("/play/" + game.id)}}>Play</button>}
+                            {isHost && !game.in_progress && nonHostUsers.length > 0 && <button onClick={() => {startGame(game.id, userId, socket)}}>Start</button>}
+                            {isHost && game.in_progress && <button onClick={() => {navigate("/play/" + game.id)}}>Play</button>}
+                        </div>
+                    )
+                })}
             </div>
         </div>
     )
