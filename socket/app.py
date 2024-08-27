@@ -464,6 +464,7 @@ def player_action(data):
     # We need to advance the game to the next player
     if complete_turn:
         roomPlayers = [player for player in Player.all() if player.game_id == game.id]
+        roomPlayers.sort(key=lambda p: p.turn_index)
         current_player_index = -1
         for i, roomPlayer in enumerate(roomPlayers):
             if roomPlayer.user_id == game.current_player:
@@ -499,6 +500,7 @@ def player_action(data):
         game.discard = [game.deck.pop()]
         
         roomPlayers = [p for p in Player.all() if p.game_id == game_id]
+        roomPlayers.sort(key=lambda p: p.turn_index)
         
         # Player has won
         if player.phase_index >= len(game.phase_list) - 1 and player.completed_phase:
