@@ -556,6 +556,7 @@ def handle_data(data, websocket):
                 except Exception as e:
                     # This happens because the SQL statement failed
                     print(e)
+                    conn.rollback()
                     return json.dumps(
                         {
                             "type": "rejection",
