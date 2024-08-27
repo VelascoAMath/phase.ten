@@ -193,7 +193,7 @@ export default function PlayRoom({props}) {
             </div>
             <div className="room-players">
                 {roomPlayers.map((player) => {
-                    const className = "player " + ((player.user_id === game.current_player) ? "current ": "") + ((player.skip_cards > 0) ? "skipped": "");
+                    const className = "player " + ((player.user_id === game.current_player) ? "current ": "") + ((player.skip_cards.length > 0) ? "skipped": "");
                     return (<div className={className} key={player.id}> <div>{player.name}</div>
                         <div>Phase {player.phase_index + 1}</div>
                         <div>{player.hand_size} {player.hand_size === 1 ? "card": "cards"}</div>
