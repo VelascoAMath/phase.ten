@@ -158,14 +158,14 @@ async def send_users():
 async def send_players():
     socket_to_delete = set()
     for (socket, player_id) in socket_to_player_id.items():
-
+        
         # This player is deleted
         # We'll need to send a different player to this socket
-
+        
         if not Player.exists(player_id):
             socket_to_delete.add(socket)
             break
-
+        
         player = Player.get_by_id(player_id)
         game = Game.get_by_id(player.game_id)
         user_id = player.user_id
@@ -513,7 +513,7 @@ def player_action(data):
                 # We move the player list up one turn
                 roomPlayer.turn_index = (i + 1) % len(roomPlayers)
                 if roomPlayer.completed_phase:
-                    roomPlayer.phase_index = min(roomPlayer.phase_index + 1, len(DEFAULT_PHASE_LIST) - 1)
+                    roomPlayer.phase_index = min(roomPlayer.phase_index + 1, len(game.phase_list) - 1)
                     roomPlayer.completed_phase = False
                     roomPlayer.skip_cards = CardCollection()
                 
@@ -662,6 +662,40 @@ def handle_data(data, websocket):
             
             return json.dumps({"type": "ignore"})
         case "get_games":
+            return json.dumps({"type": "ignore"})
+        case "edit_game_phase":
+            game_id = data["game_id"]
+            user_id = data["user_id"]
+            
+            new_phase = data["new_phase"]
+            
+            if len(new_phase) == 0:
+                return json.dumps({"type": "rejection", "message": "Cannot submit an empty phase list!"})
+            
+            if not Game.exists(game_id):
+                return json.dumps({"type": "rejection", "message": f"{game_id} is not a valid game id!"})
+            
+            game = Game.get_by_id(game_id)
+            
+            if game.in_progress:
+                return json.dumps({"type": "rejection", "message": f"{game_id} is already in progress!"})
+            
+            if str(game.host) != user_id:
+                return json.dumps({"type": "rejection",
+                                   "message": "You are not the host of the game and cannot edit its phase!"})
+            
+            # Make sure every phase is valid
+            try:
+                for phase in new_phase:
+                    RE(phase)
+            except Exception as e:
+                return json.dumps({"type": "rejection",
+                                   "message": f"Invalid phase list {new_phase}! {e}"})
+            
+            game.phase_list = new_phase
+            game.save()
+            conn.commit()
+            
             return json.dumps({"type": "ignore"})
         
         case "start_game":
