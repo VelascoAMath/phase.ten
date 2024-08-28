@@ -1,16 +1,13 @@
 import './App.css';
 import React, { useReducer, useState } from 'react';
-import CardCreation from './CardCreation';
-import CardListing from './CardListing.js';
 import Home from './Home.js';
 
-import PlayerListing from './PlayerListing';
-import PlayerCreation from './PlayerCreation'
 import Lobby from './Lobby';
 import { Route } from "wouter";
 import inputReducer from './InputReducer.js';
 import PlayerLogin from './PlayerLogin.js';
 import PlayRoom from './PlayRoom.js';
+import PlayerCreation from './PlayerCreation.js';
 
 
 const initState = {
@@ -125,10 +122,6 @@ function App() {
                     return <button key={user.id} onClick={setUser}>{user.name}</button>
                 })}
 			</div> */}
-      <Route path="/cards">
-        <CardCreation/>
-        <CardListing/>
-      </Route>
       <Route path="/signup">
         <PlayerCreation props={{state, dispatch, socket}}/>
       </Route>
@@ -136,9 +129,6 @@ function App() {
         <PlayerLogin props={{state, dispatch, socket}}/>
       </Route>
       {/* <Route path="/player/:id" component={PlayerPage} ></Route> */}
-      <Route path="/players">
-        <PlayerListing></PlayerListing>
-      </Route>
       {/* <Route path="/test_game">
         <GamePlay socket={socket}/>
       </Route> */}
