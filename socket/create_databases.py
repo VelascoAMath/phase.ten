@@ -25,6 +25,14 @@ def create_databases():
             """
         )
         cur.execute("""
+        do $$ BEGIN
+            create type game_type as enum ('NORMAL', 'LEGACY');
+        exception
+            when duplicate_object then null;
+        end $$;
+        """)
+        cur.execute("""
+        
         CREATE TABLE IF NOT EXISTS public.games (
             id uuid NOT NULL,
             phase_list json NOT NULL,
@@ -33,6 +41,7 @@ def create_databases():
             current_player uuid NOT NULL,
             host uuid NOT NULL,
             in_progress boolean DEFAULT false NOT NULL,
+            type game_type DEFAULT 'NORMAL',
             winner uuid DEFAULT NULL NULL,
             created_at timestamp NOT NULL,
             updated_at timestamp NOT NULL,
