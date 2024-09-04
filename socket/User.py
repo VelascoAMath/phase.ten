@@ -4,7 +4,6 @@ import json
 import secrets
 import sqlite3
 import uuid
-from configparser import ConfigParser
 from typing import Self
 
 import psycopg2
@@ -99,51 +98,7 @@ def main():
     print(u)
     print(u.toJSON())
     print(User.fromJSON(u.toJSON()))
-    print(u == User.fromJSON(u.toJSON()))
     assert u == User.fromJSON(u.toJSON())
-    
-    parser = ConfigParser()
-    config = {}
-    
-    parser.read('database.ini')
-    if parser.has_section('postgresql'):
-        for param in parser.items('postgresql'):
-            config[param[0]] = param[1]
-    else:
-        raise Exception(f"No postgresql section in database.ini!")
-    
-    with psycopg2.connect(**config) as conn:
-        cur = conn.cursor()
-        cur.execute(
-            """
-            CREATE TEMP TABLE users (
-                id uuid NOT NULL,
-                name text NOT NULL,
-                "token" text NOT NULL,
-                created_at timestamp NOT NULL,
-                updated_at timestamp NOT NULL,
-                CONSTRAINT users_pk PRIMARY KEY (id)
-            );
-            CREATE UNIQUE INDEX IF NOT EXISTS users_name_idx ON users (name);
-            """
-        )
-        
-        User.set_cursor(cur)
-        
-        u = User(name="Alfredo")
-        print(u)
-        u.save()
-        
-        u2 = User.get_by_id(u.id)
-        print(u2)
-        print(u == u2)
-        assert u == u2
-        
-        u2 = User.get_by_name("Alfredo")
-        print(u2)
-        print(u == u2)
-        print(dir(u))
-        assert u == u2
 
 
 if __name__ == "__main__":
