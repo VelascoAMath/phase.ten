@@ -26,7 +26,7 @@ def create_databases():
         )
         cur.execute("""
         do $$ BEGIN
-            create type game_type as enum ('NORMAL', 'LEGACY');
+            create type game_type as enum ('NORMAL', 'LEGACY', 'ADVANCEMENT');
         exception
             when duplicate_object then null;
         end $$;

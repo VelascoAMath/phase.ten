@@ -18,6 +18,7 @@ from add_db_functions import add_db_functions
 class GameType(Enum):
     NORMAL = 1
     LEGACY = 2
+    ADVANCEMENT = 3
 
 
 @dataclasses.dataclass(order=True)
