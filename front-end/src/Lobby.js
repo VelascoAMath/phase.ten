@@ -86,6 +86,7 @@ export default function Lobby({props}) {
 
             <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <button onClick={createGame}>Create Game</button>
+                {selectedGame?.host == userId && <button onClick={() => {navigate("/edit_game/" + selectedGame.id)}}>Edit</button>}
                 {selectedGame && <button onClick={() => {tryToDelete(selectedGame.id, userId, socket)}}>Delete Game</button>}
             </div>
 

@@ -8,6 +8,7 @@ import inputReducer from './InputReducer.js';
 import PlayerLogin from './PlayerLogin.js';
 import PlayRoom from './PlayRoom.js';
 import PlayerCreation from './PlayerCreation.js';
+import EditGame from './EditGame.jsx';
 
 
 const initState = {
@@ -134,6 +135,9 @@ function App() {
       </Route> */}
       <Route path="/lobby">
         <Lobby props={{state, dispatch, socket}}></Lobby>
+      </Route>
+      <Route path="/edit_game/:id">
+        <EditGame props={{state, dispatch, socket}}/>
       </Route>
       <Route path="/play/:id">
         <PlayRoom props={{state, dispatch, socket}}/>
