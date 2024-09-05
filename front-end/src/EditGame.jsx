@@ -25,7 +25,7 @@ export default function EditGame({props}) {
             <h1>Edit game {game.id}</h1>
             <h2>Phase List</h2>
             {phaseInput?.map((phase, idx) => {
-                return <input value={phase} onChange={(e) => {let phaseInputCopy = [...phaseInput]; phaseInputCopy[idx] = e.target.value.toLocaleUpperCase(); setPhaseInput(phaseInputCopy)}}/>
+                return <input key={idx} value={phase} onChange={(e) => {let phaseInputCopy = [...phaseInput]; phaseInputCopy[idx] = e.target.value.toLocaleUpperCase(); setPhaseInput(phaseInputCopy)}}/>
             })}
             <div>
                 <button onClick={() => {setPhaseInput([...phaseInput, ""])}} >Add Phase</button>
