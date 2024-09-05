@@ -107,7 +107,7 @@ export default function Lobby({props}) {
                     }
 
                     return (
-                        <div className={className} onClick={() => {if(game === selectedGame){setSelectedGame(null)} else {setSelectedGame(game)}}}>
+                        <div className={className} key={game.id} onClick={() => {if(game === selectedGame){setSelectedGame(null)} else {setSelectedGame(game)}}}>
                             {game.in_progress && starFill()} Host: {userIdToName[game.host]}
                             <hr/>
                             {
