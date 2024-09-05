@@ -19,6 +19,18 @@ class GameType(Enum):
     NORMAL = 1
     LEGACY = 2
     ADVANCEMENT = 3
+    
+    @staticmethod
+    def from_string(data):
+        match data:
+            case "NORMAL":
+                return GameType.NORMAL
+            case "LEGACY":
+                return GameType.LEGACY
+            case "ADVANCEMENT":
+                return GameType.ADVANCEMENT
+            case _:
+                raise Exception(f"{data} is not a valid GameType!")
 
 
 @dataclasses.dataclass(order=True)
@@ -78,13 +90,13 @@ class Game:
         
         if isinstance(created_at, str):
             created_at = datetime.datetime.fromisoformat(created_at)
-
+        
         if isinstance(updated_at, str):
             updated_at = datetime.datetime.fromisoformat(updated_at)
         
         return Game(uuid.UUID(data["id"]), data["phase_list"], deck, discard, uuid.UUID(data["current_player"]),
                     uuid.UUID(data["host"]), data["in_progress"],
-                    GameType.LEGACY,
+                    GameType.from_string(data["type"]),
                     None if data["winner"] is None else uuid.UUID(data["winner"]),
                     created_at=created_at, updated_at=updated_at)
     
@@ -141,7 +153,6 @@ def main():
     h = Game.fromJSON(g.toJSON())
     print(h)
     assert g == h
-    
 
 
 if __name__ == "__main__":
