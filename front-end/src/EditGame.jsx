@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
-import { useLocation, useParams } from "wouter";
+import { useParams } from "wouter";
 
 
 export default function EditGame({props}) {
-    const{state, dispatch, socket} = props;
+    const{state, socket} = props;
     const params = useParams();
-    let [, navigate] = useLocation();
     const game_id = params?.id;
     const user_id = state["user-id"];
-    const game = state["game-list"].filter((g) => g.id == game_id)[0];
+    const game = state["game-list"].filter((g) => g.id === game_id)[0];
 
     const [phaseInput, setPhaseInput] = useState(game?.phase_list);
 

@@ -62,8 +62,8 @@ export default function Lobby({props}) {
             socket.send(JSON.stringify({type: "create_game", "user_id": state["user-id"] }));
         }
     }
-    
-    
+
+
     function tryToDelete(game_id, user_id, socket){
         if(socket.readyState === socket.OPEN){
             if(selectedGame.in_progress){
@@ -86,7 +86,7 @@ export default function Lobby({props}) {
 
             <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <button onClick={createGame}>Create Game</button>
-                {selectedGame?.host == userId && <button onClick={() => {navigate("/edit_game/" + selectedGame.id)}}>Edit</button>}
+                {selectedGame?.host === userId && <button onClick={() => {navigate("/edit_game/" + selectedGame.id)}}>Edit</button>}
                 {selectedGame && <button onClick={() => {tryToDelete(selectedGame.id, userId, socket)}}>Delete Game</button>}
             </div>
 
@@ -95,7 +95,7 @@ export default function Lobby({props}) {
                     const isHost = game.host === userId;
                     const isInGame = game.users.filter((user) => {return user.id === userId}).length > 0;
                     const nonHostUsers = game.users.filter((user) => {return user.id !== game.host});
-                    
+
                     // Game in progress which we didn't join
                     if(!isInGame && game.in_progress){
                         return null;

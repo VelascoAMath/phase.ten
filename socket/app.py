@@ -20,6 +20,7 @@ DEBUG = False
 
 connected = set()
 socket_to_player_id = {}
+next_player_list = []
 
 DEFAULT_PHASE_LIST = [
     "S3+S3",
@@ -400,6 +401,8 @@ def player_action(data):
             next_player = roomPlayers[current_player_index]
         
         game.current_player = next_player.user_id
+
+        next_player_list.append(next_player)
         player.drew_card = False
         
         player.save()
@@ -433,6 +436,10 @@ def player_action(data):
                 roomPlayer.save()
         
         game.current_player = roomPlayers[-1].user_id
+        next_player_list.pop()
+        next_player_list.append(roomPlayers[-1])
+        
+        
         # Remove all phase decks
         for gpd in GamePhaseDeck.all_where_game_id(game.id):
             gpd.delete()
@@ -669,6 +676,10 @@ async def handler(websocket):
         await send_games()
         await send_users()
         await send_players()
+        while next_player_list:
+            next_player = next_player_list.pop()
+            websockets.broadcast(connected, json.dumps({"type": "next_player", "user_id": str(next_player.user_id)}))
+        
     if websocket in connected:
         connected.remove(websocket)
     if websocket in socket_to_player_id:

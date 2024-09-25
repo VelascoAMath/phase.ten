@@ -10,6 +10,7 @@ import PlayRoom from './PlayRoom.js';
 import PlayerCreation from './PlayerCreation.js';
 import EditGame from './EditGame.jsx';
 
+import alarmSound from "./turn_alarm.wav";
 
 const initState = {
   "user-id": localStorage.getItem("user-id"),
@@ -24,11 +25,11 @@ function App() {
   const [state, dispatch] = useReducer(inputReducer, initState);
   const [socketState, setSocketState] = useState(0);
   const [initialSocketCall, setInitialSocketCall] = useState(false);
+  const [canPlayDing, setCanPlayDing] = useState(false);
 
-  
-  // console.log(ding.canPlayType('turn_alarm.wav'));
 
-  
+  const ding = new Audio(alarmSound);
+
   const socket = state["socket"];
 
   socket.onerror = (event) => {
@@ -54,7 +55,7 @@ function App() {
     setSocketState(-1);
 
   }
-    
+
 
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
@@ -96,9 +97,13 @@ function App() {
       dispatch({type: "change-input", key: "game", value: data["game"]})
     } else if(data["type"] === "rejection"){
       alert(data["message"]);
+    } else if(data["type"] === "next_player" && state["user-id"] === data["user_id"]){
+      if(canPlayDing){
+        ding.play();
+      }
     }
   }
-  
+
   if(socketState === 0) {
     return <div>Establishing connection</div>
   } else if (socketState === -1){
@@ -113,15 +118,17 @@ function App() {
   return (
     <div>
       <h2>{state["user-name"]}</h2>
+      {!canPlayDing && <button onClick={() => {setCanPlayDing(true)}}>Turn On Notifications</button>}
+
       {/* <div>
                 {state["user-list"]?.map(user => {
-                    const setUser = function(){
-                        dispatch({type: "change-input", key: "user-id", value: user["id"]});
-                        dispatch({type: "change-input", key: "user-name", value: user["name"]});
-                        dispatch({type: "change-input", key: "user-token", value: user["token"]});
+                  const setUser = function(){
+                    dispatch({type: "change-input", key: "user-id", value: user["id"]});
+                    dispatch({type: "change-input", key: "user-name", value: user["name"]});
+                    dispatch({type: "change-input", key: "user-token", value: user["token"]});
                     }
                     return <button key={user.id} onClick={setUser}>{user.name}</button>
-                })}
+                    })}
 			</div> */}
       <Route path="/signup">
         <PlayerCreation props={{state, dispatch, socket}}/>
