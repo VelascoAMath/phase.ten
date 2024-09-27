@@ -5,8 +5,10 @@ import uuid
 from typing import Self
 
 import graphviz
+import vel_data_structures
 
 from Card import Card, Color, Rank
+from CardCollection import CardCollection
 
 
 @dataclasses.dataclass
@@ -443,6 +445,130 @@ class RE:
         # What has been inputted is not a valid phase
         if not has_match:
             raise Exception(f"Unrecognized phase {self.phase}!")
+    
+    def score(self, card_list: CardCollection) -> int:
+        """
+        Given a collection of cards, this will assign a score to them indicating if any subset of them satisfy the regular expression
+        0 means there is a subset and any other natural number indicates the number of cards needed to satisfy the regular expression
+        
+        :param card_list: the list of cards to test
+        :type CardCollection
+        :return: the number of cards needed to satisfy the regular expression
+        :rtype: int
+        """
+        @dataclasses.dataclass(frozen=True)
+        class BNBState:
+            deck: CardCollection = dataclasses.field(default_factory=CardCollection)
+            hand: CardCollection = dataclasses.field(default_factory=CardCollection)
+            curr_re_state: _State = None
+            error: int = 0
+            phase_len: int = 0
+            
+            def score(self) -> int:
+                return self.error
+            
+            def isSolution(self) -> bool:
+                return self.error + len(self.hand) == self.phase_len
+            
+            def expand(self) -> list[Self]:
+                children = []
+                
+                if not self.deck:
+                    return [BNBState(deck=self.deck[:], hand=self.hand[:], curr_re_state=self.curr_re_state,
+                                     phase_len=self.phase_len, error=self.error + 1)]
+                
+                for i, card in enumerate(self.deck):
+                    
+                    if self.curr_re_state.is_final:
+                        children.append(BNBState(deck=self.deck[:], hand=self.hand[:], curr_re_state=self.curr_re_state,
+                                                 phase_len=self.phase_len, error=self.error + 1))
+                    elif self.curr_re_state.emptyTransition is not None:
+                        children.append(BNBState(deck=self.deck[:], hand=self.hand[:], curr_re_state=self.curr_re_state.emptyTransition,
+                                                 phase_len=self.phase_len, error=self.error))
+                    else:
+                        for (nextCard, nextState) in self.curr_re_state.cardTransition.items():
+                            if nextCard == card:
+                                deck = self.deck[:]
+                                hand = self.hand[:]
+                                hand.append(deck.pop(i))
+                                children.append(BNBState(deck=deck[:], hand=hand[:], curr_re_state=nextState,
+                                                         phase_len=self.phase_len, error=self.error))
+                            else:
+                                children.append(BNBState(deck=self.deck[:], hand=self.hand[:], curr_re_state=nextState,
+                                                         phase_len=self.phase_len, error=self.error + 1))
+                        
+                        for (nextColor, nextState) in self.curr_re_state.colorTransition.items():
+                            if nextColor is card.color:
+                                deck = self.deck[:]
+                                hand = self.hand[:]
+                                hand.append(deck.pop(i))
+                                children.append(BNBState(deck=deck[:], hand=hand[:], curr_re_state=nextState,
+                                                         phase_len=self.phase_len, error=self.error))
+                            else:
+                                children.append(BNBState(deck=self.deck[:], hand=self.hand[:], curr_re_state=nextState,
+                                                         phase_len=self.phase_len, error=self.error + 1))
+                        
+                        for (nextRank, nextState) in self.curr_re_state.rankTransition.items():
+                            if nextRank is card.rank:
+                                deck = self.deck[:]
+                                hand = self.hand[:]
+                                hand.append(deck.pop(i))
+                                children.append(BNBState(deck=deck[:], hand=hand[:], curr_re_state=nextState,
+                                                         phase_len=self.phase_len, error=self.error))
+                            else:
+                                children.append(BNBState(deck=self.deck[:], hand=self.hand[:], curr_re_state=nextState,
+                                                         phase_len=self.phase_len, error=self.error + 1))
+                
+                return children
+            
+            def __lt__(self, other):
+                return (self.score(), -len(self.hand)) < (other.score(), -len(other.hand))
+            
+            def __le__(self, other):
+                return (self.score(), -len(self.hand)) <= (other.score(), -len(other.hand))
+            
+            def __gt__(self, other):
+                return (self.score(), -len(self.hand)) > (other.score(), -len(other.hand))
+            
+            def __ge__(self, other):
+                return (self.score(), -len(self.hand)) >= (other.score(), -len(other.hand))
+            
+            def __str__(self):
+                return (f"BNBState(deck={[str(card) for card in self.deck]}, hand={[str(card) for card in self.hand]}, "
+                        f"error={self.error}, phase_len={self.phase_len}, state={self.curr_re_state._id})")
+            
+            def __hash__(self):
+                result = 0
+                
+                for card in self.deck:
+                    result ^= hash(card)
+                
+                for card in self.hand:
+                    result ^= hash(card)
+                
+                result ^= self.curr_re_state._id
+                result ^= self.error
+                result ^= self.phase_len
+                
+                return result
+        
+        candidate_set = vel_data_structures.BHeap()
+        candidate_set.insert(BNBState(deck=card_list, phase_len=self.len, curr_re_state=self.startState))
+        explored = {candidate_set.peek()}
+        
+        while candidate_set:
+            candidate = candidate_set.pop()
+            # print(candidate)
+            if candidate.isSolution():
+                return candidate.score()
+            
+            for child in candidate.expand():
+                if child in explored:
+                    continue
+                candidate_set.insert(child)
+                explored.add(child)
+            
+        return 0
     
     def isFullyAccepted(self, card_list) -> bool:
         """
