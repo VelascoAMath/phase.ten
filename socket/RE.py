@@ -479,13 +479,13 @@ class RE:
             else:
                 g.node(str(hash(curr)), label="")
             for key, val in curr.rankTransition.items():
-                g.edge(str(hash(curr)), str(hash(curr)), label=str(key))
+                g.edge(str(hash(curr)), str(hash(val)), label=str(key))
                 q.append(val)
             for key, val in curr.colorTransition.items():
-                g.edge(str(hash(curr)), str(hash(curr)), label=str(key))
+                g.edge(str(hash(curr)), str(hash(val)), label=str(key))
                 q.append(val)
             for key, val in curr.cardTransition.items():
-                g.edge(str(hash(curr)), str(hash(curr)), label=str(key))
+                g.edge(str(hash(curr)), str(hash(val)), label=str(key))
                 q.append(val)
             if curr.emptyTransition is not None:
                 g.edge(str(hash(curr)), str(hash(curr.emptyTransition)))
