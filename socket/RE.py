@@ -354,6 +354,7 @@ class RE:
     phase: str = ""
     # The start state for the graph
     startState: _State = dataclasses.field(default_factory=_State)
+    len: int = 0
     
     def __post_init__(self):
         """
@@ -370,7 +371,8 @@ class RE:
             has_match = True
         m = re.fullmatch("C(\\d+)", self.phase)
         if m:
-            (self.startState, final_state_set) = _strictColor(int(m.group(1)))
+            self.len = int(m.group(1))
+            (self.startState, final_state_set) = _strictColor(self.len)
             for state in final_state_set:
                 state.is_final = True
             has_match = True
@@ -380,7 +382,8 @@ class RE:
             has_match = True
         m = re.fullmatch("R(\\d+)", self.phase)
         if m:
-            (self.startState, final_state_set) = _strictRun(int(m.group(1)))
+            self.len = int(m.group(1))
+            (self.startState, final_state_set) = _strictRun(self.len)
             for state in final_state_set:
                 state.is_final = True
             has_match = True
@@ -391,7 +394,8 @@ class RE:
             has_match = True
         m = re.fullmatch("S(\\d+)", self.phase)
         if m:
-            (self.startState, final_state_set) = _strictSet(int(m.group(1)))
+            self.len = int(m.group(1))
+            (self.startState, final_state_set) = _strictSet(self.len)
             for state in final_state_set:
                 state.is_final = True
             has_match = True
@@ -405,12 +409,15 @@ class RE:
                 
                 match phase_component[0]:
                     case "R":
+                        self.len += int(phase_component[1:])
                         (start_state, final_state_set) = _strictRun(int(phase_component[1:]))
                         state_collection.append((start_state, final_state_set))
                     case "C":
+                        self.len += int(phase_component[1:])
                         (start_state, final_state_set) = _strictColor(int(phase_component[1:]))
                         state_collection.append((start_state, final_state_set))
                     case "S":
+                        self.len += int(phase_component[1:])
                         (start_state, final_state_set) = _strictSet(int(phase_component[1:]))
                         state_collection.append((start_state, final_state_set))
                     case _:
