@@ -40,11 +40,13 @@ class TestRE(unittest.TestCase):
                 id uuid NOT NULL,
                 name text NOT NULL,
                 "token" text NOT NULL,
+                is_bot boolean DEFAULT false NOT NULL,
                 created_at timestamp NOT NULL,
                 updated_at timestamp NOT NULL,
                 CONSTRAINT users_pk PRIMARY KEY (id)
             );
-            CREATE UNIQUE INDEX IF NOT EXISTS users_name_idx ON users (name);
+            CREATE UNIQUE INDEX IF NOT EXISTS users_name_isbot_idx ON public.users ("name",is_bot);
+            CREATE INDEX IF NOT EXISTS users_name_idx ON public.users ("name");
             """
         )
         self.cur.execute("""
@@ -104,6 +106,7 @@ class TestRE(unittest.TestCase):
             uuid.uuid4(),
             "Alfredo",
             "secret token",
+            is_bot=False,
         )
         assert alfredo == User.fromJSON(alfredo.toJSON())
         
@@ -137,7 +140,7 @@ class TestRE(unittest.TestCase):
         ]
         discard_list = CardCollection([deck.pop() for _ in range(5)])
         
-        naly = User(name="Naly")
+        naly = User(name="Naly", is_bot=True)
         
         g = Game(uuid.uuid4(), phase_list, deck, discard_list, alfredo.id, naly.id, True, GameType.LEGACY, alfredo.id)
         h = Game.fromJSON(g.toJSON())
@@ -207,11 +210,13 @@ class TestRE(unittest.TestCase):
                     id uuid NOT NULL,
                     name text NOT NULL,
                     "token" text NOT NULL,
+                    is_bot boolean DEFAULT false NOT NULL,
                     created_at timestamp NOT NULL,
                     updated_at timestamp NOT NULL,
                     CONSTRAINT users_pk PRIMARY KEY (id)
                 );
-                CREATE UNIQUE INDEX IF NOT EXISTS users_name_idx ON users (name);
+                CREATE UNIQUE INDEX IF NOT EXISTS users_name_isbot_idx ON public.users ("name",is_bot);
+                CREATE INDEX IF NOT EXISTS users_name_idx ON public.users ("name");
                 """
             )
             cur.execute("""

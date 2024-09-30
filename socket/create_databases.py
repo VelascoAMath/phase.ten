@@ -17,11 +17,13 @@ def create_databases():
                 id uuid NOT NULL,
                 "name" text NOT NULL,
                 "token" text NOT NULL,
+                is_bot boolean DEFAULT false NOT NULL,
                 created_at timestamp NOT NULL,
                 updated_at timestamp NOT NULL,
                 CONSTRAINT users_pk PRIMARY KEY (id)
             );
-            CREATE UNIQUE INDEX IF NOT EXISTS users_name_idx ON public.users ("name");
+            CREATE UNIQUE INDEX IF NOT EXISTS users_name_isbot_idx ON public.users ("name",is_bot);
+            CREATE INDEX IF NOT EXISTS users_name_idx ON public.users ("name");
             """
         )
         cur.execute("""

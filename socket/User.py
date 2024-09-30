@@ -17,6 +17,7 @@ class User:
     id: uuid.UUID = dataclasses.field(default_factory=lambda: uuid.uuid4())
     name: str = ""
     token: str = dataclasses.field(default_factory=lambda: secrets.token_hex(16))
+    is_bot: bool = False
     created_at: datetime.datetime = dataclasses.field(default_factory=lambda: datetime.datetime.now())
     updated_at: datetime.datetime = dataclasses.field(default_factory=lambda: datetime.datetime.now())
     
@@ -32,6 +33,7 @@ class User:
             "id": str(self.id),
             "name": self.name,
             "token": self.token,
+            "is_bot": self.is_bot,
             "created_at": str(self.created_at),
             "updated_at": str(self.updated_at),
         }
@@ -56,6 +58,7 @@ class User:
             uuid.UUID(data["id"]),
             data["name"],
             data["token"],
+            data["is_bot"],
             created_at=created_at,
             updated_at=updated_at,
         )
