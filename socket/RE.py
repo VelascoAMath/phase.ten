@@ -93,11 +93,14 @@ class _State:
     
     def __hash__(self):
         return self._id
+    
+    # def __repr__(self):
+    #     return f'{self.is_final=} id={self._id} cardTransition={[(key, val._id) for (key, val) in self.cardTransition.items()]} colorTransition={[(key, val._id) for (key, val) in self.colorTransition.items()]} rankTransition={[(key, val._id) for (key, val) in self.rankTransition.items()]} emptyTransition={self.emptyTransition}'
 
 
 def _run() -> _State:
     """
-    Generate a RE graph that can be used to determine if a sequence of cards is a run
+    Generate a RE graph that can be used to determine if a sequence of cards is a run.
     A run is a sequence of cards whose ranks are in strictly increasing sequential order
     One example is R3, B4, Y5
     R3, B3, Y3 is not a run
@@ -456,6 +459,7 @@ class RE:
         :return: the number of cards needed to satisfy the regular expression
         :rtype: int
         """
+        
         @dataclasses.dataclass(frozen=True)
         class BNBState:
             deck: CardCollection = dataclasses.field(default_factory=CardCollection)
@@ -483,7 +487,8 @@ class RE:
                         children.append(BNBState(deck=self.deck[:], hand=self.hand[:], curr_re_state=self.curr_re_state,
                                                  phase_len=self.phase_len, error=self.error + 1))
                     elif self.curr_re_state.emptyTransition is not None:
-                        children.append(BNBState(deck=self.deck[:], hand=self.hand[:], curr_re_state=self.curr_re_state.emptyTransition,
+                        children.append(BNBState(deck=self.deck[:], hand=self.hand[:],
+                                                 curr_re_state=self.curr_re_state.emptyTransition,
                                                  phase_len=self.phase_len, error=self.error))
                     else:
                         for (nextCard, nextState) in self.curr_re_state.cardTransition.items():
@@ -567,10 +572,42 @@ class RE:
                     continue
                 candidate_set.insert(child)
                 explored.add(child)
-            
+        
         return 0
     
-    def isFullyAccepted(self, card_list) -> bool:
+    def isSubsetAccepted(self, card_list: CardCollection) -> tuple[bool, CardCollection]:
+        """
+        Given a collection of cards, compute if any hand created from them can satisfy the regular expression
+        
+        :param card_list: the collection of cards
+        :type CardCollection
+        :return: a tuple with a boolean to indicate if a subset of cards can satisfy the regular expression and
+        a collection of cards that satisfies our regular expression.
+        If no such subset exists, an empty card collection is returned
+        :rtype tuple[bool, CardCollection]
+        """
+        stack = [(CardCollection([]), self.startState)]
+        
+        while stack:
+            (c_list, state) = stack.pop()
+            if state.is_final:
+                return True, c_list
+            
+            if state.emptyTransition is not None:
+                stack.append((CardCollection(c_list), state.getNext(card)))
+                continue
+            
+            for card in card_list:
+                if card in c_list:
+                    continue
+                if not state.isAccepted(card):
+                    continue
+                
+                stack.append((CardCollection(c_list + [card]), state.getNext(card)))
+        
+        return False, CardCollection()
+    
+    def isFullyAccepted(self, card_list: CardCollection) -> bool:
         """
         Determines if a sequence of cards matches the phase exactly as stated. It must match the exact order of the
         components (e.g. R1,G2,Y3,R7,B7,Y7 does not match S3+R3 but does match R3+S3) and it must have exactly the

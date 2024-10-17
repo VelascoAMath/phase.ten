@@ -1,4 +1,5 @@
 import itertools
+import random
 import unittest
 
 import more_itertools
@@ -9,12 +10,17 @@ from RE import RE
 
 
 class TestRE(unittest.TestCase):
+    
+    def setUp(self):
+        random.seed(2024)
+    
     def test_strict_run(self):
         rr = RE("R4")
         accepted_list = ["R1 R2 R3 R4", "W W W R7", "W W W W", "B1 G2 Y3 R4", "W W W W"]
         for phase in accepted_list:
-            deck = [Card.from_string(c) for c in phase.split(" ")]
+            deck = CardCollection([Card.from_string(c) for c in phase.split(" ")])
             self.assertTrue(rr.isFullyAccepted(deck))
+            self.assertTrue(rr.isSubsetAccepted(deck)[0])
         
         not_accepted_list = [
             "R1 B1",
@@ -27,6 +33,17 @@ class TestRE(unittest.TestCase):
         for phase in not_accepted_list:
             deck = [Card.from_string(c) for c in phase.split(" ")]
             self.assertFalse(rr.isFullyAccepted(deck))
+        
+        
+        not_accepted_list = [
+            "R1 B1",
+            "R2 W R5",
+            "R4 R3",
+            "W W W",
+        ]
+        for phase in not_accepted_list:
+            deck = [Card.from_string(c) for c in phase.split(" ")]
+            self.assertFalse(rr.isSubsetAccepted(deck)[0])
     
     def test_run(self):
         rr = RE("R")
@@ -43,6 +60,7 @@ class TestRE(unittest.TestCase):
         for phase in accepted_list:
             deck = [Card.from_string(c) for c in phase.split(" ")]
             self.assertTrue(rr.isFullyAccepted(deck))
+            self.assertTrue(rr.isSubsetAccepted(deck)[0])
         
         not_accepted_list = [
             "R1 B1",
@@ -73,6 +91,16 @@ class TestRE(unittest.TestCase):
         for phase in not_accepted_list:
             deck = [Card.from_string(c) for c in phase.split(" ")]
             self.assertFalse(rr.isFullyAccepted(deck))
+        
+        not_accepted_list = [
+            "R1 B1",
+            "R2 W R3",
+            "R4 R3",
+            "W W W",
+        ]
+        for phase in not_accepted_list:
+            deck = [Card.from_string(c) for c in phase.split(" ")]
+            self.assertFalse(rr.isSubsetAccepted(deck)[0])
     
     def test_set(self):
         rr = RE("S")
@@ -106,6 +134,7 @@ class TestRE(unittest.TestCase):
         for phase in accepted_list:
             deck = [Card.from_string(c) for c in phase.split(" ")]
             self.assertTrue(rr.isFullyAccepted(deck))
+            self.assertTrue(rr.isSubsetAccepted(deck)[0])
         
         not_accepted_list = [
             "R1 B1",
@@ -118,6 +147,16 @@ class TestRE(unittest.TestCase):
         for phase in not_accepted_list:
             deck = [Card.from_string(c) for c in phase.split(" ")]
             self.assertFalse(rr.isFullyAccepted(deck))
+            
+        not_accepted_list = [
+            "R1 B1",
+            "R2 W B3",
+            "R4 B3",
+            "W W W",
+        ]
+        for phase in not_accepted_list:
+            deck = [Card.from_string(c) for c in phase.split(" ")]
+            self.assertFalse(rr.isSubsetAccepted(deck)[0])
     
     def test_color(self):
         rr = RE("C")
@@ -147,9 +186,26 @@ class TestRE(unittest.TestCase):
     
     def test_complex_component(self):
         rr = RE("S3+S3+R7+C4")
-        self.assertTrue(
-            rr.isFullyAccepted([Card.from_string(c) for c in "W B3 W R7 B7 W G2 W B4 B5 Y6 W R8 Y8 Y3 W W".split(" ")]))
+        deck = CardCollection([Card.from_string(c) for c in "W B3 W R7 B7 W G2 W B4 B5 Y6 W R8 Y8 Y3 W W".split(" ")])
+        self.assertTrue(rr.isFullyAccepted(deck))
+        random.shuffle(deck)
+        self.assertTrue(rr.isSubsetAccepted(deck)[0])
+
         self.assertEqual(rr.len, 17)
+
+        deck = CardCollection(
+            [Card.from_string(c) for c in "R3 B3 Y3 R7 B7 G7 G2 Y3 B4 B5 Y6 R7 R8 Y8 Y3 Y11 Y4".split(" ")]
+        )
+        self.assertTrue(rr.isFullyAccepted(deck))
+        random.shuffle(deck)
+        self.assertTrue(rr.isSubsetAccepted(deck)[0])
+
+        deck = CardCollection(
+            [Card.from_string(c) for c in "R2 B3 Y3 R7 B7 G7 G2 Y3 B4 B5 Y6 R7 R8 Y8 Y3 Y11 Y4".split(" ")]
+        )
+        self.assertFalse(rr.isFullyAccepted(deck))
+        random.shuffle(deck)
+        self.assertFalse(rr.isSubsetAccepted(deck)[0])
     
     def test_score(self):
         rr = RE("R10")
