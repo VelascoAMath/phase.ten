@@ -1,15 +1,18 @@
 import dataclasses
 import datetime
 import json
+import random
 import sqlite3
 import uuid
 from typing import Self
 
 import psycopg2
 
-from Card import Card
+from Card import Card, Rank
 from CardCollection import CardCollection
 from Game import Game
+from GamePhaseDeck import GamePhaseDeck
+from RE import RE
 from User import User
 from add_db_functions import add_db_functions
 
@@ -33,6 +36,96 @@ class Player:
     
     def __post_init__(self):
         self.updated_at = self.created_at
+    
+    def make_next_move(self):
+        """
+        Calculates what the next move should be for a bot player
+        
+        :return: a dictionary which can be converted into JSON. The format is meant to be passed into the handle_data method in app.py
+        :rtype: dict
+        """
+        game = Game.get_by_id(self.game_id)
+        user = User.get_by_id(self.user_id)
+        
+        if game.current_player != self.user_id:
+            raise Exception(f"Can't play! It's not my turn!")
+        
+        if self.skip_cards:
+            return {"player_id": self.id, "type": "player_action", "action": "do_skip"}
+        
+        if not self.drew_card:
+            
+            if len(game.discard) == 0:
+                return {"player_id": self.id, "type": "player_action", "action": "draw_deck"}
+            
+            # A skip card can never be drawn from the discard pile
+            if game.discard[-1].rank is Rank.SKIP:
+                return {"player_id": self.id, "type": "player_action", "action": "draw_deck"}
+            
+            if game.discard[-1].rank is Rank.WILD:
+                return {"player_id": self.id, "type": "player_action", "action": "draw_discard"}
+            
+            re = RE(game.phase_list[self.phase_index])
+            
+            score = re.score(self.hand)
+            
+            # Card in discard pile will get us closer to completing our phase
+            if re.score(CardCollection(self.hand + [game.discard[-1]])) < score:
+                return {"player_id": self.id, "type": "player_action", "action": "draw_discard"}
+            
+            return {"player_id": self.id, "type": "player_action", "action": "draw_deck"}
+        
+        else:
+            if not self.completed_phase:
+                
+                rr = RE(game.phase_list[self.phase_index])
+                
+                (result, hand_subset) = rr.isSubsetAccepted(self.hand)
+                
+                if result:
+                    return {"player_id": self.id, "type": "player_action", "action": "complete_phase",
+                            "cards": hand_subset.to_json_dict()}
+                else:
+                    
+                    # If we have a skip, use it on the player with the highest phase index and if there's a tie,
+                    # randomly choose one who has completed their phase
+                    for card in self.hand:
+                        if card.rank is Rank.SKIP:
+                            other_players = [player for player in Player.all() if
+                                             player.game_id == game.id and player.id != self.id]
+                            other_players.sort(key=lambda x: (x.phase_index, x.completed_phase))
+                            
+                            return {"player_id": self.id, "type": "player_action", "action": "skip_player",
+                                    "to": other_players[-1].user_id}
+                    
+                    score = rr.score(self.hand)
+                    # Discard any card in our hand which isn't necessary to completing our phase
+                    for i in range(len(self.hand)):
+                        if self.hand[i].rank is Rank.WILD:
+                            continue
+                        if not self.drew_card and rr.score(
+                            self.hand[:i] + self.hand[i + 1:] + [game.discard[-1]]) > score:
+                            return {"player_id": self.id, "type": "player_action", "action": "discard",
+                                    "card_id": self.hand[i].id}
+            else:
+                gpd_list = GamePhaseDeck.all_where_game_id(game.id)
+                
+                # if we can put down, do it
+                for gpd in gpd_list:
+                    re = RE(gpd.phase)
+                    for card in self.hand:
+                        if re.isFullyAccepted(CardCollection(CardCollection([card]) + gpd.deck)):
+                            return {"player_id": self.id, "type": "player_action", "action": "put_down",
+                                    "phase_deck_id": gpd.id,
+                                    "cards": CardCollection([card]).to_json_dict(), "direction": "start"}
+                        if re.isFullyAccepted(CardCollection(gpd.deck + CardCollection([card]))):
+                            return {"player_id": self.id, "type": "player_action", "action": "put_down",
+                                    "phase_deck_id": gpd.id,
+                                    "cards": CardCollection([card]).to_json_dict(), "direction": "end"}
+            
+            # Otherwise, pick a random card to discard
+            return {"player_id": self.id, "type": "player_action", "action": "discard",
+                    "card_id": random.choice(self.hand).id}
     
     def toJSON(self):
         return json.dumps(self.to_json_dict())
@@ -137,7 +230,6 @@ def main():
     print(p.toJSON())
     print(Player.fromJSON(p.toJSON()))
     assert p == Player.fromJSON(p.toJSON())
-    
 
 
 if __name__ == "__main__":
