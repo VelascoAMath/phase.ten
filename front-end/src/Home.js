@@ -1,16 +1,19 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'wouter';
 
 
 export default function Home({props}) {
 	
+	const { t } = useTranslation();
+	
 	return (
 		<h1>
 			<div>
-				<Link to="/signup">Sign Up</Link>
+				<Link to="/signup">{t('signUp')}</Link>
 			</div>
 			<div>
-				<Link to="/login">Log In</Link>
+				<Link to="/login">{t('login')}</Link>
 			</div>
 			{/* <div>
 				<Link to="/players">Look at players</Link>
@@ -19,7 +22,7 @@ export default function Home({props}) {
 				<Link to="/cards">Look at cards</Link>
 			</div> */}
 			<div>
-				<Link to="/lobby">Play a game</Link>
+				<Link to="/lobby">{t('playGame')}</Link>
 			</div>
 			{/* <div>
 				<Link to="/test_game">Test out our websockets</Link>

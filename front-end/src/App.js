@@ -121,7 +121,7 @@ function App() {
   return (
     <div>
       <h2>{state["user-name"]}</h2>
-      {!canPlayDing && <button onClick={() => {setCanPlayDing(true)}}>Turn On Notifications</button>}
+      {!canPlayDing && <button onClick={() => {setCanPlayDing(true)}}>{t('notifications')}</button>}
 
       {/* <div>
                 {state["user-list"]?.map(user => {

@@ -13,9 +13,12 @@ i18next
     resources: {
         en: {
             translation: {
-                learn: 'Learn React'
+                notifications: 'Turn On Notifications',
+                signUp: 'Sign Up',
+                login: 'Log In',
+                playGame: 'Play A Game'
             }
-        }
+        },
     }
 })
 
