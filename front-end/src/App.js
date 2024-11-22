@@ -1,5 +1,7 @@
 import './App.css';
 import React, { useReducer, useState } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
+
 import Home from './Home.js';
 
 import Lobby from './Lobby';
@@ -26,6 +28,7 @@ function App() {
   const [socketState, setSocketState] = useState(0);
   const [initialSocketCall, setInitialSocketCall] = useState(false);
   const [canPlayDing, setCanPlayDing] = useState(false);
+  const { t } = useTranslation();
 
 
   const ding = new Audio(alarmSound);
