@@ -37,10 +37,8 @@ DEFAULT_PHASE_LIST = [
 
 INITIAL_HAND_SIZE = 10
 
-
 # Create databases
 create_databases.create_databases()
-
 
 parser = ConfigParser()
 config = {}
@@ -408,7 +406,7 @@ def player_action(data):
             next_player = roomPlayers[current_player_index]
         
         game.current_player = next_player.user_id
-
+        
         next_player_list.append(next_player)
         player.drew_card = False
         
@@ -443,9 +441,9 @@ def player_action(data):
                 roomPlayer.save()
         
         game.current_player = roomPlayers[-1].user_id
-        next_player_list.pop()
+        if next_player_list:
+            next_player_list.pop()
         next_player_list.append(roomPlayers[-1])
-        
         
         # Remove all phase decks
         for gpd in GamePhaseDeck.all_where_game_id(game.id):
@@ -637,6 +635,7 @@ def handle_data(data, websocket):
                 deck = Card.getNewDeck()
                 random.shuffle(deck)
                 random.shuffle(player_list)
+                
                 for i, player in enumerate(player_list):
                     player.phase_index = 0
                     player.turn_index = i
@@ -680,13 +679,38 @@ async def handler(websocket):
         message = handle_data(data, websocket)
         print(message)
         await websocket.send(message)
+        
+        while next_player_list:
+            next_player: Player = next_player_list.pop()
+            if User.get_by_id(next_player.user_id).is_bot:
+                while User.get_by_id(next_player.user_id).is_bot and Game.get_by_id(next_player.game_id).current_player == next_player.user_id:
+                    next_player.make_next_move()
+                    handle_data(next_player.make_next_move(), websocket)
+                    await send_games()
+                    await send_users()
+                    await send_players()
+                    next_player = Player.get_by_id(next_player.id)
+            else:
+                websockets.broadcast(connected,
+                                     json.dumps({"type": "next_player", "user_id": str(next_player.user_id)}))
+        
+        # Look for any bots which are ready to play and make them perform their next moves
+        # We have extra checks to make the sure the game has started and has no winner
+        cur.execute("select p.* from players p join users u on p.user_id = u.id join games g on p.game_id = g.id "
+                    "where g.current_player = u.id and u.is_bot and g.in_progress and g.winner is null")
+        bot_players_ready_to_go = [Player.from_sql_tuple(p) for p in cur.fetchall()]
+        
+        for next_player in bot_players_ready_to_go:
+            next_move = next_player.make_next_move()
+            handle_data(next_move, websocket)
+            await send_games()
+            await send_users()
+            await send_players()
+        
         await send_games()
         await send_users()
         await send_players()
-        while next_player_list:
-            next_player = next_player_list.pop()
-            websockets.broadcast(connected, json.dumps({"type": "next_player", "user_id": str(next_player.user_id)}))
-        
+    
     if websocket in connected:
         connected.remove(websocket)
     if websocket in socket_to_player_id:
