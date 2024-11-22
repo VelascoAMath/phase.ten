@@ -230,11 +230,18 @@ def player_action(data):
     
     match data["action"]:
         case "draw_deck":
+            
             # You can only draw once per turn
             if player.drew_card:
                 return json.dumps({"type": "rejection", "message": "You already drew for this round!"})
             hand.append(game.deck.pop())
             player.drew_card = True
+            
+            if len(game.deck) == 0:
+                random.shuffle(game.discard)
+                game.deck.extend(game.discard)
+                game.discard = []
+            
             player.save()
             game.save()
             conn.commit()
