@@ -206,6 +206,12 @@ class TestRE(unittest.TestCase):
         self.assertFalse(rr.isFullyAccepted(deck))
         random.shuffle(deck)
         self.assertFalse(rr.isSubsetAccepted(deck)[0])
+
+        rr = RE("S5+S2")
+        deck = CardCollection(
+            [Card.from_string(c) for c in "W W W G5 W W W W W W W W".split(" ")]
+        )
+        self.assertTrue(rr.isSubsetAccepted(deck)[0])
     
     def test_score(self):
         rr = RE("R10")

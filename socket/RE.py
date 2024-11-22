@@ -545,12 +545,8 @@ class RE:
             def __hash__(self):
                 result = 0
                 
-                for card in self.deck:
-                    result ^= hash(card)
-                
-                for card in self.hand:
-                    result ^= hash(card)
-                
+                result ^= hash(str(self.deck))
+                result ^= hash(str(self.hand))
                 result ^= self.curr_re_state._id
                 result ^= self.error
                 result ^= self.phase_len
@@ -590,6 +586,7 @@ class RE:
         
         while stack:
             (c_list, state) = stack.pop()
+            c_id_set = set(c.id for c in c_list)
             if state.is_final:
                 return True, c_list
             
@@ -598,7 +595,7 @@ class RE:
                 continue
             
             for card in card_list:
-                if card in c_list:
+                if card.id in c_id_set:
                     continue
                 if not state.isAccepted(card):
                     continue
@@ -668,6 +665,8 @@ def main():
     rr = RE("S3+S3+R7+C4")
     print(rr.isFullyAccepted([Card.from_string(c) for c in "W B3 W R7 B7 W G2 W B4 B5 Y6 W R8 Y8 Y3 W W".split(" ")]))
     rr.to_graphviz()
+    rr = RE("S5+S3")
+    print(rr.score(CardCollection([Card.from_string(c) for c in "G4 W W B10 W W G11 W Y2 S".split(" ")])))
 
 
 if __name__ == "__main__":
