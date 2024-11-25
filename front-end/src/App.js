@@ -5,7 +5,7 @@ import { useTranslation, Trans } from 'react-i18next';
 import Home from './Home.js';
 
 import Lobby from './Lobby';
-import { Route } from "wouter";
+import { Route, useLocation } from "wouter";
 import inputReducer from './InputReducer.js';
 import PlayerLogin from './PlayerLogin.js';
 import PlayRoom from './PlayRoom.js';
@@ -13,6 +13,7 @@ import PlayerCreation from './PlayerCreation.js';
 import EditGame from './EditGame.jsx';
 
 import alarmSound from "./turn_alarm.wav";
+import { globe } from './Icons.js';
 
 const initState = {
   "user-id": localStorage.getItem("user-id"),
@@ -22,13 +23,21 @@ const initState = {
   "game-list": [],
 };
 
+// List of languages
+const lngs = {
+  en: { nativeName: 'English' },
+  es: { nativeName: 'Español' }
+};
+
+
 function App() {
 
   const [state, dispatch] = useReducer(inputReducer, initState);
   const [socketState, setSocketState] = useState(0);
   const [initialSocketCall, setInitialSocketCall] = useState(false);
   const [canPlayDing, setCanPlayDing] = useState(false);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  let [ , navigate] = useLocation();
 
 
   const ding = new Audio(alarmSound);
@@ -120,7 +129,10 @@ function App() {
 
   return (
     <div>
-      <h2>{state["user-name"]}</h2>
+      <div style={{display: "flex", justifyContent: "space-between"}}>
+        <h2>{state["user-name"]}</h2>
+        <div className='clickable' onClick={() => {navigate("/settings/")}}>{globe()}</div>
+      </div>
       {!canPlayDing && <button onClick={() => {setCanPlayDing(true)}}>{t('notifications')}</button>}
 
       {/* <div>
@@ -135,6 +147,15 @@ function App() {
 			</div> */}
       <Route path="/signup">
         <PlayerCreation props={{state, dispatch, socket}}/>
+      </Route>
+      <Route path="/settings">
+        <div>
+            {Object.keys(lngs).map((lng) => (
+              <button key={lng} style={{ fontWeight: i18n.resolvedLanguage === lng ? 'bold' : 'normal' }} type="submit" onClick={() => i18n.changeLanguage(lng)}>
+                {lngs[lng].nativeName}
+                </button>
+              ))}
+        </div>
       </Route>
       <Route path="/login">
         <PlayerLogin props={{state, dispatch, socket}}/>
