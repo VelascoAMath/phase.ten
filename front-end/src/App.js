@@ -112,8 +112,8 @@ function App() {
   } else if (socketState === -1){
     return (
       <>
-        <div>Failed to establish connection</div>
-        <button onClick={() => {window.location.reload()}}>Retry connection</button>
+        <div>{t('noConnection')}</div>
+        <button onClick={() => {window.location.reload()}}>{t('retryConnection')}</button>
       </>
     );
   }
