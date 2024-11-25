@@ -1,9 +1,12 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 export default function PlayerLogin({props}) {
 
 
 	const{state, dispatch, socket} = props;
+
+	const { t } = useTranslation();
 
     const getPlayers = function() {
         if(socket.readyState === socket.OPEN){
@@ -15,13 +18,13 @@ export default function PlayerLogin({props}) {
 	return (
 		<div>
 			<div>
-				Name: {state["user-name"]}
+				{t('name')}: {state["user-name"]}
 			</div>
 			<div>
-				User ID: {state["user-id"]}
+				{t('userID')}: {state["user-id"]}
 			</div>
 			<div>
-				Token: {state["user-token"]}
+				{t('token')}: {state["user-token"]}
 			</div>
 			<div>
                 {state["user-list"]?.map(user => {
@@ -33,8 +36,8 @@ export default function PlayerLogin({props}) {
                     return <button key={user.id} onClick={setUser}>{user.name}</button>
                 })}
 			</div>
-            <button onClick={getPlayers}>Refresh</button>
-            <button onClick={() => {dispatch({type: "change-input", key: "user-id", value: null}); dispatch({type: "change-input", key: "user-name", value: null}); dispatch({type: "change-input", key: "user-token", value: null});} }>Log out</button>
+            <button onClick={getPlayers}>{t('refresh')}</button>
+            <button onClick={() => {dispatch({type: "change-input", key: "user-id", value: null}); dispatch({type: "change-input", key: "user-name", value: null}); dispatch({type: "change-input", key: "user-token", value: null});} }>{t('logOut')}</button>
 		</div>
 	)
 }

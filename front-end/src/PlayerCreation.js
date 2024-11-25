@@ -1,9 +1,11 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function PlayerCreation({props}) {
 
 
 	const{state, socket} = props;
+	const { t } = useTranslation();
 
 	const [name, setName] = useState("");
 
@@ -21,16 +23,16 @@ export default function PlayerCreation({props}) {
 	return (
 		<div>
 			<div>
-				Name: {state["user-name"]}
+				{t('name')}: {state["user-name"]}
 			</div>
 			<div>
-				User ID: {state["user-id"]}
+				{t('userID')}: {state["user-id"]}
 			</div>
 			<div>
-				Token: {state["user-token"]}
+				{t('token')}: {state["user-token"]}
 			</div>
 			<input value={name} onInput={(e) => {setName(e.target.value)}} onKeyDown={(e) => {if(e.key === "Enter") {createNewPlayer()} }}/>
-			<button onClick={createNewPlayer}>Confirm Name</button>
+			<button onClick={createNewPlayer}>{t('confirmName')}</button>
 		</div>
 	)
 }

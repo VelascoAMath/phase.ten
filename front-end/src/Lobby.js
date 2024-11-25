@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 
 
@@ -36,6 +37,8 @@ export default function Lobby({props}) {
 
     const{state, socket} = props;
     const [selectedGame, setSelectedGame] = useState(null);
+    const { t } = useTranslation();
+
     let [ , navigate] = useLocation();
     const userId = state["user-id"];
 
@@ -50,7 +53,7 @@ export default function Lobby({props}) {
     if(!(state["user-id"] && state["user-token"])){
         return (
             <div>
-                You must log in first!
+                {t('mustLogIn')}
             </div>
         )
     }
@@ -67,7 +70,7 @@ export default function Lobby({props}) {
     function tryToDelete(game_id, user_id, socket){
         if(socket.readyState === socket.OPEN){
             if(selectedGame.in_progress){
-                if(window.confirm("Are you sure you want to delete this game? It's already in progress")){
+                if(window.confirm(t("deleteGameWarning"))){
                     unjoinGame(game_id, user_id, socket);
                     setSelectedGame(null);
                 }
@@ -82,12 +85,12 @@ export default function Lobby({props}) {
     return (
         <div>
 
-            {(!gameList || gameList?.length === 0) && "There seem to be no games. Why don't you create one?"}
+            {(!gameList || gameList?.length === 0) && t("noGamesMessage")}
 
             <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
-                <button onClick={createGame}>Create Game</button>
-                {selectedGame?.host === userId && <button onClick={() => {navigate("/edit_game/" + selectedGame.id)}}>Edit</button>}
-                {selectedGame && <button onClick={() => {tryToDelete(selectedGame.id, userId, socket)}}>Delete Game</button>}
+                <button onClick={createGame}>{t('createGame')}</button>
+                {selectedGame?.host === userId && <button onClick={() => {navigate("/edit_game/" + selectedGame.id)}}>{t('edit')}</button>}
+                {selectedGame && <button onClick={() => {tryToDelete(selectedGame.id, userId, socket)}}>{t('deleteGame')}</button>}
             </div>
 
             <div className="rooms-to-join">
@@ -108,7 +111,7 @@ export default function Lobby({props}) {
 
                     return (
                         <div className={className} key={game.id} onClick={() => {if(game === selectedGame){setSelectedGame(null)} else {setSelectedGame(game)}}}>
-                            {game.in_progress && starFill()} Host: {userIdToName[game.host]}
+                            {game.in_progress && starFill()} {t('host')}: {userIdToName[game.host]}
                             <hr/>
                             {
                                 nonHostUsers.map((user) => {
@@ -116,11 +119,11 @@ export default function Lobby({props}) {
                                 })
                             }
                             <hr/>
-                            {!isInGame && !game.in_progress && <button onClick={() => joinGame(game.id, userId, socket)}>Join</button>}
-                            {isInGame && !isHost && !game.in_progress && <button onClick={() => {unjoinGame(game.id, userId, socket)}}>Unjoin</button>}
-                            {isInGame && !isHost && game.in_progress && <button onClick={() => {navigate("/play/" + game.id)}}>Play</button>}
-                            {isHost && !game.in_progress && nonHostUsers.length > 0 && <button onClick={() => {startGame(game.id, userId, socket)}}>Start</button>}
-                            {isHost && game.in_progress && <button onClick={() => {navigate("/play/" + game.id)}}>Play</button>}
+                            {!isInGame && !game.in_progress && <button onClick={() => joinGame(game.id, userId, socket)}>{t('join')}</button>}
+                            {isInGame && !isHost && !game.in_progress && <button onClick={() => {unjoinGame(game.id, userId, socket)}}>{t('unjoin')}</button>}
+                            {isInGame && !isHost && game.in_progress && <button onClick={() => {navigate("/play/" + game.id)}}>{t('play')}</button>}
+                            {isHost && !game.in_progress && nonHostUsers.length > 0 && <button onClick={() => {startGame(game.id, userId, socket)}}>{t('start')}</button>}
+                            {isHost && game.in_progress && <button onClick={() => {navigate("/play/" + game.id)}}>{t('play')}</button>}
                         </div>
                     )
                 })}
