@@ -171,4 +171,8 @@ button {
   background-color: rebeccapurple;
 }
 
+.clickable {
+  cursor: pointer;
+}
+
 /*# sourceMappingURL=App.css.map */
