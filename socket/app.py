@@ -565,6 +565,37 @@ def handle_data(data, websocket):
                     print(e)
                     user = User.get_by_id(user_id)
                     return json.dumps({"type": "rejection", "message": f"({user.name} cannot join game {game_id}"})
+        case "add_bot":
+            game_id = data["game_id"]
+            user_id = data["user_id"]
+            
+            if not Game.exists(game_id):
+                return json.dumps({"type": "rejection", "message": f"{game_id} is not a valid game id!"})
+            
+            game = Game.get_by_id(game_id)
+            
+            if game.in_progress:
+                return json.dumps({"type": "rejection", "message": f"{game_id} is already in progress!"})
+            
+            if str(game.host) != user_id:
+                return json.dumps({"type": "rejection",
+                                   "message": "You are not the host of the game and cannot edit its phase!"})
+            
+            cur.execute(
+                "select u.id from users u where u.is_bot and u.id not in "
+                "(select p.user_id from players p where game_id = %s)",
+                (game_id,))
+            
+            bots: list[str] = list(cur.fetchall())
+            if bots:
+                bot_user = User.get_by_id(bots[0])
+                bot = Player(game_id=game_id, user_id=bot_user.id)
+                bot.save()
+                conn.commit()
+                return json.dumps({"type": "ignore"})
+            else:
+                return json.dumps({"type": "rejection", "message": f"Game is already full of bots!"})
+        
         case "unjoin_game":
             game_id = data["game_id"]
             user_id = data["user_id"]
@@ -578,7 +609,6 @@ def handle_data(data, websocket):
             if str(game.host) == user_id:
                 game.delete()
                 conn.commit()
-            
             else:
                 if game.in_progress:
                     return json.dumps({"type": "error", "message": "Cannot leave game after it has already started!"})
@@ -586,6 +616,7 @@ def handle_data(data, websocket):
                 conn.commit()
             
             return json.dumps({"type": "ignore"})
+        
         case "get_games":
             return json.dumps({"type": "ignore"})
         case "edit_game_phase":
@@ -683,7 +714,8 @@ async def handler(websocket):
         while next_player_list:
             next_player: Player = next_player_list.pop()
             if User.get_by_id(next_player.user_id).is_bot:
-                while User.get_by_id(next_player.user_id).is_bot and Game.get_by_id(next_player.game_id).current_player == next_player.user_id:
+                while User.get_by_id(next_player.user_id).is_bot and Game.get_by_id(
+                    next_player.game_id).current_player == next_player.user_id:
                     next_player.make_next_move()
                     handle_data(next_player.make_next_move(), websocket)
                     await send_games()
