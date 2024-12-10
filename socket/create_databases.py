@@ -99,7 +99,8 @@ def create_databases():
             p.phase_index,
             p.skip_cards,
             p.drew_card,
-            p.completed_phase
+            p.completed_phase,
+            p.id
            FROM players p
              JOIN users u ON p.user_id = u.id
           ORDER BY p.game_id, p.turn_index;

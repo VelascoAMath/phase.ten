@@ -24,9 +24,6 @@ class GamePhaseDeck:
     created_at: datetime.datetime = dataclasses.field(default_factory=lambda: datetime.datetime.now())
     updated_at: datetime.datetime = dataclasses.field(default_factory=lambda: datetime.datetime.now())
     
-    def __post_init__(self):
-        self.updated_at = self.created_at
-    
     def toJSON(self):
         return json.dumps(self.to_json_dict())
     
