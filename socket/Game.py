@@ -124,7 +124,7 @@ class Game:
 
 
 def main():
-    deck = Card.getNewDeck()
+    deck = CardCollection.getNewDeck()
     while len(deck) > 10:
         deck.pop()
     

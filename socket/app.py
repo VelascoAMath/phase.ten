@@ -416,7 +416,7 @@ def player_action(data):
     
     # Player has completed their hand
     if len(player.hand) == 0:
-        game.deck = Card.getNewDeck()
+        game.deck = CardCollection.getNewDeck()
         random.shuffle(game.deck)
         game.discard = [game.deck.pop()]
         
@@ -663,7 +663,7 @@ def handle_data(data, websocket):
             if str(game.host) == user_id and not game.in_progress:
                 player_list = [player for player in Player.all() if player.game_id == game.id]
                 
-                deck = Card.getNewDeck()
+                deck = CardCollection.getNewDeck()
                 random.shuffle(deck)
                 random.shuffle(player_list)
                 

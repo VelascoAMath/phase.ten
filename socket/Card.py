@@ -184,25 +184,6 @@ class Card:
                 f"Cannot create a card with color {self.color} and rank {self.rank}!"
             )
     
-    @staticmethod
-    def getNewDeck():
-        deck = []
-        for color in Color:
-            if color is Color.WILD or color is Color.SKIP:
-                continue
-            for rank in Rank:
-                if rank is Rank.WILD or rank is Rank.SKIP:
-                    continue
-                deck.append(Card(color, rank))
-                deck.append(Card(color, rank))
-        
-        for _ in range(4):
-            deck.append(Card(Color.SKIP, Rank.SKIP))
-        
-        for _ in range(8):
-            deck.append(Card(Color.WILD, Rank.WILD))
-        return deck
-    
     def __eq__(self, other):
         if isinstance(other, Card):
             return self.rank is other.rank and self.color is other.color
@@ -276,11 +257,6 @@ def main():
             print(Card.from_string(str(c)))
             print()
     
-    deck = Card.getNewDeck()
-    random.shuffle(deck)
-    print([str(x) for x in deck])
-    deck.sort(key=lambda x: x.color.value)
-    print([str(x) for x in deck])
     
     assert Card(color=Color.BLUE, rank=Rank.ELEVEN) == Card(color=Color.BLUE, rank=Rank.ELEVEN)
     assert Card(color=Color.BLUE, rank=Rank.ELEVEN) != Card(color=Color.RED, rank=Rank.ELEVEN)
