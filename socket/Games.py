@@ -16,7 +16,7 @@ class GameType(Enum):
     NORMAL = 1
     LEGACY = 2
     ADVANCEMENT = 3
-    
+
     @staticmethod
     def from_string(data):
         match data:
@@ -31,11 +31,11 @@ class GameType(Enum):
 
 
 class GameTypeField(peewee.Field):
-    field_type = 'game_type'
-    
+    field_type = "game_type"
+
     def db_value(self, value: GameType) -> str:
         return value.name
-    
+
     def python_value(self, value: str) -> GameType:
         return GameType.from_string(value)
 
@@ -66,7 +66,7 @@ class Games(BaseModel):
         model=Users,
         null=True,
     )
-    
+
     def to_json_dict(self):
         return {
             "id": str(self.id),
@@ -81,15 +81,15 @@ class Games(BaseModel):
             "created_at": str(self.created_at),
             "updated_at": str(self.updated_at),
         }
-    
+
     def toJSON(self):
         return json.dumps(self.to_json_dict())
-    
+
     @staticmethod
     def fromJSON(data):
         data = json.loads(data)
         return Games.from_json_dict(data)
-    
+
     @staticmethod
     def from_json_dict(data):
         deck = CardCollection()
@@ -98,16 +98,16 @@ class Games(BaseModel):
         discard = CardCollection()
         for c in data["discard"]:
             discard.append(Card.fromJSONDict(c))
-        
+
         created_at = data["created_at"]
         updated_at = data["updated_at"]
-        
+
         if isinstance(created_at, str):
             created_at = datetime.datetime.fromisoformat(created_at)
-        
+
         if isinstance(updated_at, str):
             updated_at = datetime.datetime.fromisoformat(updated_at)
-        
+
         return Games(
             id=uuid.UUID(data["id"]),
             phase_list=data["phase_list"],
@@ -121,21 +121,31 @@ class Games(BaseModel):
             created_at=created_at,
             updated_at=updated_at,
         )
-    
+
     def __repr__(self):
-        return (f"Games(id={self.id}, phase_list={self.phase_list}, deck={self.deck}, discard={self.discard}, "
-                f"current_player={self.current_player}, host={self.host}, type={self.type}, winner={self.winner}, "
-                f"created_at={self.created_at}, updated_at={self.updated_at})")
-    
+        return (
+            f"Games(id={self.id}, phase_list={self.phase_list}, deck={self.deck}, discard={self.discard}, "
+            f"current_player={self.current_player}, host={self.host}, type={self.type}, winner={self.winner}, "
+            f"created_at={self.created_at}, updated_at={self.updated_at})"
+        )
+
     def __str__(self):
         return self.__repr__()
-    
+
     def __eq__(self, other):
         if isinstance(other, Games):
-            return super().__eq__(
-                other) and self.phase_list == other.phase_list and self.deck == other.deck and self.discard == other.discard and self.current_player == other.current_player and self.host == other.host and self.type == other.type and self.winner == other.winner
+            return (
+                super().__eq__(other)
+                and self.phase_list == other.phase_list
+                and self.deck == other.deck
+                and self.discard == other.discard
+                and self.current_player == other.current_player
+                and self.host == other.host
+                and self.type == other.type
+                and self.winner == other.winner
+            )
         else:
             return False
-    
+
     class Meta:
         table_name = "games"
