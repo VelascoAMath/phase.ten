@@ -3,6 +3,7 @@ import datetime
 import json
 import uuid
 from enum import Enum
+from typing import Any
 
 import peewee
 
@@ -42,14 +43,14 @@ class GameTypeField(peewee.Field):
 
 @dataclasses.dataclass(init=False)
 class Games(BaseModel):
-    phase_list = StringListField(null=False)
-    deck = CardListField(null=False)
-    discard = CardListField(null=False)
-    current_player = peewee.ForeignKeyField(
+    phase_list: list[str] = StringListField(null=False)
+    deck: CardCollection = CardListField(null=False)
+    discard: CardCollection = CardListField(null=False)
+    current_player: Users = peewee.ForeignKeyField(
         column_name="current_player", field="id", model=Users, null=False
     )
     # The player who originally created the game
-    host = peewee.ForeignKeyField(
+    host: Users = peewee.ForeignKeyField(
         backref="users_host_set",
         column_name="host",
         field="id",
@@ -57,9 +58,9 @@ class Games(BaseModel):
         null=False,
     )
     # If the game has started
-    in_progress = peewee.BooleanField(default=False, null=False)
-    type = GameTypeField(default=GameType.NORMAL, null=False)
-    winner = peewee.ForeignKeyField(
+    in_progress: bool = peewee.BooleanField(default=False, null=False)
+    type: GameType = GameTypeField(default=GameType.NORMAL, null=False)
+    winner: Users | None = peewee.ForeignKeyField(
         backref="users_winner_set",
         column_name="winner",
         field="id",
@@ -149,3 +150,7 @@ class Games(BaseModel):
 
     class Meta:
         table_name = "games"
+    
+    @classmethod
+    def exists(cls, game_id: Any):
+        return Games.get_or_none(id=game_id) is not None
