@@ -51,11 +51,11 @@ class CardListField(peewee.Field):
 
 
 class BaseModel(peewee.Model):
-    id: uuid.UUID = peewee.UUIDField(primary_key=True, default=lambda: uuid.uuid4())
-    created_at: datetime.datetime = peewee.DateTimeField(
+    id: uuid.UUID | peewee.UUIDField = peewee.UUIDField(primary_key=True, default=lambda: uuid.uuid4())
+    created_at: datetime.datetime | peewee.DateTimeField = peewee.DateTimeField(
         null=False, default=lambda: datetime.datetime.now()
     )
-    updated_at: datetime.datetime = peewee.DateTimeField(
+    updated_at: datetime.datetime | peewee.DateTimeField = peewee.DateTimeField(
         null=False, default=lambda: datetime.datetime.now()
     )
 
