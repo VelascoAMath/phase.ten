@@ -13,7 +13,7 @@ from BaseModel import BaseModel
 class Users(BaseModel):
     name: str = peewee.TextField(null=False, unique=True)
     token: str = peewee.TextField(null=False, default=lambda: secrets.token_hex(16))
-    is_bot: bool = peewee.BooleanField(null=False, default=False)
+    is_bot: peewee.BooleanField = peewee.BooleanField(null=False, default=False)
 
     def toJSON(self):
         return json.dumps(self.to_json_dict())
@@ -75,5 +75,5 @@ class Users(BaseModel):
         indexes = ((("name", "is_bot"), True),)
 
     @classmethod
-    def exists(cls, user_id):
+    def exists(cls, user_id: str | uuid.UUID):
         return Users.get_or_none(id=user_id) is not None
