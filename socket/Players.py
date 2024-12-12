@@ -40,10 +40,10 @@ class Players(BaseModel):
         :return: a dictionary which can be converted into JSON. The format is meant to be passed into the handle_data method in app.py
         :rtype: dict
         """
-        game = Games.get_by_id(self.game_id)
-        user = Users.get_by_id(self.user_id)
+        game = self.game
+        user = self.user
 
-        if game.current_player != self.user_id:
+        if game.current_player != self.user:
             raise Exception(f"Can't play! It's not my turn!")
 
         if self.skip_cards:
@@ -108,20 +108,13 @@ class Players(BaseModel):
                     # randomly choose one who has completed their phase
                     for card in self.hand:
                         if card.rank is Rank.SKIP:
-                            other_players = [
-                                player
-                                for player in Players.all()
-                                if player.game_id == game.id and player.id != self.id
-                            ]
-                            other_players.sort(
-                                key=lambda x: (x.phase_index, x.completed_phase)
-                            )
-
+                            other_players: list[Players] = list(Players.select().where((Players.game == game) & (Players.id != self.id)).order_by(Players.phase_index, Players.completed_phase))
+    
                             return {
                                 "player_id": self.id,
                                 "type": "player_action",
                                 "action": "skip_player",
-                                "to": other_players[-1].user_id,
+                                "to": other_players[-1].user.id,
                             }
 
                     score = rr.score(self.hand)
@@ -143,7 +136,7 @@ class Players(BaseModel):
                                 "card_id": self.hand[i].id,
                             }
             else:
-                gpd_list = Gamephasedecks.all_where_game_id(game.id)
+                gpd_list = list(Gamephasedecks.select().where(Gamephasedecks.game==game))
 
                 # if we can put down, do it
                 for gpd in gpd_list:
@@ -258,3 +251,7 @@ class Players(BaseModel):
             (("game", "turn_index"), True),
             (("game", "user"), True),
         )
+
+    @classmethod
+    def exists(cls, player_id: str | uuid.UUID):
+        return Players.get_or_none(id=player_id) is not None
