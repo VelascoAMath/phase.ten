@@ -1,0 +1,7 @@
+Game==0.0.5
+graphviz==0.20.3
+more_itertools==10.5.0
+peewee==3.17.8
+psycopg2==2.9.9
+vel_data_structures==3.8.0
+websockets==12.0
