@@ -523,7 +523,7 @@ def player_action(data):
         next_player_list.append(roomPlayers[-1])
         
         # Remove all phase decks
-        for gpd in Gamephasedecks.select().where(Gamephasedecks.game == game):
+        for gpd in Gamephasedecks.select().where(Gamephasedecks.game == game).order_by(Gamephasedecks.id):
             gpd.delete_instance()
         game.save()
     
