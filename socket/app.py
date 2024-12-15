@@ -843,64 +843,68 @@ def handle_data(data, websocket):
 async def handler(websocket):
     connected.add(websocket)
     
-    async for event in websocket:
-        data = json.loads(event)
-        message = handle_data(data, websocket)
-        print(message)
-        await websocket.send(message)
-        
-        while next_player_list:
-            next_player: Players = next_player_list.pop()
-            if next_player.user.is_bot:
-                while (
-                    next_player.user.is_bot
-                    and next_player.game.current_player
-                    == next_player.user
-                ):
-                    next_player.make_next_move()
-                    handle_data(next_player.make_next_move(), websocket)
+    while True:
+        try:
+            async for event in websocket:
+                data = json.loads(event)
+                message = handle_data(data, websocket)
+                print(message)
+                await websocket.send(message)
+                
+                while next_player_list:
+                    next_player: Players = next_player_list.pop()
+                    if next_player.user.is_bot:
+                        while (
+                            next_player.user.is_bot
+                            and next_player.game.current_player
+                            == next_player.user
+                        ):
+                            next_player.make_next_move()
+                            handle_data(next_player.make_next_move(), websocket)
+                            await send_games()
+                            await send_users()
+                            await send_players()
+                            next_player = Players.get_by_id(next_player.id)
+                    else:
+                        websockets.broadcast(
+                            connected,
+                            json.dumps(
+                                {"type": "next_player", "user_id": str(next_player.user.id)}
+                            ),
+                        )
+                
+                # Look for any bots which are ready to play and make them perform their next moves
+                # We have extra checks to make the sure the game has started and has no winner
+                # cur.execute("select p.* from players p join users u on p.user_id = u.id join games g on p.game_id = g.id "
+                #             "where g.current_player = u.id and u.is_bot and g.in_progress and g.winner is null")
+                bot_players_ready_to_go = [
+                    p
+                    for p in Players.select()
+                    if (
+                        p.user.is_bot
+                        and p.game.current_player == p.user
+                        and p.game.in_progress
+                        and p.game.winner is None
+                    )
+                ]
+                
+                for next_player in bot_players_ready_to_go:
+                    next_move = next_player.make_next_move()
+                    handle_data(next_move, websocket)
                     await send_games()
                     await send_users()
                     await send_players()
-                    next_player = Players.get_by_id(next_player.id)
-            else:
-                websockets.broadcast(
-                    connected,
-                    json.dumps(
-                        {"type": "next_player", "user_id": str(next_player.user.id)}
-                    ),
-                )
+                
+                await send_games()
+                await send_users()
+                await send_players()
+        except:
+            pass
         
-        # Look for any bots which are ready to play and make them perform their next moves
-        # We have extra checks to make the sure the game has started and has no winner
-        # cur.execute("select p.* from players p join users u on p.user_id = u.id join games g on p.game_id = g.id "
-        #             "where g.current_player = u.id and u.is_bot and g.in_progress and g.winner is null")
-        bot_players_ready_to_go = [
-            p
-            for p in Players.select()
-            if (
-                p.user.is_bot
-                and p.game.current_player == p.user
-                and p.game.in_progress
-                and p.game.winner is None
-            )
-        ]
-        
-        for next_player in bot_players_ready_to_go:
-            next_move = next_player.make_next_move()
-            handle_data(next_move, websocket)
-            await send_games()
-            await send_users()
-            await send_players()
-        
-        await send_games()
-        await send_users()
-        await send_players()
-    
-    if websocket in connected:
-        connected.remove(websocket)
-    if websocket in socket_to_player_id:
-        socket_to_player_id.pop(websocket)
+        if websocket in connected:
+            connected.remove(websocket)
+        if websocket in socket_to_player_id:
+            socket_to_player_id.pop(websocket)
 
 
 async def main():
