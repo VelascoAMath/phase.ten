@@ -7,7 +7,7 @@ You will need two terminals to run this game
 ## Terminal 1
 
 > cd front-end
-> npm install
+> npm install --legacy-peer-deps
 > npm start
 
 
