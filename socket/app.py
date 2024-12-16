@@ -70,7 +70,7 @@ if DEBUG:
 db.create_tables([Users, Games, Players, Gamephasedecks])
 
 # Create the bots
-for name in (set(f"Bot{i + 1}" for i in range(4)) - set(u.name for u in Users.select().where(Users.is_bot))):
+for name in (set(f"Bot{i + 1}" for i in range(6)) - set(u.name for u in Users.select().where(Users.is_bot))):
     Users(name=name, is_bot=True).save(force_insert=True)
 
 
