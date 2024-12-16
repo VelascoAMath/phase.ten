@@ -698,6 +698,50 @@ def handle_data(data, websocket):
                     {"type": "rejection", "message": f"Game is already full of bots!"}
                 )
         
+        case "remove_bot":
+            game_id = data["game_id"]
+            user_id = data["user_id"]
+            
+            if not Games.exists(game_id):
+                return json.dumps(
+                    {
+                        "type": "rejection",
+                        "message": f"{game_id} is not a valid game id!",
+                    }
+                )
+            
+            game: Games = Games.get_by_id(game_id)
+            
+            if game.in_progress:
+                return json.dumps(
+                    {
+                        "type": "rejection",
+                        "message": f"{game_id} is already in progress!",
+                    }
+                )
+            
+            if str(game.host.id) != user_id:
+                return json.dumps(
+                    {
+                        "type": "rejection",
+                        "message": "You are not the host of the game and cannot edit its phase!",
+                    }
+                )
+            
+            bots: list[Users] = list(Users.select().where(
+                Users.is_bot &
+                (Users.id.in_(Players.select(Players.user).where(Players.game == game).order_by(Players.id)))
+            ).order_by(Users.name))
+            
+            if bots:
+                bot: Players = Players.get((Players.game == game) & (Players.user == bots[-1]))
+                bot.delete_instance()
+                return json.dumps({"type": "ignore"})
+            else:
+                return json.dumps(
+                    {"type": "rejection", "message": f"Game has no bots!"}
+                )
+        
         case "unjoin_game":
             game_id = data["game_id"]
             user_id = data["user_id"]

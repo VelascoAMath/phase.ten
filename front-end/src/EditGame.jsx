@@ -43,6 +43,7 @@ export default function EditGame({props}) {
             <ul>
                 {game.users.map((user) => <li key={user.id}>{user.name} {user.id === game.current_player && "(" + t('currentPlayer') + ")"}  {user.id === game.winner && "(" + t('winner') + ")"} </li>)}
                 <button onClick={() => {socket.send(JSON.stringify({type: "add_bot", "user_id": user_id, "game_id": game_id }))}}>{t('addBot')}</button>
+                <button onClick={() => {socket.send(JSON.stringify({type: "remove_bot", "user_id": user_id, "game_id": game_id }))}}>{t('removeBot')}</button>
             </ul>
             <h2>{t('createdAt')}</h2>
             {game.created_at}
