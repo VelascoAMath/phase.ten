@@ -28,14 +28,14 @@ export default function EditGame({props}) {
             <h1>{t('editGame')} {game.id}</h1>
             <h2>{t('phaseList')}</h2>
             {phaseInput?.map((phase, idx) => {
-                return <input key={idx} value={phase} onChange={(e) => {let phaseInputCopy = [...phaseInput]; phaseInputCopy[idx] = e.target.value.toLocaleUpperCase(); setPhaseInput(phaseInputCopy)}}/>
+                return <input key={idx} value={phase} onChange={(e) => {if(game.in_progress){return} let phaseInputCopy = [...phaseInput]; phaseInputCopy[idx] = e.target.value.toLocaleUpperCase(); setPhaseInput(phaseInputCopy)}}/>
             })}
-            <div>
+            {!game.in_progress && <div>
                 <button onClick={() => {setPhaseInput([...phaseInput, ""])}} >{t('addPhase')}</button>
                 <button onClick={() => {setPhaseInput(phaseInput.filter((_, idx) => {return idx < phaseInput.length - 1}))}} >{t('removePhase')}</button>
                 <button onClick={() => {if(socket.readyState === socket.OPEN){socket.send(JSON.stringify({type: "edit_game_phase", "user_id": user_id, "game_id": game_id, new_phase: phaseInput }))} }}>{t('changePhase')}</button>
                 <button onClick={() => {if(socket.readyState === socket.OPEN){socket.send(JSON.stringify({type: "edit_game_phase", "user_id": user_id, "game_id": game_id, new_phase: ["S3+S3","S3+R4","S4+R4","R7","R8","R9","S4+S4","C7","S5+S2","S5+S3"] }))} }} >{t('reset')}</button>
-            </div>
+            </div>}
 
             <h2>{t('gameType')}</h2>
             {game.type}
