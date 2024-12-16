@@ -502,12 +502,10 @@ def player_action(data):
                 )
                 roomPlayer.drew_card = False
                 # We move the player list up one turn
-                print(roomPlayer.turn_index)
                 if roomPlayer.turn_index >= len(roomPlayers):
                     roomPlayer.turn_index = (roomPlayer.turn_index + 1) % len(roomPlayers)
                 else:
                     roomPlayer.turn_index = ((roomPlayer.turn_index + 1) % len(roomPlayers)) + len(roomPlayers)
-                print(roomPlayer.turn_index)
                 if roomPlayer.completed_phase:
                     roomPlayer.phase_index = min(
                         roomPlayer.phase_index + 1, len(game.phase_list) - 1
