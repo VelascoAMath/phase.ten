@@ -873,8 +873,6 @@ async def handler(websocket):
                 
                 # Look for any bots which are ready to play and make them perform their next moves
                 # We have extra checks to make the sure the game has started and has no winner
-                # cur.execute("select p.* from players p join users u on p.user_id = u.id join games g on p.game_id = g.id "
-                #             "where g.current_player = u.id and u.is_bot and g.in_progress and g.winner is null")
                 bot_players_ready_to_go = [
                     p
                     for p in Players.select()
