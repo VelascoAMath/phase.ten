@@ -8,6 +8,7 @@ import websockets
 
 from Card import Card, Rank
 from CardCollection import CardCollection
+from GameMessage import GameMessage
 from Gamephasedecks import Gamephasedecks
 from Games import Games
 from Players import Players
@@ -60,14 +61,15 @@ end $$;
 db.execute_sql(
     """
 create sequence if not exists players_turn_index_seq AS integer;
+create sequence if not exists game_message_index_seq AS integer;
 """
 )
 
 if DEBUG:
-    db.drop_tables([Users, Games, Players, Gamephasedecks])
+    db.drop_tables([Users, Games, Players, Gamephasedecks, GameMessage])
 
 # create_databases()
-db.create_tables([Users, Games, Players, Gamephasedecks])
+db.create_tables([Users, Games, Players, Gamephasedecks, GameMessage])
 
 # Create the bots
 for name in (set(f"Bot{i + 1}" for i in range(4)) - set(u.name for u in Users.select().where(Users.is_bot))):
