@@ -150,6 +150,9 @@ async def send_players():
             for x in Gamephasedecks.select().where(Gamephasedecks.game == game)
         ]
 
+        game_dict["message_list"] = [{"message": gm.message, "index": gm.index} for gm in
+                                     GameMessage.select().where(GameMessage.game == game).order_by(-GameMessage.index)]
+
         await socket.send(json.dumps({"type": "get_game", "game": game_dict}))
 
 
@@ -171,6 +174,7 @@ async def send_games():
             if "token" in user_dict:
                 del user_dict["token"]
             game_dict["users"].append(user_dict)
+
 
         game_list.append(game_dict)
 
