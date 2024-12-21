@@ -234,6 +234,12 @@ export default function PlayRoom({props}) {
                     }
                 )}
             </div>
+            <div className="messages">
+                {game.message_list.map((message) => {
+
+                    return <div>{message.message}</div>
+                })}
+            </div>
             <h2 style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
                 You are on phase {player.phase_index + 1} - {player.phase}
             </h2>
