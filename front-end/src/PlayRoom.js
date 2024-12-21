@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { checkCircleFill, xCircleFill } from "./Icons";
 
@@ -75,6 +75,29 @@ export default function PlayRoom({props}) {
     const [wantToSkip, setWantToSkip] = useState(false);
     const [selectedSkipPlayer, setSelectedSkipPlayer] = useState(null);
 
+    const [time, setTime] = useState(new Date(Date.now()));
+
+    // Due to the numerous renders that occur at once, we need a flag to make sure that we don't have multiple functions updating the timer
+    const [timeOutExists, setTimeOutExists] = useState(true);
+
+    let last_move_made = new Date(game?.last_move_made);
+    let next_player_alarm = new Date(game?.next_player_alarm);
+    const secondsRemaining = Math.ceil((next_player_alarm - time) / 1000);
+    const formatedTimeRemaining = Math.floor(secondsRemaining / 3600) + ":" + Math.floor((secondsRemaining % 3600) / 60).toString().padStart(2, "0") + ":" + Math.floor(secondsRemaining % 60).toString().padStart(2, "0");
+
+    const mustWaitForOtherPlayer = next_player_alarm - time > 0;
+
+    useEffect(() => {
+        if(game){
+            if(mustWaitForOtherPlayer && timeOutExists){
+                setTimeOutExists(false);
+                setTimeout(() => {
+                    setTime(new Date(Date.now()));
+                    setTimeOutExists(true);
+                }, 100);
+            }
+        }
+    }, [game, time])
 
     // Either we haven't made a call to get the player data
     if(state["player"] === undefined){
@@ -120,6 +143,7 @@ export default function PlayRoom({props}) {
     const hasSkip = hand.filter(card => {return card.rank === "S"}).length > 0;
 
     const roomPlayers = game["players"];
+    
 
     const drawDeck = function(){
         if(socket.readyState === socket.OPEN){
@@ -185,6 +209,12 @@ export default function PlayRoom({props}) {
         }
     }
 
+    const skipSlowPlayer = function() {
+        if(socket.readyState === socket.OPEN){
+            socket.send(JSON.stringify({type: "skip_slow_player", player_id: player_id}));
+        }
+    }
+
 
     return (
         <div>
@@ -226,6 +256,16 @@ export default function PlayRoom({props}) {
                     {isCurrentPlayer && (!player["drew_card"]) && <button onClick={drawDeck}>Draw Deck</button>}
                 </div>
             </div>
+            <div>
+                <div>
+                    {mustWaitForOtherPlayer && formatedTimeRemaining}
+                    {mustWaitForOtherPlayer && <div>Waiting</div>}
+                </div>
+                {!mustWaitForOtherPlayer && !isCurrentPlayer && <button onClick={skipSlowPlayer}>Skip {game.players.filter((p) => {return p.user_id === game.current_player})[0].name} for wasting our time</button>}
+                {/* {<button onClick={skipSlowPlayer}>Skip {game.players.filter((p) => {return p.user_id === game.current_player})[0].name} for wasting our time</button>} */}
+                {!mustWaitForOtherPlayer && isCurrentPlayer && <div>You're in danger of getting skipped!!!</div>}
+            </div>
+            
             <div style={{marginTop: "10px"}} className="card-collection">
                 {getDeckDivsSelectable(player["hand"], selectedCards, setSelectedCards )}
             </div>

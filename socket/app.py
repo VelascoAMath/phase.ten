@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import json
 import random
 from configparser import ConfigParser
@@ -414,6 +415,8 @@ def player_action(data):
                 to_player.skip_cards.append(skip_card)
                 hand.remove(skip_card)
                 
+                game.last_move_made = datetime.datetime.now(datetime.timezone.utc)
+                game.save()
                 player.save()
                 to_player.save()
                 complete_turn = True
@@ -433,6 +436,7 @@ def player_action(data):
             if selected_card is not None:
                 hand.remove(selected_card)
                 game.discard.append(selected_card)
+                game.last_move_made = datetime.datetime.now(datetime.timezone.utc)
                 
                 player.save()
                 game.save()
@@ -825,6 +829,52 @@ def handle_data(data, websocket):
                     {
                         "type": "rejection",
                         "message": "You are not the host and cannot start this game",
+                    }
+                )
+        case "skip_slow_player":
+            player_id = data["player_id"]
+            
+            if Players.exists(player_id):
+                player: Players = Players.get_by_id(player_id)
+                game = player.game
+                
+                if (game.last_move_made + game.player_time_limit) < datetime.datetime.now(datetime.timezone.utc):
+                    
+                    roomPlayers: list[Players] = list(
+                        Players.select().where(Players.game == game).order_by(Players.turn_index)
+                    )
+                    
+                    next_player: Players = Players.get((Players.user == game.current_player) & (Players.game == game))
+                    next_player.save()
+                    i = (roomPlayers.index(next_player) + 1) % len(roomPlayers)
+                    next_player = roomPlayers[i]
+                    
+                    while next_player.skip_cards:
+                        next_player.skip_cards.pop()
+                        next_player.drew_card = False
+                        i = (i + 1) % len(roomPlayers)
+                        next_player = roomPlayers[i]
+                        next_player.save()
+                        
+                    game.current_player = next_player.user
+                    game.last_move_made = datetime.datetime.now(datetime.timezone.utc)
+                    game.save()
+                    
+                    return json.dumps({"type": "ignore"})
+                else:
+                    return json.dumps(
+                        {
+                            "type": "rejection",
+                            "message": f"Can't skip {game.current_player.name} yet! They're not slow",
+                        }
+                    )
+            
+            
+            else:
+                return json.dumps(
+                    {
+                        "type": "rejection",
+                        "message": f"Invalid player id {player_id}!",
                     }
                 )
         case "player_action":
