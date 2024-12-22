@@ -522,6 +522,7 @@ def player_action(data):
                 roomPlayer.hand = CardCollection(
                     [game.deck.pop() for _ in range(INITIAL_HAND_SIZE)]
                 )
+                roomPlayer.skip_cards = CardCollection()
                 roomPlayer.drew_card = False
                 # We move the player list up one turn
                 if roomPlayer.turn_index >= len(roomPlayers):
@@ -537,7 +538,6 @@ def player_action(data):
                         roomPlayer.phase_index + 1, len(game.phase_list) - 1
                     )
                     roomPlayer.completed_phase = False
-                    roomPlayer.skip_cards = CardCollection()
 
                 roomPlayer.save()
 
