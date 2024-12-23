@@ -6,6 +6,13 @@ You will need two terminals to run this game
 
 ## Terminal 1
 
+Create a file called URL.jsx and defined an exported constant called SOCKET_URL which is a string pointing to the network address of the server's websocket.
+This is an example of how the file should look.
+
+export const SOCKET_URL = "ws://127.0.0.1:8001";
+
+
+
 > cd front-end
 > npm install --legacy-peer-deps
 > npm start
