@@ -94,7 +94,9 @@ export default function Lobby({props}) {
             </div>
 
             <div className="rooms-to-join">
-                {gameList?.map((game) => {
+                {gameList
+                ?.toSorted((a, b) => {return b.updated_at.localeCompare(a.updated_at)} )
+                ?.map((game) => {
                     const isHost = game.host === userId;
                     const isInGame = game.users.filter((user) => {return user.id === userId}).length > 0;
                     const nonHostUsers = game.users.filter((user) => {return user.id !== game.host});
