@@ -2,48 +2,36 @@ import dataclasses
 import datetime
 import json
 import random
-import sqlite3
 import uuid
-from typing import Self
 
-import psycopg2
+import peewee
 
-from Card import Card, Rank
+from BaseModel import BaseModel, CardListField
+from Card import Rank, Card
 from CardCollection import CardCollection
-from Game import Game
-from GamePhaseDeck import GamePhaseDeck
+from Gamephasedecks import Gamephasedecks
+from Games import Games
 from RE import RE
-from User import User
-from add_db_functions import add_db_functions
+from Users import Users
 
 
-@dataclasses.dataclass(order=True)
-@add_db_functions(
-    db_name="players",
-    single_foreign=[("game_id", Game), ("user_id", User)],
-    unique_indices=[["game_id", "turn_index"], ["game_id", "user_id"]],
-    serial_set={"turn_index"},
-)
-class Player:
-    id: uuid.UUID = dataclasses.field(default_factory=lambda: uuid.uuid4())
-    game_id: uuid.UUID = None
-    user_id: uuid.UUID = None
-    hand: CardCollection = dataclasses.field(default_factory=CardCollection)
+@dataclasses.dataclass(init=False)
+class Players(BaseModel):
+    game: Games = peewee.ForeignKeyField(
+        column_name="game_id", field="id", model=Games, null=False, on_delete="CASCADE"
+    )
+    user: Users = peewee.ForeignKeyField(
+        column_name="user_id", field="id", model=Users, null=False, on_delete="CASCADE"
+    )
+    hand: CardCollection = CardListField(null=False, default=CardCollection())
     # Does this player go first, second, etc
-    turn_index: int = -1
-    phase_index: int = 0
-    drew_card: bool = False
-    completed_phase: bool = False
-    skip_cards: CardCollection = dataclasses.field(default_factory=CardCollection)
-    created_at: datetime.datetime = dataclasses.field(
-        default_factory=lambda: datetime.datetime.now()
+    turn_index: int = peewee.IntegerField(
+        constraints=[peewee.SQL("DEFAULT nextval('players_turn_index_seq'::regclass)")]
     )
-    updated_at: datetime.datetime = dataclasses.field(
-        default_factory=lambda: datetime.datetime.now()
-    )
-
-    def __post_init__(self):
-        self.updated_at = self.created_at
+    phase_index: int = peewee.IntegerField(null=False, default=0)
+    drew_card: bool = peewee.BooleanField(default=False, null=False)
+    completed_phase: bool = peewee.BooleanField(default=False, null=False)
+    skip_cards: CardCollection = CardListField(null=False, default=CardCollection())
 
     def make_next_move(self):
         """
@@ -52,10 +40,10 @@ class Player:
         :return: a dictionary which can be converted into JSON. The format is meant to be passed into the handle_data method in app.py
         :rtype: dict
         """
-        game = Game.get_by_id(self.game_id)
-        user = User.get_by_id(self.user_id)
+        game = self.game
+        user = self.user
 
-        if game.current_player != self.user_id:
+        if game.current_player != self.user:
             raise Exception(f"Can't play! It's not my turn!")
 
         if self.skip_cards:
@@ -120,20 +108,13 @@ class Player:
                     # randomly choose one who has completed their phase
                     for card in self.hand:
                         if card.rank is Rank.SKIP:
-                            other_players = [
-                                player
-                                for player in Player.all()
-                                if player.game_id == game.id and player.id != self.id
-                            ]
-                            other_players.sort(
-                                key=lambda x: (x.phase_index, x.completed_phase)
-                            )
-
+                            other_players: list[Players] = list(Players.select().where((Players.game == game) & (Players.id != self.id)).order_by(Players.phase_index, Players.completed_phase))
+    
                             return {
                                 "player_id": self.id,
                                 "type": "player_action",
                                 "action": "skip_player",
-                                "to": other_players[-1].user_id,
+                                "to": other_players[-1].user.id,
                             }
 
                     score = rr.score(self.hand)
@@ -155,7 +136,7 @@ class Player:
                                 "card_id": self.hand[i].id,
                             }
             else:
-                gpd_list = GamePhaseDeck.all_where_game_id(game.id)
+                gpd_list = list(Gamephasedecks.select().where(Gamephasedecks.game==game))
 
                 # if we can put down, do it
                 for gpd in gpd_list:
@@ -183,7 +164,7 @@ class Player:
                                 "cards": CardCollection([card]).to_json_dict(),
                                 "direction": "end",
                             }
-
+                
                 for card in self.hand:
                     if card.rank is not Rank.WILD:
                         return {
@@ -192,6 +173,7 @@ class Player:
                             "action": "discard",
                             "card_id": card.id,
                         }
+
 
             # Otherwise, pick a random card to discard
             return {
@@ -222,7 +204,7 @@ class Player:
     @staticmethod
     def fromJSON(data):
         data = json.loads(data)
-        return Player.from_json_dict(data)
+        return Players.from_json_dict(data)
 
     @staticmethod
     def from_json_dict(data):
@@ -235,84 +217,51 @@ class Player:
         if isinstance(updated_at, str):
             updated_at = datetime.datetime.fromisoformat(updated_at)
 
-        return Player(
-            uuid.UUID(data["id"]),
-            uuid.UUID(data["game_id"]),
-            uuid.UUID(data["user_id"]),
-            CardCollection(Card.fromJSONDict(card) for card in data["hand"]),
-            data["turn_index"],
-            data["phase_index"],
-            data["drew_card"],
-            data["completed_phase"],
-            CardCollection(Card.fromJSONDict(card) for card in data["skip_cards"]),
+        return Players(
+            id=uuid.UUID(data["id"]),
+            game=Games.get_by_id(data["game_id"]),
+            user=Users.get_by_id(data["user_id"]),
+            hand=CardCollection(Card.fromJSONDict(card) for card in data["hand"]),
+            turn_index=data["turn_index"],
+            phase_index=data["phase_index"],
+            drew_card=data["drew_card"],
+            completed_phase=data["completed_phase"],
+            skip_cards=CardCollection(
+                Card.fromJSONDict(card) for card in data["skip_cards"]
+            ),
             created_at=created_at,
             updated_at=updated_at,
         )
 
-    @classmethod
-    def exists(cls, player_id: str | uuid.UUID) -> bool:
-        pass
+    def __str__(self):
+        return f"Players(id={self.id}, game_id={self.game.id} user_id={self.user.id} hand={self.hand}, turn_index={self.turn_index}, phase_index={self.phase_index}, drew_card={self.drew_card}, completed_phase={self.completed_phase}, skip_cards={self.skip_cards}, created_at={self.created_at}, updated_at={self.updated_at})"
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __eq__(self, other):
+        if isinstance(other, Players):
+            return (
+                super().__eq__(other)
+                and self.game == other.game
+                and self.user == other.user
+                and self.hand == other.hand
+                and self.turn_index == other.turn_index
+                and self.phase_index == other.phase_index
+                and self.drew_card == other.drew_card
+                and self.completed_phase == other.completed_phase
+                and self.skip_cards == other.skip_cards
+            )
+        else:
+            return False
+
+    class Meta:
+        table_name = "players"
+        indexes = (
+            (("game", "turn_index"), True),
+            (("game", "user"), True),
+        )
 
     @classmethod
-    def set_cursor(cls, cur: sqlite3.Cursor | psycopg2.extensions.cursor):
-        pass
-
-    @classmethod
-    def all(cls) -> list[Self]:
-        pass
-
-    def save(self):
-        pass
-
-    @classmethod
-    def get_by_id(cls, player_id: str | uuid.UUID) -> Self:
-        pass
-
-    @classmethod
-    def get_by_game_id_user_id(
-        cls, game_id: str | uuid.UUID, to_id: str | uuid.UUID
-    ) -> Self:
-        pass
-
-    @classmethod
-    def exists_by_game_id_user_id(
-        cls, game_id: str | uuid.UUID, user_id: str | uuid.UUID
-    ) -> bool:
-        pass
-
-    def delete(self):
-        pass
-
-
-def main():
-    u = User(name="Alfredo")
-    g = Game(id=uuid.uuid4(), current_player=u.id, host=u.id)
-    p = Player(
-        id=uuid.uuid4(),
-        game_id=g.id,
-        user_id=u.id,
-        hand=CardCollection(
-            [
-                Card.from_string("R10"),
-                Card.from_string("W"),
-                Card.from_string("S"),
-                Card.from_string("B4"),
-            ]
-        ),
-        turn_index=4,
-        phase_index=8,
-        drew_card=True,
-        completed_phase=True,
-        skip_cards=CardCollection(
-            [Card.from_string("S"), Card.from_string("S"), Card.from_string("S")]
-        ),
-    )
-
-    print(p)
-    print(p.toJSON())
-    print(Player.fromJSON(p.toJSON()))
-    assert p == Player.fromJSON(p.toJSON())
-
-
-if __name__ == "__main__":
-    main()
+    def exists(cls, player_id: str | uuid.UUID):
+        return Players.get_or_none(id=player_id) is not None

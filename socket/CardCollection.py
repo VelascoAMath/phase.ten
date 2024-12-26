@@ -1,6 +1,7 @@
 import json
+from typing import Self
 
-from Card import Card
+from Card import Card, Color, Rank
 
 
 class CardCollection(list):
@@ -35,10 +36,29 @@ class CardCollection(list):
     @staticmethod
     def from_json_dict(data):
         return CardCollection([Card.fromJSONDict(card) for card in data])
+    
+    @staticmethod
+    def getNewDeck() -> Self:
+        deck = CardCollection()
+        for color in Color:
+            if color is Color.WILD or color is Color.SKIP:
+                continue
+            for rank in Rank:
+                if rank is Rank.WILD or rank is Rank.SKIP:
+                    continue
+                deck.append(Card(color, rank))
+                deck.append(Card(color, rank))
+        
+        for _ in range(4):
+            deck.append(Card(Color.SKIP, Rank.SKIP))
+        
+        for _ in range(8):
+            deck.append(Card(Color.WILD, Rank.WILD))
+        return deck
 
 
 def main():
-    deck = CardCollection(Card.getNewDeck())
+    deck = CardCollection.getNewDeck()
     
     print(deck)
     print(deck == CardCollection.from_json(deck.to_json()))

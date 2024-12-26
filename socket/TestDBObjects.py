@@ -1,125 +1,60 @@
-import unittest
-import uuid
-from configparser import ConfigParser
 import random
+import unittest
+from configparser import ConfigParser
 
-import psycopg2
+import peewee
 
 from Card import Card
 from CardCollection import CardCollection
-from Game import Game, GameType
-from GamePhaseDeck import GamePhaseDeck
-from Player import Player
-from RE import RE
-from User import User
+from Gamephasedecks import Gamephasedecks
+from Games import Games, GameType
+from Players import Players
+from Users import Users
 
 
 class TestRE(unittest.TestCase):
     
     def setUp(self):
         parser = ConfigParser()
-        config = {}
+        parser.read('database_test.ini')
+        postgres_args = dict(parser.items("postgresql"))
+        self.db = peewee.PostgresqlDatabase(**postgres_args)
+        db = self.db
         
-        parser.read('database.ini')
-        if parser.has_section('postgresql'):
-            for param in parser.items('postgresql'):
-                config[param[0]] = param[1]
-        else:
-            raise Exception(f"No postgresql section in database.ini!")
-        
-        self.conn = psycopg2.connect(**config)
-        self.cur = self.conn.cursor()
-        User.set_cursor(self.cur)
-        Game.set_cursor(self.cur)
-        Player.set_cursor(self.cur)
-        GamePhaseDeck.set_cursor(self.cur)
-        
-        self.cur.execute(
-            """
-            CREATE TEMP TABLE users (
-                id uuid NOT NULL,
-                name text NOT NULL,
-                "token" text NOT NULL,
-                is_bot boolean DEFAULT false NOT NULL,
-                created_at timestamp NOT NULL,
-                updated_at timestamp NOT NULL,
-                CONSTRAINT users_pk PRIMARY KEY (id)
-            );
-            CREATE UNIQUE INDEX IF NOT EXISTS users_name_isbot_idx ON public.users ("name",is_bot);
-            CREATE INDEX IF NOT EXISTS users_name_idx ON public.users ("name");
-            """
-        )
-        self.cur.execute("""
-        CREATE TEMP TABLE games (
-            id uuid NOT NULL,
-            phase_list json NOT NULL,
-            deck json NOT NULL,
-            "discard" json NOT NULL,
-            current_player uuid NOT NULL,
-            host uuid NOT NULL,
-            in_progress boolean DEFAULT false NOT NULL,
-            winner uuid NULL,
-            created_at timestamp NOT NULL,
-            updated_at timestamp NOT NULL,
-            CONSTRAINT game_pk PRIMARY KEY (id),
-            CONSTRAINT game_users_fk FOREIGN KEY (current_player) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
-            CONSTRAINT game_users_fk_1 FOREIGN KEY (host) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
-            CONSTRAINT game_users_fk_2 FOREIGN KEY (winner) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
-        );
+        """Main entry point of program"""
+        db.execute_sql("""
+        do $$ BEGIN
+            create type game_type as enum ('NORMAL', 'LEGACY', 'ADVANCEMENT');
+        exception
+            when duplicate_object then null;
+        end $$;
         """)
-        self.cur.execute("""
-        CREATE TEMP TABLE players (
-            id uuid NOT NULL,
-            game_id uuid NOT NULL,
-            user_id uuid NOT NULL,
-            hand json NOT NULL,
-            turn_index serial NOT NULL,
-            phase_index int NOT NULL,
-            drew_card boolean DEFAULT false NOT NULL,
-            completed_phase boolean DEFAULT false NOT NULL,
-            skip_cards json NOT NULL,
-            CONSTRAINT players_pk PRIMARY KEY (id),
-            CONSTRAINT players_games_fk FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE ON UPDATE CASCADE,
-            CONSTRAINT players_users_fk FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
-        );
-        CREATE UNIQUE INDEX players_game_id_turn_index_idx ON players (game_id,turn_index);
-        CREATE UNIQUE INDEX players_game_id_user_id_idx ON players (game_id,user_id);
+        db.execute_sql("""
+        create sequence if not exists players_turn_index_seq AS integer;
         """)
-        self.cur.execute("""
-        CREATE TEMP TABLE gamephasedecks (
-            id uuid NOT NULL,
-            game_id uuid NOT NULL,
-            phase text NOT NULL,
-            deck json NOT NULL,
-            created_at timestamp NOT NULL,
-            updated_at timestamp NOT NULL,
-            CONSTRAINT gamephasedecks_pk PRIMARY KEY (id),
-            CONSTRAINT gamephasedecks_games_fk FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE ON UPDATE CASCADE
-        );
-        """)
+        db.drop_tables([Users, Games, Players, Gamephasedecks])
+        db.create_tables([Users, Games, Players, Gamephasedecks])
     
     def tearDown(self):
-        self.conn.close()
+        self.db.close()
     
     def test_objects(self):
-        alfredo = User(
-            uuid.uuid4(),
-            "Alfredo",
-            "secret token",
+        alfredo = Users(
+            name="Alfredo",
+            token="secret token",
             is_bot=False,
         )
-        assert alfredo == User.fromJSON(alfredo.toJSON())
+        assert alfredo == Users.fromJSON(alfredo.toJSON())
         
-        alfredo = User(name="Alfredo")
-        alfredo.save()
+        alfredo.save(force_insert=True)
         
-        u2 = User.get_by_id(alfredo.id)
+        u2 = Users.get_by_id(alfredo.id)
         assert alfredo == u2
         
-        u2 = User.get_by_name("Alfredo")
+        u2 = Users.get(name="Alfredo")
         assert alfredo == u2
         
-        deck = Card.getNewDeck()
+        deck = CardCollection.getNewDeck()
         while len(deck) > 10:
             deck.pop()
         
@@ -140,16 +75,26 @@ class TestRE(unittest.TestCase):
         ]
         discard_list = CardCollection([deck.pop() for _ in range(5)])
         
-        naly = User(name="Naly", is_bot=True)
+        naly = Users(name="Naly", is_bot=True)
+        naly.save(force_insert=True)
         
-        g = Game(uuid.uuid4(), phase_list, deck, discard_list, alfredo.id, naly.id, True, GameType.LEGACY, alfredo.id)
-        h = Game.fromJSON(g.toJSON())
+        assert alfredo != naly
+        assert alfredo == Users(id=alfredo.id, name="Alfredo", token="secret token", is_bot=False, created_at=alfredo.created_at, updated_at=alfredo.updated_at)
+        
+        g = Games(phase_list=phase_list, deck=deck, discard=discard_list, host=Users.get_by_id(alfredo.id),
+                  current_player=Users.get_by_id(naly.id), in_progress=True, type=GameType.LEGACY,
+                  winner=Users.get_by_id(alfredo.id))
+        h = Games.fromJSON(g.toJSON())
         assert g == h
+        assert g != Games(phase_list=phase_list, deck=deck, discard=discard_list, host=Users.get_by_id(naly.id),
+                          current_player=Users.get_by_id(alfredo.id), in_progress=False, type=GameType.NORMAL,
+                          winner=None)
         
-        alfredo_p = Player(
-            id=uuid.uuid4(),
-            game_id=g.id,
-            user_id=alfredo.id,
+        g.save(force_insert=True)
+        
+        alfredo_p = Players(
+            game=g,
+            user=alfredo,
             hand=CardCollection([
                 Card.from_string("R10"),
                 Card.from_string("W"),
@@ -163,10 +108,11 @@ class TestRE(unittest.TestCase):
             skip_cards=CardCollection([Card.from_string("S"), Card.from_string("S"), Card.from_string("S")])
         )
         
-        naly_p = Player(
-            id=uuid.uuid4(),
-            game_id=g.id,
-            user_id=naly.id,
+        alfredo_p.save(force_insert=True)
+        
+        naly_p = Players(
+            game=g,
+            user=naly,
             hand=CardCollection([
                 Card.from_string("B7"),
                 Card.from_string("Y8"),
@@ -179,124 +125,30 @@ class TestRE(unittest.TestCase):
             completed_phase=False,
             skip_cards=CardCollection([])
         )
+        naly_p.save(force_insert=True)
         
-        assert alfredo_p == Player.fromJSON(alfredo_p.toJSON())
-        assert naly_p == Player.fromJSON(naly_p.toJSON())
+        assert alfredo_p == Players.fromJSON(alfredo_p.toJSON())
+        assert naly_p == Players.fromJSON(naly_p.toJSON())
+        assert alfredo_p != naly_p
         
-        gpd = GamePhaseDeck(phase="S", game_id=g.id,
-                            deck=CardCollection([Card.from_string("R3"), Card.from_string("B7")]))
-        assert gpd == GamePhaseDeck.fromJSON(gpd.toJSON())
+        gpd = Gamephasedecks(phase="S", game=g,
+                             deck=CardCollection([Card.from_string("R3"), Card.from_string("B7")]))
+        assert gpd == Gamephasedecks.fromJSON(gpd.toJSON())
         
-        parser = ConfigParser()
-        config = {}
+        gpd.save(force_insert=True)
         
-        parser.read('database.ini')
-        if parser.has_section('postgresql'):
-            for param in parser.items('postgresql'):
-                config[param[0]] = param[1]
-        else:
-            raise Exception(f"No postgresql section in database.ini!")
+        assert alfredo == Users.get_by_id(alfredo.id)
+        assert alfredo == Users.get(name=alfredo.name)
+        assert naly == Users.get_by_id(naly.id)
+        assert naly == Users.get(name=naly.name)
         
-        with psycopg2.connect(**config) as conn:
-            cur = conn.cursor()
-            User.set_cursor(cur)
-            Game.set_cursor(cur)
-            Player.set_cursor(cur)
-            GamePhaseDeck.set_cursor(cur)
-            
-            cur.execute(
-                """
-                CREATE TEMP TABLE users (
-                    id uuid NOT NULL,
-                    name text NOT NULL,
-                    "token" text NOT NULL,
-                    is_bot boolean DEFAULT false NOT NULL,
-                    created_at timestamp NOT NULL,
-                    updated_at timestamp NOT NULL,
-                    CONSTRAINT users_pk PRIMARY KEY (id)
-                );
-                CREATE UNIQUE INDEX IF NOT EXISTS users_name_isbot_idx ON public.users ("name",is_bot);
-                CREATE INDEX IF NOT EXISTS users_name_idx ON public.users ("name");
-                """
-            )
-            cur.execute("""
-            do $$ BEGIN
-                create type game_type as enum ('NORMAL', 'LEGACY');
-            exception
-                when duplicate_object then null;
-            end $$;
-            """)
-            cur.execute("""
-            CREATE TEMP TABLE games (
-                id uuid NOT NULL,
-                phase_list json NOT NULL,
-                deck json NOT NULL,
-                "discard" json NOT NULL,
-                current_player uuid NOT NULL,
-                host uuid NOT NULL,
-                in_progress boolean DEFAULT false NOT NULL,
-                type game_type DEFAULT 'NORMAL',
-                winner uuid NULL,
-                created_at timestamp NOT NULL,
-                updated_at timestamp NOT NULL,
-                CONSTRAINT game_pk PRIMARY KEY (id),
-                CONSTRAINT game_users_fk FOREIGN KEY (current_player) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
-                CONSTRAINT game_users_fk_1 FOREIGN KEY (host) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
-                CONSTRAINT game_users_fk_2 FOREIGN KEY (winner) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
-            );
-            """)
-            cur.execute("""
-            CREATE TEMP TABLE players (
-                id uuid NOT NULL,
-                game_id uuid NOT NULL,
-                user_id uuid NOT NULL,
-                hand json NOT NULL,
-                turn_index serial NOT NULL,
-                phase_index int NOT NULL,
-                drew_card boolean DEFAULT false NOT NULL,
-                completed_phase boolean DEFAULT false NOT NULL,
-                skip_cards json NOT NULL,
-                created_at timestamp NOT NULL,
-                updated_at timestamp NOT NULL,
-                CONSTRAINT players_pk PRIMARY KEY (id),
-                CONSTRAINT players_games_fk FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE ON UPDATE CASCADE,
-                CONSTRAINT players_users_fk FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
-            );
-            CREATE UNIQUE INDEX players_game_id_turn_index_idx ON players (game_id,turn_index);
-            CREATE UNIQUE INDEX players_game_id_user_id_idx ON players (game_id,user_id);
-            """)
-            cur.execute("""
-            CREATE TEMP TABLE gamephasedecks (
-                id uuid NOT NULL,
-                game_id uuid NOT NULL,
-                phase text NOT NULL,
-                deck json NOT NULL,
-                created_at timestamp NOT NULL,
-                updated_at timestamp NOT NULL,
-                CONSTRAINT gamephasedecks_pk PRIMARY KEY (id),
-                CONSTRAINT gamephasedecks_games_fk FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE ON UPDATE CASCADE
-            );
-            """)
-            
-            alfredo.save()
-            naly.save()
-            g.save()
-            alfredo_p.save()
-            naly_p.save()
-            gpd.save()
-            
-            assert alfredo == User.get_by_id(alfredo.id)
-            assert alfredo == User.get_by_name(alfredo.name)
-            assert naly == User.get_by_id(naly.id)
-            assert naly == User.get_by_name(naly.name)
-            
-            assert Game.get_by_id(g.id) == g
-            
-            alfredo_p.turn_index = Player.get_by_id(alfredo_p.id).turn_index
-            assert alfredo_p == Player.get_by_id(alfredo_p.id)
-            assert alfredo_p == Player.get_by_game_id_user_id(g.id, alfredo.id)
-            
-            assert gpd == GamePhaseDeck.get_by_id(gpd.id)
+        assert Games.get_by_id(g.id) == g
+        
+        alfredo_p.turn_index = Players.get_by_id(alfredo_p.id).turn_index
+        assert alfredo_p == Players.get_by_id(alfredo_p.id)
+        assert alfredo_p == Players.get_or_none(game=g.id, user=alfredo)
+        
+        assert gpd == Gamephasedecks.get_by_id(gpd.id)
 
 
 if __name__ == "__main__":
