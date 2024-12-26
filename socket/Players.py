@@ -164,6 +164,16 @@ class Players(BaseModel):
                                 "cards": CardCollection([card]).to_json_dict(),
                                 "direction": "end",
                             }
+                
+                for card in self.hand:
+                    if card.rank is not Rank.WILD:
+                        return {
+                            "player_id": self.id,
+                            "type": "player_action",
+                            "action": "discard",
+                            "card_id": card.id,
+                        }
+
 
             # Otherwise, pick a random card to discard
             return {
