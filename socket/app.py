@@ -753,6 +753,7 @@ def handle_data(data, websocket):
 
             # The host is deleting the game
             if game.host == user:
+                Gamephasedecks.delete().where(Gamephasedecks.game == game).execute()
                 game.delete_instance()
                 player.delete_instance()
             else:
