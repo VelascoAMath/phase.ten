@@ -33,6 +33,34 @@ function startGame(game_id, user_id, socket){
 }
 
 
+
+// Function to sort the games
+// First games displayed are those which are waiting for players
+// Second games displayed are those which are in progress
+// Final games shown are those which have been completed
+// In each category, the games are sorted in reverse chronological order based on the last move made
+function gameCompare(gameA, gameB){
+    
+    if(gameA.in_progress && gameB.in_progress){
+        if(!gameA.winner && !gameB.winner){
+            return gameB.updated_at.localeCompare(gameA.updated_at)
+        } else if (gameA.winner && !gameB.winner){
+            return 1;
+        } else if (!gameA.winner && gameB.winner) {
+            return -1;
+        } else {
+            return gameB.updated_at.localeCompare(gameA.updated_at);
+        }   
+    } else if(gameA.in_progress && !gameB.in_progress){
+        return 1;
+    } else if (!gameA.in_progress && gameB.in_progress) {
+        return -1;
+    } else {
+        return gameB.updated_at.localeCompare(gameA.updated_at)
+    }
+}
+
+
 export default function Lobby({props}) {
 
     const{state, socket} = props;
