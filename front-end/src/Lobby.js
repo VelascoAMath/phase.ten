@@ -1,14 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
-
-
-
-const starFill = function(){
-    return <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-star-fill" viewBox="0 0 16 16">
-    <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
-  </svg>;
-}
+import { emojiFrownFill, starFill, trophyFill } from "./Icons";
 
 
 
@@ -40,7 +33,7 @@ function startGame(game_id, user_id, socket){
 // Final games shown are those which have been completed
 // In each category, the games are sorted in reverse chronological order based on the last move made
 function gameCompare(gameA, gameB){
-    
+
     if(gameA.in_progress && gameB.in_progress){
         if(!gameA.winner && !gameB.winner){
             return gameB.updated_at.localeCompare(gameA.updated_at)
@@ -50,7 +43,7 @@ function gameCompare(gameA, gameB){
             return -1;
         } else {
             return gameB.updated_at.localeCompare(gameA.updated_at);
-        }   
+        }
     } else if(gameA.in_progress && !gameB.in_progress){
         return 1;
     } else if (!gameA.in_progress && gameB.in_progress) {
@@ -123,11 +116,25 @@ export default function Lobby({props}) {
 
             <div className="rooms-to-join">
                 {gameList
-                ?.toSorted((a, b) => {return b.updated_at.localeCompare(a.updated_at)} )
+                ?.toSorted(gameCompare)
                 ?.map((game) => {
                     const isHost = game.host === userId;
                     const isInGame = game.users.filter((user) => {return user.id === userId}).length > 0;
                     const nonHostUsers = game.users.filter((user) => {return user.id !== game.host});
+
+                    // The icon to display based on the game being in progress and having a winner
+                    let icon = null;
+                    if(game.in_progress){
+                       if(game.winner === null){
+                        icon = starFill();
+                       } else {
+                        if(game.winner === userId){
+                            icon = trophyFill();
+                        } else {
+                            icon = emojiFrownFill();
+                        }
+                       }
+                    }
 
                     // Game in progress which we didn't join
                     if(!isInGame && game.in_progress){
@@ -141,7 +148,7 @@ export default function Lobby({props}) {
 
                     return (
                         <div className={className} key={game.id} onClick={() => {if(game === selectedGame){setSelectedGame(null)} else {setSelectedGame(game)}}}>
-                            {game.in_progress && starFill()} {t('host')}: {userIdToName[game.host]}
+                            {icon} {t('host')}: {userIdToName[game.host]}
                             <hr/>
                             {
                                 nonHostUsers.map((user) => {
