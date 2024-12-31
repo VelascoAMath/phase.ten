@@ -21,6 +21,9 @@ export default function PlayerLogin({props}) {
 				{t('name')}: {state["user-name"]}
 			</div>
 			<div>
+				{t('display')}: {state["user-display"]}
+			</div>
+			<div>
 				{t('userID')}: {state["user-id"]}
 			</div>
 			<div>
@@ -31,6 +34,7 @@ export default function PlayerLogin({props}) {
                     const setUser = function(){
                         dispatch({type: "change-input", key: "user-id", value: user["id"]});
                         dispatch({type: "change-input", key: "user-name", value: user["name"]});
+                        dispatch({type: "change-input", key: "user-display", value: user["display"]});
                         dispatch({type: "change-input", key: "user-token", value: user["token"]});
                     }
                     return <button key={user.id} onClick={setUser}>{user.name}</button>

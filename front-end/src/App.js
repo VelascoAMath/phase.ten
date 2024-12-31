@@ -19,6 +19,7 @@ import { SOCKET_URL } from './URL.jsx';
 const initState = {
   "user-id": localStorage.getItem("user-id"),
   "user-name": localStorage.getItem("user-name"),
+  "user-display": localStorage.getItem("user-display"),
   "user-token": localStorage.getItem("user-token"),
   "socket": new WebSocket(SOCKET_URL),
   "game-list": [],
@@ -76,9 +77,11 @@ function App() {
     if(data["type"] === "new_user"){
       dispatch({type: "change-input", key: "user-id", value: data.user["id"]});
       dispatch({type: "change-input", key: "user-name", value: data.user["name"]});
+      dispatch({type: "change-input", key: "user-display", value: data.user["display"]});
       dispatch({type: "change-input", key: "user-token", value: data.user["token"]});
       localStorage.setItem("user-id", data.user["user-id"]);
       localStorage.setItem("user-name", data.user["user-name"]);
+      localStorage.setItem("user-display", data.user["user-display"]);
       localStorage.setItem("user-token", data.user["user-token"]);
     }
     else if(data["type"] === "get_users"){
@@ -95,9 +98,11 @@ function App() {
       if(!validToken){
         localStorage.removeItem("user-id");
         localStorage.removeItem("user-name");
+        localStorage.removeItem("user-display");
         localStorage.removeItem("user-token");
         dispatch({type: "change-input", key: "user-id", value: null});
         dispatch({type: "change-input", key: "user-name", value: null});
+        dispatch({type: "change-input", key: "user-display", value: null});
         dispatch({type: "change-input", key: "user-token", value: null});
       }
     } else if (data["type"] === "get_games"){
