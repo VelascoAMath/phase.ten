@@ -1,3 +1,6 @@
+import datetime
+import uuid
+
 import peewee
 
 from BaseModel import BaseModel
@@ -23,8 +26,32 @@ class GameMessage(BaseModel):
             "updated_at": str(self.updated_at),
         }
     
+    @staticmethod
+    def from_json_dict(data):
+        created_at = data["created_at"]
+        updated_at = data["updated_at"]
+        
+        if isinstance(created_at, str):
+            created_at = datetime.datetime.fromisoformat(created_at)
+        
+        if isinstance(updated_at, str):
+            updated_at = datetime.datetime.fromisoformat(updated_at)
+        
+        return GameMessage(
+            id=uuid.UUID(data["id"]),
+            game=uuid.UUID(data["game"]),
+            message=data["message"],
+            index=data["index"],
+            created_at=created_at,
+            updated_at=updated_at,
+        )
+    
     class Meta:
         table_name = "gamemessage"
         indexes = (
             (("game_id", "index"), True),
         )
+    
+    @classmethod
+    def exists(cls, user_id: str | uuid.UUID):
+        return GameMessage.get_or_none(id=user_id) is not None
