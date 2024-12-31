@@ -30,7 +30,7 @@ export default function PlayerLogin({props}) {
 				{t('token')}: {state["user-token"]}
 			</div>
 			<div>
-                {state["user-list"]?.map(user => {
+                {state["user-list"]?.filter(user => !user.is_bot)?.map(user => {
                     const setUser = function(){
                         dispatch({type: "change-input", key: "user-id", value: user["id"]});
                         dispatch({type: "change-input", key: "user-name", value: user["name"]});
