@@ -108,8 +108,12 @@ class Players(BaseModel):
                     # randomly choose one who has completed their phase
                     for card in self.hand:
                         if card.rank is Rank.SKIP:
-                            other_players: list[Players] = list(Players.select().where((Players.game == game) & (Players.id != self.id)).order_by(Players.phase_index, Players.completed_phase))
-    
+                            other_players: list[Players] = list(
+                                Players.select()
+                                .where((Players.game == game) & (Players.id != self.id))
+                                .order_by(Players.phase_index, Players.completed_phase)
+                            )
+
                             return {
                                 "player_id": self.id,
                                 "type": "player_action",
@@ -135,8 +139,20 @@ class Players(BaseModel):
                                 "action": "discard",
                                 "card_id": self.hand[i].id,
                             }
+
+                    # None of the cards are good candidates to throw away. Just pick a non-WILD card
+                    for card in self.hand:
+                        if card.rank is not Rank.WILD:
+                            return {
+                                "player_id": self.id,
+                                "type": "player_action",
+                                "action": "discard",
+                                "card_id": card.id,
+                            }
             else:
-                gpd_list = list(Gamephasedecks.select().where(Gamephasedecks.game==game))
+                gpd_list = list(
+                    Gamephasedecks.select().where(Gamephasedecks.game == game)
+                )
 
                 # if we can put down, do it
                 for gpd in gpd_list:
@@ -164,6 +180,15 @@ class Players(BaseModel):
                                 "cards": CardCollection([card]).to_json_dict(),
                                 "direction": "end",
                             }
+
+                for card in self.hand:
+                    if card.rank is not Rank.WILD:
+                        return {
+                            "player_id": self.id,
+                            "type": "player_action",
+                            "action": "discard",
+                            "card_id": card.id,
+                        }
 
             # Otherwise, pick a random card to discard
             return {

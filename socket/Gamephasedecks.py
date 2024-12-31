@@ -59,6 +59,11 @@ class Gamephasedecks(BaseModel):
             created_at=created_at,
             updated_at=updated_at,
         )
+    
+
+    @classmethod
+    def exists(cls, user_id: str | uuid.UUID):
+        return Gamephasedecks.get_or_none(id=user_id) is not None
 
     def __str__(self):
         return f"Gamephasedecks(id={self.id}, game_id={self.game.id}, phase={self.phase}, deck={self.deck}, created_at={self.created_at}, updated_at={self.updated_at})"

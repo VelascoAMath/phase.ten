@@ -63,6 +63,13 @@ class BaseModel(peewee.Model):
         super().__init__(**kwargs)
         self.updated_at = self.created_at
 
+    def save(self, *args, **kwargs):
+        self.updated_at = datetime.datetime.now()
+        super().save(*args, **kwargs)
+        
+    def save_as_is(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+    
     def __eq__(self, other) -> bool:
         if isinstance(other, BaseModel):
             return (
