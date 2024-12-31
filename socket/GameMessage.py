@@ -13,6 +13,16 @@ class GameMessage(BaseModel):
         constraints=[peewee.SQL("DEFAULT nextval('game_message_index_seq'::regclass)")]
     )
     
+    def to_json_dict(self) -> dict:
+        return {
+            "id": str(self.id),
+            "game": str(self.game.id),
+            "message": self.message,
+            "index": self.index,
+            "created_at": str(self.created_at),
+            "updated_at": str(self.updated_at),
+        }
+    
     class Meta:
         table_name = "gamemessage"
         indexes = (
