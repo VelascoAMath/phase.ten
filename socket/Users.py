@@ -12,8 +12,13 @@ from BaseModel import BaseModel
 @dataclasses.dataclass(init=False)
 class Users(BaseModel):
     name: str = peewee.TextField(null=False, unique=True)
+    display: str = peewee.TextField(null=False)
     token: str = peewee.TextField(null=False, default=lambda: secrets.token_hex(16))
     is_bot: peewee.BooleanField = peewee.BooleanField(null=False, default=False)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.display = self.name
 
     def toJSON(self):
         return json.dumps(self.to_json_dict())
@@ -22,6 +27,7 @@ class Users(BaseModel):
         return {
             "id": str(self.id),
             "name": self.name,
+            "display": self.display,
             "token": self.token,
             "is_bot": self.is_bot,
             "created_at": str(self.created_at),
@@ -47,6 +53,7 @@ class Users(BaseModel):
         return Users(
             id=uuid.UUID(data["id"]),
             name=data["name"],
+            display=data["display"],
             token=data["token"],
             is_bot=data["is_bot"],
             created_at=created_at,
@@ -54,7 +61,7 @@ class Users(BaseModel):
         )
 
     def __str__(self):
-        return f"User(id={self.id}, name={self.name}, token={self.token}, is_bot={self.is_bot}, created_at={self.created_at}, updated_at={self.updated_at})"
+        return f"User(id={self.id}, name={self.name}, display={self.display}, token={self.token}, is_bot={self.is_bot}, created_at={self.created_at}, updated_at={self.updated_at})"
 
     def __repr__(self):
         return self.__str__()
@@ -64,6 +71,7 @@ class Users(BaseModel):
             return (
                 super().__eq__(other)
                 and self.name == other.name
+                and self.display == other.display
                 and self.token == other.token
                 and self.is_bot == other.is_bot
             )
