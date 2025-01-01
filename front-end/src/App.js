@@ -141,7 +141,7 @@ function App() {
       </div>
       {!canPlayDing && <button onClick={() => {setCanPlayDing(true)}}>{t('notifications')}</button>}
 
-      <div>
+      {/* <div>
                 {state["user-list"]?.map(user => {
                   const setUser = function(){
                     dispatch({type: "change-input", key: "user-id", value: user["id"]});
@@ -150,7 +150,7 @@ function App() {
                     }
                     return <button key={user.id} onClick={setUser}>{user.name}</button>
                     })}
-			</div>
+			</div> */}
       <Route path="/signup">
         <PlayerCreation props={{state, dispatch, socket}}/>
       </Route>
