@@ -63,10 +63,10 @@ export default function Lobby({props}) {
     let [ , navigate] = useLocation();
     const userId = state["user-id"];
 
-    let userIdToName = {};
+    let userIdToDisplay = {};
     if(state["user-list"]){
         for(const user of state["user-list"]){
-            userIdToName[user.id] = user.name;
+            userIdToDisplay[user.id] = user.display;
         }
     }
 
@@ -148,11 +148,11 @@ export default function Lobby({props}) {
 
                     return (
                         <div className={className} key={game.id} onClick={() => {if(game === selectedGame){setSelectedGame(null)} else {setSelectedGame(game)}}}>
-                            {icon} {t('host')}: {userIdToName[game.host]}
+                            {icon} {t('host')}: {userIdToDisplay[game.host]}
                             <hr/>
                             {
                                 nonHostUsers.map((user) => {
-                                    return <div>{user.name}</div>
+                                    return <div>{user.display}</div>
                                 })
                             }
                             <hr/>

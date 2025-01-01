@@ -224,7 +224,7 @@ export default function PlayRoom({props}) {
             <div className="room-players">
                 {roomPlayers.map((player) => {
                     const className = "player " + ((player.user_id === game.current_player) ? "current ": "") + ((player.skip_cards.length > 0) ? "skipped": "");
-                    return (<div className={className} key={player.id}> <div>{player.name}</div>
+                    return (<div className={className} key={player.id}> <div>{player.display}</div>
                         <div>Phase {player.phase_index + 1}</div>
                         <div>{player.hand_size} {player.hand_size === 1 ? "card": "cards"}</div>
                         <div>{game.phase_list[player.phase_index]}</div>
@@ -267,8 +267,7 @@ export default function PlayRoom({props}) {
                     {mustWaitForOtherPlayer && formatedTimeRemaining}
                     {mustWaitForOtherPlayer && <div>Waiting</div>}
                 </div>
-                {!mustWaitForOtherPlayer && !isCurrentPlayer && <button onClick={skipSlowPlayer}>Skip {game.players.filter((p) => {return p.user_id === game.current_player})[0].name} for wasting our time</button>}
-                {/* {<button onClick={skipSlowPlayer}>Skip {game.players.filter((p) => {return p.user_id === game.current_player})[0].name} for wasting our time</button>} */}
+                {!mustWaitForOtherPlayer && !isCurrentPlayer && <button onClick={skipSlowPlayer}>Skip {game.players.filter((p) => {return p.user_id === game.current_player})[0].display} for wasting our time</button>}
                 {!mustWaitForOtherPlayer && isCurrentPlayer && <div>You're in danger of getting skipped!!!</div>}
             </div>
             
@@ -293,7 +292,7 @@ export default function PlayRoom({props}) {
                 <div style={{display: "flex", flexDirection: "column", alignItems: "center", border: "5px white solid"}}>
                     <h3>Who do you want to skip?</h3>
                     <div>
-                        {game.users.filter(user => user.id !== player.user_id).map(user => <button key={user.id} style={{border: (user.id === selectedSkipPlayer ? "solid red 2px": "")}} onClick={() => setSelectedSkipPlayer(user.id)}>{user.name}</button> )}
+                        {game.users.filter(user => user.id !== player.user_id).map(user => <button key={user.id} style={{border: (user.id === selectedSkipPlayer ? "solid red 2px": "")}} onClick={() => setSelectedSkipPlayer(user.id)}>{user.display}</button> )}
                     </div>
                     {selectedSkipPlayer && <button onClick={skipPlayer}>Skip Player</button>}
                 </div>
