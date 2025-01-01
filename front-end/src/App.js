@@ -136,7 +136,10 @@ function App() {
   return (
     <div>
       <div style={{display: "flex", justifyContent: "space-between"}}>
-        <h2>{state["user-name"]}</h2>
+        <div>
+          <h2>{state["user-display"]}</h2>
+          <h2>@{state["user-name"]}</h2>
+        </div>
         <div className='clickable' onClick={() => {navigate("/settings/")}}>{globe()}</div>
       </div>
       {!canPlayDing && <button onClick={() => {setCanPlayDing(true)}}>{t('notifications')}</button>}
