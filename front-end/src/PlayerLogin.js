@@ -43,6 +43,7 @@ export default function PlayerLogin({props}) {
                         dispatch({type: "change-input", key: "user-name", value: user["name"]});
                         dispatch({type: "change-input", key: "user-display", value: user["display"]});
                         dispatch({type: "change-input", key: "user-token", value: user["token"]});
+						setDisplay(user["display"]);
                     }
                     return <button key={user.id} onClick={setUser}>{user.name}</button>
                 })}
