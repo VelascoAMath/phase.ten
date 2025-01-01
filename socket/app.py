@@ -135,6 +135,7 @@ async def send_players():
             user_dict = player.user.to_json_dict()
             player_dict = player.to_json_dict()
             player_dict["name"] = player.user.name
+            player_dict["display"] = player.user.display
             player_dict["hand_size"] = len(player.hand)
 
             if "hand" in player_dict:
