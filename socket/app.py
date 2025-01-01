@@ -465,7 +465,6 @@ def player_action(data):
                 to_id = data["to"]
                 to_user = Users.get_by_id(to_id)
                 to_player: Players = Players.get(game=game, user=to_user)
-                to_player: Players = Players.get(game=game, user=to_user)
                 to_player.skip_cards.append(skip_card)
                 hand.remove(skip_card)
 
@@ -595,13 +594,7 @@ def player_action(data):
                     roomPlayer.turn_index = (roomPlayer.turn_index + 1) % len(
                         roomPlayers
                     )
-                    roomPlayer.turn_index = (roomPlayer.turn_index + 1) % len(
-                        roomPlayers
-                    )
                 else:
-                    roomPlayer.turn_index = (
-                        (roomPlayer.turn_index + 1) % len(roomPlayers)
-                    ) + len(roomPlayers)
                     roomPlayer.turn_index = (
                         (roomPlayer.turn_index + 1) % len(roomPlayers)
                     ) + len(roomPlayers)
@@ -621,11 +614,6 @@ def player_action(data):
 
 
         # Remove all phase decks
-        for gpd in (
-            Gamephasedecks.select()
-            .where(Gamephasedecks.game == game)
-            .order_by(Gamephasedecks.id)
-        ):
         for gpd in (
             Gamephasedecks.select()
             .where(Gamephasedecks.game == game)
@@ -832,20 +820,6 @@ def handle_data(data, websocket):
                         "message": "You are not the host of the game and cannot edit its phase!",
                     }
                 )
-
-            bots: list[Users] = list(
-                Users.select()
-                .where(
-                    Users.is_bot
-                    & (
-                        Users.id.not_in(
-                            Players.select(Players.user).where(Players.game == game)
-                        )
-                    )
-                )
-                .order_by(Users.name)
-            )
-
 
             bots: list[Users] = list(
                 Users.select()
@@ -1154,7 +1128,6 @@ async def handler(websocket):
                         while (
                             next_player.user.is_bot
                             and next_player.game.current_player == next_player.user
-                            and next_player.game.current_player == next_player.user
                         ):
                             next_player.make_next_move()
                             handle_data(next_player.make_next_move(), websocket)
@@ -1166,10 +1139,6 @@ async def handler(websocket):
                         websockets.broadcast(
                             connected,
                             json.dumps(
-                                {
-                                    "type": "next_player",
-                                    "user_id": str(next_player.user.id),
-                                }
                                 {
                                     "type": "next_player",
                                     "user_id": str(next_player.user.id),
