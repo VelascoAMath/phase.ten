@@ -16,10 +16,6 @@ class Users(BaseModel):
     token: str = peewee.TextField(null=False, default=lambda: secrets.token_hex(16))
     is_bot: peewee.BooleanField = peewee.BooleanField(null=False, default=False)
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.display = self.name
-
     def toJSON(self):
         return json.dumps(self.to_json_dict())
 
