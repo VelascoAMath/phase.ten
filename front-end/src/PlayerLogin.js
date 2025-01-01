@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export default function PlayerLogin({props}) {
@@ -13,6 +13,13 @@ export default function PlayerLogin({props}) {
             socket.send(JSON.stringify({type: "get_users"}));
         }
     }
+
+	const [display, setDisplay] = useState(state["user-display"]);
+
+	// Send a request to edit the user's display name
+	const sendEditDisplay = () => {
+		socket.send(JSON.stringify({type: "edit_display_name", "user_id": state["user-id"], "display": display }))
+	}
 
 
 	return (
@@ -40,8 +47,14 @@ export default function PlayerLogin({props}) {
                     return <button key={user.id} onClick={setUser}>{user.name}</button>
                 })}
 			</div>
-            <button onClick={getPlayers}>{t('refresh')}</button>
-            <button onClick={() => {dispatch({type: "change-input", key: "user-id", value: null}); dispatch({type: "change-input", key: "user-name", value: null}); dispatch({type: "change-input", key: "user-token", value: null});} }>{t('logOut')}</button>
+			<div>
+				<button onClick={getPlayers}>{t('refresh')}</button>
+				<button onClick={() => {dispatch({type: "change-input", key: "user-id", value: null}); dispatch({type: "change-input", key: "user-name", value: null}); dispatch({type: "change-input", key: "user-token", value: null});} }>{t('logOut')}</button>
+			</div>
+			<div>
+				<input minLength={1} value={display} onChange={(e) => {setDisplay(e.target.value)}} onKeyDown={(e) => {if(e.key === "Enter") {sendEditDisplay()} }}/>
+				<button onClick={sendEditDisplay}>Change Display Name</button>
+			</div>
 		</div>
 	)
 }

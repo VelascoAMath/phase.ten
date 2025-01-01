@@ -76,7 +76,7 @@ db.create_tables([Users, Games, Players, Gamephasedecks, GameMessage])
 for name in set(f"Bot{i + 1}" for i in range(6)) - set(
     u.name for u in Users.select().where(Users.is_bot)
 ):
-    Users(name=name, is_bot=True).save(force_insert=True)
+    Users(name=name, display=name, is_bot=True).save(force_insert=True)
 
 
 async def send_users():
@@ -587,6 +587,7 @@ def handle_data(data, websocket):
                     # Add this new user to our databases
                     u = Users(
                         name=data["name"],
+                        display=data["name"],
                     )
                     u.save(force_insert=True)
                     return json.dumps({"type": "new_user", "user": u.to_json_dict()})
@@ -605,6 +606,28 @@ def handle_data(data, websocket):
                     {
                         "type": "rejection",
                         "message": f"User already exists with the name {data['name']}",
+                    }
+                )
+        case "edit_display_name":
+            user_id = data["user_id"]
+            new_display_name: str = data["display"]
+
+            if Users.exists(user_id):
+                if len(new_display_name) == 0:
+                    return json.dumps(
+                        {"type": "rejection", "message": f"Must have display name!"}
+                    )
+
+                user: Users = Users.get_by_id(user_id)
+                user.display = new_display_name
+
+                return json.dumps({"type": "new_user", "user": user.to_json_dict()})
+
+            else:
+                return json.dumps(
+                    {
+                        "type": "rejection",
+                        "message": f"{user_id} is not a valid user id!",
                     }
                 )
 
