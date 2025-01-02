@@ -42,11 +42,13 @@
 \#*
 *~
 socket/__pycache__/
-socket/*class
-socket/*gv
-socket/*pdf
+socket/*.class
+socket/*.gv
+socket/*.pdf
+socket/*.pkl
 
-socket/database.ini
+*.ini
+
 
 *.db
 *.css.map
