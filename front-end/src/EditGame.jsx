@@ -15,8 +15,35 @@ export default function EditGame({props}) {
 
     const [phaseInput, setPhaseInput] = useState(game?.phase_list);
 
+    const [timeLimit, setTimeLimit] = useState({days: 0, hours: game?.player_time_limit[0] || 0, minutes: game?.player_time_limit[1] || 0, seconds: 0});
+    const timeUnitList = ["days", "hours", "minutes", "seconds"];
+
+    if(timeLimit.seconds >= 60){
+        setTimeLimit({...timeLimit, seconds: timeLimit.seconds - 60, minutes: timeLimit.minutes + 1});
+    }
+    if(timeLimit.minutes >= 60){
+        setTimeLimit({...timeLimit, minutes: timeLimit.minutes - 60, hours: timeLimit.hours + 1});
+    }
+    if(timeLimit.hours >= 24){
+        setTimeLimit({...timeLimit, hours: timeLimit.hours - 24, days: timeLimit.days + 1});
+    }
+
+    if(timeLimit.seconds < 0){
+        setTimeLimit({...timeLimit, minutes: timeLimit.minutes - 1, seconds: timeLimit.seconds + 60});
+    }
+    if(timeLimit.minutes < 0){
+        setTimeLimit({...timeLimit, hours: timeLimit.hours - 1, minutes: timeLimit.minutes + 60});
+    }
+    if(timeLimit.hours < 0){
+        setTimeLimit({...timeLimit, days: timeLimit.days - 1, hours: timeLimit.hours + 24});
+    }
+    if(timeLimit.days < 0){
+        setTimeLimit({days: 0, hours: 0, minutes: 0, seconds: 0});
+    }
+
     useEffect(() => {
         setPhaseInput(game?.phase_list);
+        setTimeLimit({days: game?.player_time_limit[0], hours: Math.floor(game?.player_time_limit[1]/ 60) || 0, minutes: game?.player_time_limit[1] % 60 || 0, seconds: 0});
     }, [game])
 
     if(!game){
@@ -39,6 +66,20 @@ export default function EditGame({props}) {
 
             <h2>{t('gameType')}</h2>
             {game.type}
+            <h2>{t('playerTimeLimit')}</h2>
+            <div className="left-to-right">
+                {timeUnitList.map(timeUnit => {
+                    const onChange = (e) => {
+                        setTimeLimit({...timeLimit, [timeUnit]: Number(e.target.value)});
+                    }
+
+                    return <div>
+                        <div className="timerTitle">{t(timeUnit)}</div>
+                        <input value={timeLimit[timeUnit]} onChange={onChange} type="number"/>
+                    </div>
+
+                })}
+            </div>
             <h2>{t('players')}</h2>
             <ul>
                 {game.users.map((user) => <li key={user.id}>{user.name} {user.id === game.current_player && "(" + t('currentPlayer') + ")"}  {user.id === game.winner && "(" + t('winner') + ")"} </li>)}
