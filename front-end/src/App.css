@@ -22,7 +22,6 @@ button {
   overflow-y: scroll;
 }
 
-
 .winner {
   font-size: 5rem;
   font-weight: bold;
@@ -63,7 +62,6 @@ button {
 .room-players {
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
   justify-content: center;
   background-color: purple;
   padding: 5px;
@@ -183,6 +181,10 @@ button {
 
 .clickable {
   cursor: pointer;
+}
+
+.left-to-right {
+  display: flex;
 }
 
 /*# sourceMappingURL=App.css.map */
