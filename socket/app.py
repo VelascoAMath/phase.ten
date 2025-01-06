@@ -861,6 +861,49 @@ def handle_data(data, websocket):
 
         case "get_games":
             return json.dumps({"type": "ignore"})
+        case "edit_player_time_limit":
+            print(data)
+
+            user_id = data["user_id"]
+            game_id = data["game_id"]
+
+            if not Users.exists(user_id):
+                return json.dumps(
+                    {
+                        "type": "rejection",
+                        "messsage": f"{user_id} is an invalid user id!",
+                    }
+                )
+
+            if not Games.exists(game_id):
+                return json.dumps(
+                    {
+                        "type": "rejection",
+                        "messsage": f"{game_id} is an invalid game id!",
+                    }
+                )
+
+            user = Users.get_by_id(user_id)
+            game = Games.get_by_id(game_id)
+
+            if game.host != user:
+                return json.dumps(
+                    {
+                        "type": "rejection",
+                        "message": "You are not the host of the game!",
+                    }
+                )
+
+            game.player_time_limit = datetime.timedelta(
+                days=data["days"],
+                seconds=data["hours"] * 3600 + data["minutes"] * 60 + data["seconds"],
+            )
+            game.save()
+
+            print(game.player_time_limit)
+
+            return json.dumps({"type": "ignore"})
+
         case "edit_game_phase":
             game_id = data["game_id"]
             user_id = data["user_id"]
