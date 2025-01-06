@@ -59,10 +59,6 @@ class BaseModel(peewee.Model):
         null=False, default=lambda: datetime.datetime.now()
     )
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.updated_at = self.created_at
-
     def save(self, *args, **kwargs):
         self.updated_at = datetime.datetime.now()
         super().save(*args, **kwargs)
