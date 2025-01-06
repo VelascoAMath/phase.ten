@@ -185,6 +185,7 @@ button {
 
 .left-to-right {
   display: flex;
+  flex-wrap: wrap;
 }
 
 /*# sourceMappingURL=App.css.map */
