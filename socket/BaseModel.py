@@ -75,7 +75,7 @@ class BaseModel(peewee.Model):
             return (
                 self.id == other.id
                 and self.created_at == other.created_at
-                and self.updated_at == other.created_at
+                and self.updated_at == other.updated_at
             )
         else:
             return False
