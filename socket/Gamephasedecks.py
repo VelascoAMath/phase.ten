@@ -28,7 +28,7 @@ class Gamephasedecks(BaseModel):
     def to_json_dict(self):
         return {
             "id": str(self.id),
-            "game_id": str(self.game_id),
+            "game_id": str(self.game.id),
             "phase": self.phase,
             "deck": self.deck.to_json_dict(),
             "created_at": str(self.created_at),
