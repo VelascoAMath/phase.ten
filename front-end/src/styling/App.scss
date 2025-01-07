@@ -17,6 +17,14 @@ button {
   font-size: large;
 }
 
+.messages {
+  background-color: rgb(18, 0, 51);
+  height: 150px;
+  border: 1px white solid;
+  text-align: center;
+  overflow-y: scroll;
+}
+
 .winner {
   font-size: 5rem;
   font-weight: bold;
@@ -197,4 +205,9 @@ button {
 
 .clickable {
   cursor: pointer;
+}
+
+.left-to-right {
+  display: flex;
+  flex-wrap: wrap;
 }

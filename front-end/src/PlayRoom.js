@@ -305,7 +305,7 @@ export default function PlayRoom({props}) {
                 {isCurrentPlayer && (selectedCards.length > 0) && player["drew_card"] && !player.completed_phase && <button onClick={completePhase}>Complete Phase</button>}
             </div>
             <div>
-                {game["phase_decks"].map((deck) => {
+                {game["phase_decks"].toSorted((a, b) => {return a.id.localeCompare(b.id)}).map((deck) => {
                     return (
                         <div className="phase-deck-collection" key={deck.id}>
                             <button style={{width: "150px"}} onClick={() => {putDown(deck.id, "start")}}>Put down at start</button>
