@@ -438,12 +438,6 @@ def player_action(data):
                 )
                 game_message.save(force_insert=True)
 
-                game_message = GameMessage(
-                    game=game,
-                    message=f"{player.user.name} has skipped {to_player.user.name}",
-                )
-                game_message.save(force_insert=True)
-
                 complete_turn = True
 
             else:
