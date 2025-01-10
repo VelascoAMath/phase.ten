@@ -62,6 +62,7 @@ button {
 .room-players {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
   justify-content: center;
   background-color: purple;
   padding: 5px;
