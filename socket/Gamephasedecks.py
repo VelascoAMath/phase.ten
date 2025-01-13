@@ -79,7 +79,7 @@ class Gamephasedecks(BaseModel):
                 and self.phase == other.phase
                 and self.deck == other.deck
                 and self.created_at == other.created_at
-                and self.updated_at == other.created_at
+                and self.updated_at == other.updated_at
             )
         else:
             return False

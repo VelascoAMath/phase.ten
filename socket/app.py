@@ -962,9 +962,7 @@ def handle_data(data, websocket):
             game = Games.get_by_id(game_id)
 
             if str(game.host.id) == user_id and not game.in_progress:
-                player_list: list[Players] = [
-                    player for player in Players.select() if player.game_id == game.id
-                ]
+                player_list: list[Players] = list(Players.select().where(Players.game == game))
 
                 deck = CardCollection.getNewDeck()
                 random.shuffle(deck)
@@ -985,6 +983,7 @@ def handle_data(data, websocket):
                 game.deck = CardCollection(deck)
                 game.in_progress = True
                 game.current_player = player_list[0].user
+                game.last_move_made = datetime.datetime.now(datetime.timezone.utc)
                 game.save()
                 return json.dumps({"type": "ignore"})
             else:
